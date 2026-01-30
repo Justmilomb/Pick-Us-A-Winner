@@ -2,14 +2,14 @@
   "usage": {
     "127.0.0.1": {
       "ip": "127.0.0.1",
-      "credits": 4,
+      "credits": 3,
       "freeCreditsUsed": 2,
-      "totalRequests": 9,
-      "instagramCalls": 4,
+      "totalRequests": 10,
+      "instagramCalls": 5,
       "giveawaysCreated": 0,
       "emailsSent": 0,
       "imagesGenerated": 5,
-      "lastActivity": "2026-01-28T23:13:21.383Z",
+      "lastActivity": "2026-01-30T19:28:56.220Z",
       "suspicious": false,
       "blocked": false,
       "purchaseTokens": [
