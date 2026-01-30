@@ -1,0 +1,310 @@
+@import "tailwindcss";
+@import "../../node_modules/tw-animate-css/dist/tw-animate.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Marquee Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@theme inline {
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+
+  /* Neo-Brutalist Color Palette - Harmonized */
+  --color-background: hsl(45 50% 98%);
+  /* Cleaner light cream */
+  --color-foreground: hsl(0 0% 10%);
+  /* Near black for better readability */
+
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(0 0% 10%);
+
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(0 0% 10%);
+
+  --color-primary: hsl(280 80% 50%);
+  /* Slightly deeper purple */
+  --color-primary-foreground: hsl(0 0% 100%);
+
+  --color-secondary: hsl(48 100% 50%);
+  /* Richer yellow */
+  --color-secondary-foreground: hsl(0 0% 10%);
+
+  --color-muted: hsl(240 10% 96%);
+  --color-muted-foreground: hsl(240 5% 45%);
+
+  --color-accent: hsl(330 90% 55%);
+  /* Vibrant pink */
+  --color-accent-foreground: hsl(0 0% 100%);
+
+  --color-instagram: hsl(330 80% 45%);
+  /* Instagram Pink */
+
+  --color-destructive: hsl(0 80% 50%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+
+  --color-border: hsl(0 0% 15%);
+  /* Slightly softer black */
+  --color-input: hsl(0 0% 100%);
+  --color-ring: hsl(280 80% 50%);
+
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --font-display: 'Clash Display', 'Space Grotesk', system-ui, sans-serif;
+
+  --shadow-neo: 6px 6px 0px 0px #000000;
+  --shadow-neo-lg: 12px 12px 0px 0px #000000;
+  --shadow-neo-sm: 3px 3px 0px 0px #000000;
+}
+
+@layer base {
+  * {
+    @apply border-border selection:bg-primary selection:text-white;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    background-image: radial-gradient(circle at 2px 2px, rgba(0, 0, 0, 0.05) 1px, transparent 0);
+    background-size: 40px 40px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display font-bold uppercase tracking-tight;
+  }
+}
+
+@layer utilities {
+  .neo-box {
+    @apply border-2 border-black shadow-[4px_4px_0px_0px_#000000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000000] transition-all bg-white;
+  }
+
+  .neo-box-static {
+    @apply border-2 border-black shadow-[4px_4px_0px_0px_#000000] bg-white;
+  }
+
+  .neo-btn-primary {
+    @apply bg-primary text-white border-2 border-black shadow-[4px_4px_0px_0px_#000000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all font-bold uppercase tracking-wider px-6 py-3;
+  }
+
+  .neo-btn-secondary {
+    @apply bg-secondary text-black border-2 border-black shadow-[4px_4px_0px_0px_#000000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all font-bold uppercase tracking-wider px-6 py-3;
+  }
+
+  .neo-input {
+    @apply border-2 border-black shadow-[4px_4px_0px_0px_#000000] focus:shadow-[2px_2px_0px_0px_#000000] focus:translate-x-[2px] focus:translate-y-[2px] transition-all p-3 font-medium outline-none;
+    font-size: 16px; /* Prevent iOS zoom on input focus */
+  }
+
+  /* Marquee animation */
+  .animate-marquee {
+    animation: marquee 20s linear infinite;
+  }
+
+  /* Step card styles for consistent colors */
+  .step-card-yellow {
+    @apply bg-secondary text-black;
+  }
+
+  .step-card-purple {
+    @apply bg-primary text-white;
+  }
+
+  .step-card-pink {
+    @apply bg-accent text-white;
+  }
+
+  /* Responsive container padding */
+  .container-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Touch-friendly tap targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+}
+
+/* Prevent iOS zoom on inputs */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* Responsive typography */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+  
+  /* Improve small screen readability */
+  h1 {
+    font-size: clamp(2rem, 8vw, 3rem) !important;
+  }
+  
+  h2 {
+    font-size: clamp(1.5rem, 6vw, 2.5rem) !important;
+  }
+  
+  /* Ensure dialogs fit on small screens */
+  [role="dialog"] {
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1025px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Improve very small screens */
+@media (max-width: 400px) {
+  .hero-title {
+    font-size: 2.5rem !important;
+  }
+  
+  /* Ensure buttons are touch-friendly */
+  button, a[role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Image optimization */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Lazy loading for non-critical images */
+img[loading="lazy"] {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+img[loading="lazy"].loaded {
+  opacity: 1;
+}
+
+/* Better responsive grid */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+/* Fix dialog on mobile */
+[data-radix-dialog-content] {
+  max-width: calc(100vw - 2rem) !important;
+  max-height: calc(100vh - 2rem) !important;
+  overflow-y: auto !important;
+}
+
+/* Ensure cards don't overflow */
+.neo-box, .neo-box-static {
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Fix horizontal overflow */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Better touch scrolling */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Responsive spacing */
+@media (max-width: 640px) {
+  .container-padding {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Reduce neo-shadow on mobile for cleaner look */
+  .neo-box {
+    box-shadow: 3px 3px 0px 0px #000000;
+  }
+  
+  .neo-box:hover {
+    box-shadow: 2px 2px 0px 0px #000000;
+  }
+  
+  /* Better form elements on mobile */
+  .neo-input {
+    box-shadow: 3px 3px 0px 0px #000000;
+  }
+  
+  /* Stack buttons on very small screens */
+  .button-group {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .button-group > * {
+    width: 100%;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .neo-box {
+    box-shadow: 4px 4px 0px 0px #000000;
+  }
+}
+
+/* Safe area padding for notched devices */
+@supports (padding: max(0px)) {
+  .safe-area-padding {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Accessible focus states */
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

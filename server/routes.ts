@@ -1,0 +1,673 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import {
+  fetchInstagramComments,
+  generateMockComments,
+  extractPostId,
+} from "./instagram";
+import { setupAuth } from "./auth";
+import { log } from "./log";
+import { format } from "date-fns";
+
+// Security imports
+import {
+  globalRateLimiter,
+  instagramRateLimiter,
+  giveawayRateLimiter,
+  emailRateLimiter,
+  imageRateLimiter,
+  blockCheckMiddleware,
+  creditCheckMiddleware,
+  createTrackingMiddleware,
+  validateRequest,
+  validateInstagramRequest,
+  validateGiveawayRequest,
+  validateEmailRequest,
+  adminAuthMiddleware,
+  checkCredits,
+  consumeCredit,
+  generatePurchaseToken,
+  redeemPurchaseToken,
+  getSecurityStats,
+  getClientIP,
+  SECURITY_CONFIG,
+} from "./security";
+
+export async function registerRoutes(
+  httpServer: Server,
+  app: Express
+): Promise<Server> {
+  setupAuth(app);
+
+  // ============================================
+  // GLOBAL MIDDLEWARE
+  // ============================================
+  
+  // Apply global rate limiting to all /api routes
+  app.use("/api", globalRateLimiter);
+  
+  // Apply block check to all /api routes
+  app.use("/api", blockCheckMiddleware);
+  
+  // Apply request validation to all /api routes
+  app.use("/api", validateRequest);
+
+  // Debug logging for API requests
+  app.use("/api/instagram", (req, res, next) => {
+    if (req.method === "POST") {
+      log(`API Request Body: ${JSON.stringify(req.body)}`, "debug");
+    }
+    next();
+  });
+
+  // ============================================
+  // CREDIT SYSTEM ENDPOINTS
+  // ============================================
+
+  // Check credits for current IP
+  app.get("/api/credits", (req, res) => {
+    const ip = getClientIP(req);
+    const status = checkCredits(ip);
+    return res.json({
+      credits: status.remaining,
+      freeCreditsRemaining: status.freeRemaining,
+      hasCredits: status.hasCredits
+    });
+  });
+
+  // Redeem a purchase token
+  app.post("/api/credits/redeem", (req, res) => {
+    const { token } = req.body;
+    
+    if (!token || typeof token !== "string") {
+      return res.status(400).json({ error: "Missing or invalid token" });
+    }
+    
+    const ip = getClientIP(req);
+    const result = redeemPurchaseToken(ip, token);
+    
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+    
+    const status = checkCredits(ip);
+    return res.json({
+      success: true,
+      creditsAdded: result.credits,
+      totalCredits: status.remaining
+    });
+  });
+
+  // ============================================
+  // INSTAGRAM ENDPOINTS
+  // ============================================
+
+  // URL Validation endpoint (no API cost - just validates format)
+  app.post("/api/instagram/validate", 
+    validateInstagramRequest,
+    async (req, res) => {
+      try {
+        const { url } = req.body;
+        const postId = extractPostId(url);
+        
+        if (!postId) {
+          return res.status(400).json({
+            valid: false,
+            error: "Could not extract post ID from URL. Use format: instagram.com/p/CODE or instagram.com/reel/CODE"
+          });
+        }
+
+        // Also return credit status so frontend knows if they can proceed
+        const ip = getClientIP(req);
+        const creditStatus = checkCredits(ip);
+
+        return res.json({
+          valid: true,
+          postId,
+          url,
+          credits: creditStatus.remaining,
+          hasCredits: creditStatus.hasCredits
+        });
+      } catch (error) {
+        log(`Validation Error: ${error}`, "error");
+        return res.status(500).json({
+          valid: false,
+          error: error instanceof Error ? error.message : "Failed to validate URL"
+        });
+      }
+    }
+  );
+
+  // Instagram comments endpoint - PROTECTED
+  app.post("/api/instagram/comments",
+    validateInstagramRequest,
+    instagramRateLimiter,
+    creditCheckMiddleware,
+    createTrackingMiddleware("instagram"),
+    async (req, res) => {
+      try {
+        const { url, demo } = req.body;
+        const ip = getClientIP(req);
+
+        const postId = extractPostId(url);
+        if (!postId) {
+          return res.status(400).json({
+            error: "Could not extract post ID from URL"
+          });
+        }
+
+        // Demo mode - return mock data (doesn't consume credits)
+        if (demo) {
+          const mockComments = generateMockComments(150);
+
+          return res.json({
+            entries: mockComments.map(c => ({
+              id: c.id,
+              username: c.username,
+              avatar: c.avatar,
+              comment: c.text,
+              platform: "instagram" as const,
+              timestamp: c.timestamp,
+              fraudScore: 0,
+            })),
+            total: mockComments.length,
+            demo: true,
+            message: "Demo mode - no credits consumed.",
+          });
+        }
+
+        // CONSUME CREDIT BEFORE API CALL
+        const consumed = consumeCredit(ip);
+        if (!consumed) {
+          return res.status(402).json({
+            error: "No credits remaining. Please purchase credits to continue.",
+            purchaseRequired: true
+          });
+        }
+
+        // Real API call (credit already consumed)
+        const result = await fetchInstagramComments(postId);
+
+        // Fraud detection
+        const usernameCounts = new Map<string, number>();
+        result.comments.forEach((c: any) => {
+          usernameCounts.set(c.username, (usernameCounts.get(c.username) || 0) + 1);
+        });
+
+        const entriesWithFraud = result.comments.map((c: any) => {
+          let fraudScore = 0;
+          const usernameCount = usernameCounts.get(c.username) || 0;
+          
+          if (usernameCount > 1) fraudScore += usernameCount * 10;
+          if (c.text && c.text.length < 5) fraudScore += 5;
+          if (c.text && /^[\p{Emoji}\s]+$/u.test(c.text)) fraudScore += 3;
+
+          return {
+            id: c.id,
+            username: c.username,
+            avatar: c.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.username}`,
+            comment: c.text,
+            platform: "instagram" as const,
+            timestamp: c.timestamp,
+            fraudScore: Math.min(fraudScore, 100),
+          };
+        });
+
+        // Get updated credit status
+        const creditStatus = checkCredits(ip);
+
+        return res.json({
+          entries: entriesWithFraud,
+          total: result.total,
+          postInfo: result.postInfo,
+          demo: false,
+          creditsRemaining: creditStatus.remaining,
+          fraudStats: {
+            flagged: entriesWithFraud.filter((e: any) => e.fraudScore > 20).length,
+            total: entriesWithFraud.length,
+          },
+        });
+      } catch (error) {
+        console.error("Instagram Comments API Error:", error);
+        return res.status(500).json({
+          error: error instanceof Error ? error.message : "Failed to fetch comments"
+        });
+      }
+    }
+  );
+
+  // ============================================
+  // GIVEAWAY ENDPOINTS
+  // ============================================
+
+  // Helper function to validate scheduling times
+  function validateMinimumTime(scheduledFor: Date): { valid: boolean; error?: string } {
+    const now = new Date();
+    const minTime = new Date(now.getTime() + 15 * 60 * 1000);
+    if (scheduledFor < minTime) {
+      return {
+        valid: false,
+        error: `Scheduled time must be at least 15 minutes from now.`
+      };
+    }
+    
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 1);
+    if (scheduledFor > maxDate) {
+      return {
+        valid: false,
+        error: `Scheduled time cannot be more than 1 month in advance.`
+      };
+    }
+    
+    return { valid: true };
+  }
+
+  // Schedule Giveaway Endpoint - PROTECTED
+  app.post("/api/giveaways",
+    giveawayRateLimiter,
+    validateGiveawayRequest,
+    createTrackingMiddleware("giveaway"),
+    async (req, res) => {
+      try {
+        const { scheduledFor, config, status, userId } = req.body;
+
+        if (!scheduledFor || !config) {
+          return res.status(400).send("Missing required fields");
+        }
+
+        // Validate email is provided (required for anonymous giveaways)
+        if (!config.contactEmail) {
+          return res.status(400).json({ error: "Contact email is required" });
+        }
+
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(config.contactEmail)) {
+          return res.status(400).json({ error: "Invalid email format" });
+        }
+
+        const scheduledDate = new Date(scheduledFor);
+        const timeValidation = validateMinimumTime(scheduledDate);
+        if (!timeValidation.valid) {
+          return res.status(400).json({ error: timeValidation.error });
+        }
+
+        // Track IP with giveaway for abuse prevention
+        const ip = getClientIP(req);
+
+        const giveaway = await storage.createGiveaway({
+          userId: userId || "anonymous",
+          scheduledFor: scheduledDate,
+          config: { ...config, creatorIP: ip },
+          status: status || "pending"
+        });
+
+        // Send confirmation email
+        const contactEmail = config.contactEmail;
+        if (contactEmail && (giveaway as any).accessToken) {
+          const { sendEmail } = await import("./email");
+          const { getScheduleEmailHTML, getScheduleEmailText } = await import("./email-templates");
+          const baseUrl = process.env.BASE_URL || req.protocol + "://" + req.get("host");
+          const accessLink = `${baseUrl}/schedule/${(giveaway as any).accessToken}`;
+          
+          const scheduledDateFormatted = format(scheduledDate, "MMMM do, yyyy 'at' h:mm a");
+          
+          await sendEmail({
+            to: contactEmail,
+            subject: "Your Giveaway Has Been Scheduled! 🎉",
+            text: getScheduleEmailText({
+              scheduledDate: scheduledDateFormatted,
+              accessLink,
+              postUrl: config.url,
+            }),
+            html: getScheduleEmailHTML({
+              scheduledDate: scheduledDateFormatted,
+              accessLink,
+              postUrl: config.url,
+            }),
+          });
+        }
+
+        return res.status(201).json(giveaway);
+      } catch (error) {
+        console.error("Schedule Giveaway Error:", error);
+        return res.status(500).json({ error: "Failed to schedule giveaway" });
+      }
+    }
+  );
+
+  // Get user's giveaways (authenticated)
+  app.get("/api/giveaways", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.json([]);
+    }
+    const giveaways = await storage.getUserGiveaways((req.user as any).id);
+    res.json(giveaways);
+  });
+
+  // Get giveaway by access token
+  app.get("/api/giveaways/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      
+      // Validate token format (UUID)
+      if (!token || token.length < 30) {
+        return res.status(400).json({ error: "Invalid token format" });
+      }
+      
+      const giveaway = await storage.getGiveawayByToken(token);
+      
+      if (!giveaway) {
+        return res.status(404).json({ error: "Giveaway not found" });
+      }
+
+      return res.json(giveaway);
+    } catch (error) {
+      console.error("Get Giveaway Error:", error);
+      return res.status(500).json({ error: "Failed to fetch giveaway" });
+    }
+  });
+
+  // Update giveaway by access token
+  app.put("/api/giveaways/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const { scheduledFor, config, status } = req.body;
+
+      const giveaway = await storage.getGiveawayByToken(token);
+      if (!giveaway) {
+        return res.status(404).json({ error: "Giveaway not found" });
+      }
+
+      // Check lock window
+      const now = new Date();
+      const scheduledTime = new Date(giveaway.scheduledFor);
+      const timeUntilScheduled = scheduledTime.getTime() - now.getTime();
+      const fifteenMinutes = 15 * 60 * 1000;
+
+      if (timeUntilScheduled < fifteenMinutes) {
+        return res.status(403).json({
+          error: "Giveaway cannot be edited. Less than 15 minutes remaining."
+        });
+      }
+
+      if (scheduledFor) {
+        const newScheduledDate = new Date(scheduledFor);
+        const timeValidation = validateMinimumTime(newScheduledDate);
+        if (!timeValidation.valid) {
+          return res.status(400).json({ error: timeValidation.error });
+        }
+      }
+
+      const updates: any = {};
+      if (scheduledFor) updates.scheduledFor = new Date(scheduledFor);
+      if (config) updates.config = config;
+      if (status) updates.status = status;
+
+      const updated = await storage.updateGiveaway(giveaway.id, updates);
+      if (!updated) {
+        return res.status(500).json({ error: "Failed to update giveaway" });
+      }
+
+      return res.json(updated);
+    } catch (error) {
+      console.error("Update Giveaway Error:", error);
+      return res.status(500).json({ error: "Failed to update giveaway" });
+    }
+  });
+
+  // Delete giveaway by access token
+  app.delete("/api/giveaways/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+
+      const giveaway = await storage.getGiveawayByToken(token);
+      if (!giveaway) {
+        return res.status(404).json({ error: "Giveaway not found" });
+      }
+
+      const now = new Date();
+      const scheduledTime = new Date(giveaway.scheduledFor);
+      const timeUntilScheduled = scheduledTime.getTime() - now.getTime();
+      const fifteenMinutes = 15 * 60 * 1000;
+
+      if (timeUntilScheduled < fifteenMinutes) {
+        return res.status(403).json({
+          error: "Giveaway cannot be cancelled. Less than 15 minutes remaining."
+        });
+      }
+
+      const deleted = await storage.deleteGiveaway(giveaway.id);
+      if (!deleted) {
+        return res.status(500).json({ error: "Failed to delete giveaway" });
+      }
+
+      return res.json({ success: true, message: "Giveaway cancelled successfully" });
+    } catch (error) {
+      console.error("Delete Giveaway Error:", error);
+      return res.status(500).json({ error: "Failed to delete giveaway" });
+    }
+  });
+
+  // ============================================
+  // IMAGE & EMAIL ENDPOINTS - PROTECTED
+  // ============================================
+
+  // Winner Image Generator
+  app.post("/api/generate-winner-image",
+    imageRateLimiter,
+    createTrackingMiddleware("image"),
+    async (req, res) => {
+      try {
+        const { username, avatar, comment, prize } = req.body;
+
+        if (!username || typeof username !== "string") {
+          return res.status(400).json({ error: "Username is required" });
+        }
+
+        // Sanitize inputs
+        const safeUsername = username.slice(0, 50);
+        const safeComment = comment ? comment.slice(0, 500) : undefined;
+        const safePrize = prize ? prize.slice(0, 100) : undefined;
+
+        const { generateWinnerImageJPEG } = await import("./image");
+        const imageBuffer = await generateWinnerImageJPEG({ 
+          username: safeUsername, 
+          avatar, 
+          comment: safeComment, 
+          prize: safePrize 
+        });
+
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.setHeader('Content-Disposition', `attachment; filename="winner-${safeUsername}.jpg"`);
+        res.setHeader('Cache-Control', 'no-cache');
+        res.send(imageBuffer);
+      } catch (error) {
+        console.error("Image Generation Error:", error);
+        return res.status(500).json({
+          error: error instanceof Error ? error.message : "Failed to generate image"
+        });
+      }
+    }
+  );
+
+  // Send Winning Emails - PROTECTED
+  app.post("/api/send-winning-emails",
+    emailRateLimiter,
+    validateEmailRequest,
+    createTrackingMiddleware("email"),
+    async (req, res) => {
+      try {
+        const { winners } = req.body;
+
+        const { sendEmail } = await import("./email");
+        const { getWinnerEmailHTML, getWinnerEmailText } = await import("./email-templates");
+        const results = [];
+
+        for (const winner of winners) {
+          if (!winner.email || !winner.username) {
+            continue;
+          }
+
+          const sent = await sendEmail({
+            to: winner.email,
+            subject: "🎉 Congratulations! You're a Giveaway Winner!",
+            text: getWinnerEmailText({
+              username: winner.username,
+              comment: winner.comment,
+              prize: winner.prize,
+            }),
+            html: getWinnerEmailHTML({
+              username: winner.username,
+              comment: winner.comment,
+              prize: winner.prize,
+            }),
+          });
+
+          results.push({ username: winner.username, email: winner.email, sent });
+        }
+
+        return res.json({
+          success: true,
+          sent: results.filter(r => r.sent).length,
+          total: results.length,
+          results,
+        });
+      } catch (error) {
+        console.error("Send Winning Emails Error:", error);
+        return res.status(500).json({
+          error: error instanceof Error ? error.message : "Failed to send winning emails"
+        });
+      }
+    }
+  );
+
+  // ============================================
+  // ANALYTICS - ADMIN ONLY
+  // ============================================
+
+  app.get("/api/analytics",
+    adminAuthMiddleware,
+    async (req, res) => {
+      try {
+        const allGiveaways = await storage.getAllGiveaways();
+        
+        const stats = {
+          totalGiveaways: allGiveaways.length,
+          completedGiveaways: allGiveaways.filter((g: any) => g.status === 'completed').length,
+          pendingGiveaways: allGiveaways.filter((g: any) => g.status === 'pending').length,
+          totalWinners: allGiveaways.reduce((sum: number, g: any) => {
+            return sum + (g.winners ? (Array.isArray(g.winners) ? g.winners.length : 0) : 0);
+          }, 0),
+          security: getSecurityStats()
+        };
+
+        return res.json(stats);
+      } catch (error) {
+        console.error("Analytics Error:", error);
+        return res.status(500).json({
+          error: error instanceof Error ? error.message : "Failed to fetch analytics"
+        });
+      }
+    }
+  );
+
+  // ============================================
+  // ADMIN ENDPOINTS
+  // ============================================
+
+  // Generate purchase tokens (admin only)
+  app.post("/api/admin/generate-token",
+    adminAuthMiddleware,
+    (req, res) => {
+      const { credits } = req.body;
+      const token = generatePurchaseToken(credits || 10);
+      return res.json({ token, credits: credits || 10 });
+    }
+  );
+
+  // View security stats (admin only)
+  app.get("/api/admin/security",
+    adminAuthMiddleware,
+    (req, res) => {
+      return res.json(getSecurityStats());
+    }
+  );
+
+  // ============================================
+  // UTILITY ENDPOINTS
+  // ============================================
+
+  app.get("/api/check-username", async (req, res) => {
+    const { username } = req.query;
+    if (!username || typeof username !== "string") {
+      return res.status(400).json({ error: "Invalid username" });
+    }
+    const user = await storage.getUserByUsername(username);
+    res.json({ available: !user });
+  });
+
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      security: "enabled"
+    });
+  });
+
+  // ============================================
+  // SEO ENDPOINTS
+  // ============================================
+
+  app.get("/robots.txt", (_req, res) => {
+    res.type("text/plain");
+    res.send(`User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /schedule/
+Disallow: /analytics
+
+Sitemap: https://giveaway-engine.com/sitemap.xml
+`);
+  });
+
+  app.get("/sitemap.xml", (_req, res) => {
+    const baseUrl = "https://giveaway-engine.com";
+    const currentDate = new Date().toISOString().split("T")[0];
+    
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/tool</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/privacy</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/terms</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>`;
+
+    res.type("application/xml");
+    res.send(sitemap);
+  });
+
+  return httpServer;
+}

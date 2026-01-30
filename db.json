@@ -1,0 +1,157 @@
+{
+  "users": [],
+  "giveaways": [
+    [
+      "f77e18ed-f5e8-442c-a19b-07f3c798259b",
+      {
+        "userId": "anonymous",
+        "scheduledFor": "2026-01-29T12:00:00.000Z",
+        "config": {
+          "url": "",
+          "username": "justmilomb",
+          "mode": "followers",
+          "winnerCount": 6,
+          "keyword": "",
+          "minMentions": 0,
+          "duplicateCheck": true
+        },
+        "status": "failed",
+        "id": "f77e18ed-f5e8-442c-a19b-07f3c798259b",
+        "createdAt": "2026-01-26T22:20:50.879Z",
+        "winners": null
+      }
+    ],
+    [
+      "eec8fe99-68e6-408a-b133-f68ee590aa76",
+      {
+        "userId": "anonymous",
+        "scheduledFor": "2026-01-29T12:00:00.000Z",
+        "config": {
+          "url": "https://www.instagram.com/justmilomb/p/DRh5dDACGPU/",
+          "username": "",
+          "mode": "comments",
+          "winnerCount": 1,
+          "keyword": "",
+          "minMentions": 1,
+          "duplicateCheck": false,
+          "contactEmail": "milomilomilomb@gmail.com"
+        },
+        "status": "completed",
+        "id": "eec8fe99-68e6-408a-b133-f68ee590aa76",
+        "createdAt": "2026-01-26T22:31:23.094Z",
+        "winners": []
+      }
+    ],
+    [
+      "745218da-8e1c-4b83-a7cd-a7435247c437",
+      {
+        "userId": "anonymous",
+        "scheduledFor": "2026-01-29T12:00:00.000Z",
+        "config": {
+          "url": "",
+          "username": "justmilomb",
+          "mode": "followers",
+          "winnerCount": 3,
+          "keyword": "",
+          "minMentions": 1,
+          "duplicateCheck": true,
+          "contactEmail": "milomilomilomb@gmail.com"
+        },
+        "status": "failed",
+        "id": "745218da-8e1c-4b83-a7cd-a7435247c437",
+        "createdAt": "2026-01-26T22:35:04.951Z",
+        "winners": null
+      }
+    ],
+    [
+      "e6da4284-11a2-40ad-94f2-742b8d15012b",
+      {
+        "userId": "anonymous",
+        "scheduledFor": "2026-01-29T12:00:00.000Z",
+        "config": {
+          "url": "",
+          "username": "ss",
+          "mode": "followers",
+          "winnerCount": 6,
+          "keyword": "",
+          "minMentions": 1,
+          "duplicateCheck": true,
+          "contactEmail": "milomilomilomb@gmail.com"
+        },
+        "status": "failed",
+        "id": "e6da4284-11a2-40ad-94f2-742b8d15012b",
+        "createdAt": "2026-01-26T22:40:38.974Z",
+        "winners": null
+      }
+    ],
+    [
+      "466c1f8f-f1c1-494b-918f-590bd71accde",
+      {
+        "userId": "anonymous",
+        "scheduledFor": "2026-01-29T12:00:00.000Z",
+        "config": {
+          "url": "",
+          "username": "justmilomb",
+          "mode": "followers",
+          "winnerCount": 6,
+          "keyword": "",
+          "minMentions": 1,
+          "duplicateCheck": true,
+          "contactEmail": "milomilomilomb@gmail.com"
+        },
+        "status": "failed",
+        "id": "466c1f8f-f1c1-494b-918f-590bd71accde",
+        "createdAt": "2026-01-26T22:42:35.710Z",
+        "winners": null
+      }
+    ],
+    [
+      "99bf606c-e85f-490b-9ca6-d493bcf57f1c",
+      {
+        "userId": "anonymous",
+        "scheduledFor": "2026-01-27T22:57:00.000Z",
+        "config": {
+          "url": "https://www.instagram.com/justmilomb/p/DT8Zbh6iFRS/",
+          "mode": "comments",
+          "winnerCount": 1,
+          "keyword": "",
+          "minMentions": 1,
+          "duplicateCheck": true,
+          "blockList": "",
+          "bonusChances": false,
+          "excludeFraud": true,
+          "contactEmail": "milomilomilomb@gmail.com"
+        },
+        "status": "completed",
+        "id": "99bf606c-e85f-490b-9ca6-d493bcf57f1c",
+        "createdAt": "2026-01-27T22:41:37.857Z",
+        "winners": [],
+        "accessToken": "f0e2bd53-2250-442b-809d-04e58a04233c"
+      }
+    ],
+    [
+      "5861866b-b0a2-4fa3-af02-8643126d13e1",
+      {
+        "userId": "anonymous",
+        "scheduledFor": "2026-01-27T23:11:05.192Z",
+        "config": {
+          "url": "https://www.instagram.com/justmilomb/p/DT8Zbh6iFRS/",
+          "mode": "comments",
+          "winnerCount": 1,
+          "keyword": "",
+          "minMentions": 1,
+          "duplicateCheck": true,
+          "blockList": "",
+          "bonusChances": false,
+          "excludeFraud": true,
+          "contactEmail": "milomilomilomb@gmail.com"
+        },
+        "status": "completed",
+        "id": "5861866b-b0a2-4fa3-af02-8643126d13e1",
+        "createdAt": "2026-01-27T22:55:25.308Z",
+        "winners": [],
+        "accessToken": "0dec6c05-fbb3-4f7f-9f75-7f3222b77826"
+      }
+    ]
+  ]
+}

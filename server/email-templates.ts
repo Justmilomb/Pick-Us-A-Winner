@@ -1,0 +1,503 @@
+/**
+ * Professional HTML Email Templates
+ * All templates are responsive and compatible with major email clients
+ */
+
+const baseStyles = `
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f5f5f5;
+      line-height: 1.6;
+    }
+    .email-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+    }
+    .email-header {
+      background: linear-gradient(135deg, #E1306C 0%, #C13584 50%, #833AB4 100%);
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .email-header h1 {
+      color: #ffffff;
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .email-body {
+      padding: 40px 30px;
+      color: #333333;
+    }
+    .email-body h2 {
+      color: #E1306C;
+      font-size: 24px;
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+    .email-body p {
+      font-size: 16px;
+      color: #555555;
+      margin-bottom: 16px;
+    }
+    .button {
+      display: inline-block;
+      padding: 14px 32px;
+      background-color: #E1306C;
+      color: #ffffff !important;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 16px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .button:hover {
+      background-color: #C13584;
+    }
+    .info-box {
+      background-color: #f8f9fa;
+      border-left: 4px solid #E1306C;
+      padding: 20px;
+      margin: 24px 0;
+      border-radius: 4px;
+    }
+    .info-box h3 {
+      color: #E1306C;
+      font-size: 18px;
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .info-box ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .info-box li {
+      margin-bottom: 8px;
+      color: #555555;
+    }
+    .winner-list {
+      background-color: #fff5f7;
+      border: 2px solid #E1306C;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 24px 0;
+    }
+    .winner-item {
+      padding: 16px;
+      background-color: #ffffff;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      border-left: 4px solid #E1306C;
+    }
+    .winner-item:last-child {
+      margin-bottom: 0;
+    }
+    .winner-username {
+      font-weight: 700;
+      color: #E1306C;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .winner-comment {
+      color: #666666;
+      font-style: italic;
+      margin-top: 8px;
+    }
+    .email-footer {
+      background-color: #f8f9fa;
+      padding: 30px;
+      text-align: center;
+      border-top: 1px solid #e0e0e0;
+    }
+    .email-footer p {
+      color: #888888;
+      font-size: 14px;
+      margin: 8px 0;
+    }
+    .email-footer a {
+      color: #E1306C;
+      text-decoration: none;
+    }
+    .divider {
+      height: 1px;
+      background-color: #e0e0e0;
+      margin: 30px 0;
+    }
+    @media only screen and (max-width: 600px) {
+      .email-body {
+        padding: 30px 20px;
+      }
+      .email-header {
+        padding: 30px 15px;
+      }
+      .email-header h1 {
+        font-size: 24px;
+      }
+      .email-body h2 {
+        font-size: 20px;
+      }
+      .button {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+      }
+    }
+  </style>
+`;
+
+export interface ScheduleEmailData {
+  scheduledDate: string;
+  accessLink: string;
+  postUrl?: string;
+}
+
+export interface WinnerEmailData {
+  username: string;
+  comment?: string;
+  prize?: string;
+}
+
+export interface ResultsEmailData {
+  winners: Array<{
+    username: string;
+    comment?: string;
+  }>;
+  totalEntries: number;
+  postUrl?: string;
+}
+
+/**
+ * Schedule Confirmation Email Template
+ */
+export function getScheduleEmailHTML(data: ScheduleEmailData): string {
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Giveaway Has Been Scheduled</title>
+  ${baseStyles}
+</head>
+<body>
+  <div class="email-container">
+    <div class="email-header">
+      <h1>🎉 Giveaway Scheduled!</h1>
+    </div>
+    
+    <div class="email-body">
+      <h2>Your Giveaway is Ready</h2>
+      <p>Great news! Your Instagram giveaway has been successfully scheduled and will run automatically.</p>
+      
+      <div class="info-box">
+        <h3>📅 Scheduled Time</h3>
+        <p style="font-size: 20px; font-weight: 700; color: #E1306C; margin: 0;">
+          ${data.scheduledDate}
+        </p>
+      </div>
+      
+      <p>You can manage your giveaway, view its status, and make changes (up to 15 minutes before it runs) using your unique access link:</p>
+      
+      <div style="text-align: center;">
+        <a href="${data.accessLink}" class="button">Manage My Giveaway</a>
+      </div>
+      
+      <div class="info-box">
+        <h3>📋 Important Information</h3>
+        <ul>
+          <li>You can edit or cancel your giveaway up to <strong>15 minutes</strong> before the scheduled time</li>
+          <li>After that, the giveaway will be locked and will run automatically</li>
+          <li>You'll receive another email with the results once winners are selected</li>
+          <li>Keep your access link safe - you'll need it to manage your giveaway</li>
+        </ul>
+      </div>
+      
+      ${data.postUrl ? `
+      <div class="divider"></div>
+      <p style="font-size: 14px; color: #888888;">
+        <strong>Instagram Post:</strong><br>
+        <a href="${data.postUrl}" style="color: #E1306C; word-break: break-all;">${data.postUrl}</a>
+      </p>
+      ` : ''}
+    </div>
+    
+    <div class="email-footer">
+      <p><strong>PickUsAWinner</strong></p>
+      <p>The fastest and fairest way to pick giveaway winners</p>
+      <p>
+        <a href="https://pickusawinner.com">Visit Website</a> | 
+        <a href="https://pickusawinner.com/privacy">Privacy Policy</a>
+      </p>
+      <p style="font-size: 12px; color: #aaaaaa; margin-top: 20px;">
+        This is an automated email. Please do not reply to this message.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+/**
+ * Winner Notification Email Template
+ */
+export function getWinnerEmailHTML(data: WinnerEmailData): string {
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Congratulations! You're a Winner!</title>
+  ${baseStyles}
+</head>
+<body>
+  <div class="email-container">
+    <div class="email-header">
+      <h1>🎉 Congratulations!</h1>
+    </div>
+    
+    <div class="email-body">
+      <h2>You're a Winner!</h2>
+      <p>Hi <strong>@${data.username}</strong>,</p>
+      
+      <p>We're thrilled to inform you that you've been selected as a winner in our Instagram giveaway!</p>
+      
+      ${data.comment ? `
+      <div class="winner-list">
+        <div class="winner-item">
+          <div class="winner-username">Your Winning Comment</div>
+          <div class="winner-comment">"${data.comment}"</div>
+        </div>
+      </div>
+      ` : ''}
+      
+      ${data.prize ? `
+      <div class="info-box">
+        <h3>🏆 Your Prize</h3>
+        <p style="font-size: 18px; font-weight: 600; color: #E1306C; margin: 0;">
+          ${data.prize}
+        </p>
+      </div>
+      ` : ''}
+      
+      <div class="info-box">
+        <h3>📝 What Happens Next?</h3>
+        <ul>
+          <li>Share your win on your Instagram story using the winner image provided</li>
+          <li>Tag us to spread the word and celebrate with your followers!</li>
+          <li>We'll contact you soon with prize details and next steps</li>
+        </ul>
+      </div>
+      
+      <p>Thank you for participating in our giveaway! We appreciate your support.</p>
+    </div>
+    
+    <div class="email-footer">
+      <p><strong>PickUsAWinner</strong></p>
+      <p>The fastest and fairest way to pick giveaway winners</p>
+      <p>
+        <a href="https://pickusawinner.com">Visit Website</a> | 
+        <a href="https://pickusawinner.com/privacy">Privacy Policy</a>
+      </p>
+      <p style="font-size: 12px; color: #aaaaaa; margin-top: 20px;">
+        This is an automated email. Please do not reply to this message.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+/**
+ * Giveaway Results Email Template
+ */
+export function getResultsEmailHTML(data: ResultsEmailData): string {
+  const winnersList = data.winners.map((winner, index) => `
+    <div class="winner-item">
+      <div class="winner-username">Winner #${index + 1}: @${winner.username}</div>
+      ${winner.comment ? `<div class="winner-comment">"${winner.comment}"</div>` : ''}
+    </div>
+  `).join('');
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Giveaway Results Are Ready!</title>
+  ${baseStyles}
+</head>
+<body>
+  <div class="email-container">
+    <div class="email-header">
+      <h1>🏆 Giveaway Complete!</h1>
+    </div>
+    
+    <div class="email-body">
+      <h2>Your Winners Have Been Selected</h2>
+      <p>Your scheduled giveaway has completed successfully! Here are the results:</p>
+      
+      <div class="info-box">
+        <h3>📊 Giveaway Statistics</h3>
+        <p style="margin: 0;">
+          <strong>Total Entries:</strong> ${data.totalEntries}<br>
+          <strong>Winners Selected:</strong> ${data.winners.length}
+        </p>
+      </div>
+      
+      ${data.winners.length > 0 ? `
+      <div class="winner-list">
+        <h3 style="color: #E1306C; margin-top: 0; margin-bottom: 16px; font-size: 20px;">🎉 Winners</h3>
+        ${winnersList}
+      </div>
+      ` : `
+      <div class="info-box" style="border-left-color: #ff9800;">
+        <h3 style="color: #ff9800;">⚠️ No Winners Found</h3>
+        <p>Unfortunately, no participants matched your giveaway criteria. You may want to adjust your filters and try again.</p>
+      </div>
+      `}
+      
+      ${data.postUrl ? `
+      <div class="divider"></div>
+      <p style="font-size: 14px; color: #888888;">
+        <strong>Instagram Post:</strong><br>
+        <a href="${data.postUrl}" style="color: #E1306C; word-break: break-all;">${data.postUrl}</a>
+      </p>
+      ` : ''}
+      
+      <div class="info-box">
+        <h3>💡 Next Steps</h3>
+        <ul>
+          <li>Contact the winners to arrange prize delivery</li>
+          <li>Download winner images to share on your Instagram story</li>
+          <li>Consider running another giveaway to keep your audience engaged!</li>
+        </ul>
+      </div>
+      
+      <div style="text-align: center; margin-top: 30px;">
+        <a href="https://giveaway-engine.com/tool" class="button">Run Another Giveaway</a>
+      </div>
+    </div>
+    
+    <div class="email-footer">
+      <p><strong>PickUsAWinner</strong></p>
+      <p>The fastest and fairest way to pick giveaway winners</p>
+      <p>
+        <a href="https://pickusawinner.com">Visit Website</a> | 
+        <a href="https://pickusawinner.com/privacy">Privacy Policy</a>
+      </p>
+      <p style="font-size: 12px; color: #aaaaaa; margin-top: 20px;">
+        This is an automated email. Please do not reply to this message.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+/**
+ * Get plain text version for email clients that don't support HTML
+ */
+export function getScheduleEmailText(data: ScheduleEmailData): string {
+  return `
+🎉 Your Giveaway Has Been Scheduled! 🎉
+
+Your Instagram giveaway has been successfully scheduled and will run automatically.
+
+📅 Scheduled Time: ${data.scheduledDate}
+
+Manage Your Giveaway:
+${data.accessLink}
+
+You can use this link to:
+- Edit your giveaway settings (up to 15 minutes before scheduled time)
+- View the countdown timer
+- Cancel the giveaway if needed
+- Access results once the giveaway completes
+
+Important Notes:
+- You can edit or cancel your giveaway up to 15 minutes before the scheduled time
+- After that, the giveaway will be locked and will run automatically
+- You'll receive another email with the results once winners are selected
+- Keep your access link safe - you'll need it to manage your giveaway
+
+${data.postUrl ? `Instagram Post: ${data.postUrl}` : ''}
+
+Best regards,
+PickUsAWinner Team
+
+---
+Visit us at: https://pickusawinner.com
+  `.trim();
+}
+
+export function getWinnerEmailText(data: WinnerEmailData): string {
+  return `
+🎉 Congratulations! You're a Winner! 🎉
+
+Hi @${data.username},
+
+We're thrilled to inform you that you've been selected as a winner in our Instagram giveaway!
+
+${data.comment ? `Your winning comment: "${data.comment}"` : ''}
+
+${data.prize ? `Your Prize: ${data.prize}` : ''}
+
+What happens next?
+- Share your win on your Instagram story using the winner image provided
+- Tag us to spread the word!
+- We'll contact you soon with prize details and next steps
+
+Thank you for participating in our giveaway!
+
+Best regards,
+PickUsAWinner Team
+
+---
+Visit us at: https://pickusawinner.com
+  `.trim();
+}
+
+export function getResultsEmailText(data: ResultsEmailData): string {
+  const winnersText = data.winners.length > 0
+    ? data.winners.map((w, i) => `Winner #${i + 1}: @${w.username}${w.comment ? ` - "${w.comment}"` : ''}`).join('\n')
+    : 'No winners found matching your criteria.';
+
+  return `
+🏆 Your Giveaway Results Are Ready! 🏆
+
+Your scheduled giveaway has completed successfully!
+
+📊 Statistics:
+- Total Entries: ${data.totalEntries}
+- Winners Selected: ${data.winners.length}
+
+🎉 Winners:
+${winnersText}
+
+${data.postUrl ? `Instagram Post: ${data.postUrl}` : ''}
+
+Next Steps:
+- Contact the winners to arrange prize delivery
+- Download winner images to share on your Instagram story
+- Consider running another giveaway!
+
+Best regards,
+PickUsAWinner Team
+
+---
+Visit us at: https://pickusawinner.com
+  `.trim();
+}

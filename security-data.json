@@ -1,0 +1,28 @@
+{
+  "usage": {
+    "127.0.0.1": {
+      "ip": "127.0.0.1",
+      "credits": 4,
+      "freeCreditsUsed": 2,
+      "totalRequests": 9,
+      "instagramCalls": 4,
+      "giveawaysCreated": 0,
+      "emailsSent": 0,
+      "imagesGenerated": 5,
+      "lastActivity": "2026-01-28T23:13:21.383Z",
+      "suspicious": false,
+      "blocked": false,
+      "purchaseTokens": [
+        "PAY_7b281288-9dcb-44ed-aae2-3d9ed57195c6"
+      ]
+    }
+  },
+  "purchaseTokens": {
+    "PAY_7b281288-9dcb-44ed-aae2-3d9ed57195c6": {
+      "credits": 5,
+      "createdAt": "2026-01-28T22:55:33.415Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-28T22:55:33.462Z"
+    }
+  }
+}
