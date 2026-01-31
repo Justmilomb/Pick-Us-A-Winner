@@ -64,6 +64,22 @@ import { startScheduler } from "./scheduler";
     log("CRITICAL: APIFY_TOKEN not found in environment.", "error");
   }
 
+  // Check for Instagram credentials
+  if (process.env.INSTAGRAM_USERNAME && process.env.INSTAGRAM_PASSWORD) {
+    log(`Instagram credentials detected: ${process.env.INSTAGRAM_USERNAME}`);
+    log("Custom scraper will be used by default when credentials are available.");
+  } else {
+    log("INSTAGRAM_USERNAME or INSTAGRAM_PASSWORD not found. Custom scraper will not be available.");
+  }
+
+  // Check if Puppeteer is available
+  try {
+    const puppeteer = await import("puppeteer-extra");
+    log("Puppeteer is available. Custom scraper can be used.");
+  } catch (error) {
+    log(`WARNING: Puppeteer not available. Custom scraper will fail: ${error}`, "error");
+  }
+
   startScheduler();
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {

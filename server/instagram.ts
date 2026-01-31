@@ -99,16 +99,21 @@ export async function fetchInstagramComments(
     // Default: If credentials exist, use custom scraper (prioritized)
     if (hasCredentials) {
         log(`Using custom scraper for post: ${postCode} (credentials available)`, "instagram");
+        log(`Credentials check: INSTAGRAM_USERNAME=${process.env.INSTAGRAM_USERNAME ? 'SET' : 'NOT SET'}, INSTAGRAM_PASSWORD=${process.env.INSTAGRAM_PASSWORD ? 'SET' : 'NOT SET'}`, "instagram");
         try {
             return await fetchWithCustomScraper(postUrl);
         } catch (error) {
-            log(`Custom scraper failed: ${error}. Falling back to Apify.`, "instagram");
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            log(`Custom scraper failed: ${errorMessage}. Falling back to Apify.`, "error");
             // Fallback to Apify if custom scraper fails
             if (process.env.APIFY_TOKEN) {
+                log("Attempting fallback to Apify...", "instagram");
                 return await fetchWithApify(postCode, postUrl);
             }
             throw error;
         }
+    } else {
+        log(`No credentials found. INSTAGRAM_USERNAME=${process.env.INSTAGRAM_USERNAME ? 'SET' : 'NOT SET'}, INSTAGRAM_PASSWORD=${process.env.INSTAGRAM_PASSWORD ? 'SET' : 'NOT SET'}`, "instagram");
     }
 
     // No credentials: Try Apify if token is available
@@ -219,11 +224,34 @@ async function fetchWithApify(
  * Fetch comments using custom Puppeteer scraper
  */
 async function fetchWithCustomScraper(postUrl: string): Promise<FetchCommentsResult> {
-    const scraper = new InstagramScraper();
+    if (!InstagramScraper) {
+        throw new Error("Custom scraper not available. Puppeteer may not be installed.");
+    }
+    
+    let scraper: any = null;
     try {
-        return await scraper.fetchComments(postUrl);
+        log("Initializing custom scraper...", "instagram");
+        scraper = new InstagramScraper();
+        log("Custom scraper initialized, fetching comments...", "instagram");
+        const result = await scraper.fetchComments(postUrl);
+        log(`Custom scraper successfully fetched ${result.comments.length} comments`, "instagram");
+        return result;
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        log(`Custom scraper error: ${errorMessage}`, "error");
+        if (errorStack) {
+            log(`Custom scraper stack: ${errorStack}`, "error");
+        }
+        throw error; // Re-throw so the fallback logic can catch it
     } finally {
-        await scraper.close();
+        if (scraper) {
+            try {
+                await scraper.close();
+            } catch (closeError) {
+                log(`Error closing scraper: ${closeError}`, "error");
+            }
+        }
     }
 }
 
