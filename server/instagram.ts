@@ -66,13 +66,15 @@ export async function fetchInstagramComments(
     try {
         const postUrl = postCode.startsWith("http") ? postCode : `https://www.instagram.com/p/${postCode}/`;
 
+        // Configure Apify to fetch ALL comments (maximum limit)
         const input = {
             "directUrls": [postUrl],
             "resultsType": "comments",
-            "resultsLimit": 5000,
+            "resultsLimit": 50000, // Maximum comments to fetch - increased from 5000
             "searchType": "hashtag",
             "searchLimit": 1,
-            "addParentData": true
+            "addParentData": true,
+            "commentsPerPost": 50000, // Ensure we get all comments per post
         };
 
         const run = await client.actor("shu8hvrXbJbY3Eb9W").call(input);

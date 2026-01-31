@@ -14,7 +14,7 @@ interface WinnerImageData {
 export async function generateWinnerImageJPEG(data: WinnerImageData): Promise<Buffer> {
   const width = 1080;
   const height = 1920;
-  
+
   // Create a beautiful gradient background using sharp
   const gradientSvg = `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
@@ -46,7 +46,7 @@ export async function generateWinnerImageJPEG(data: WinnerImageData): Promise<Bu
   const maxCharsPerLine = 30;
   const commentLines: string[] = [];
   let currentLine = '';
-  
+
   for (const word of words) {
     if ((currentLine + ' ' + word).length > maxCharsPerLine && currentLine) {
       commentLines.push(currentLine);
@@ -95,7 +95,6 @@ export async function generateWinnerImageJPEG(data: WinnerImageData): Promise<Bu
 
   const textBuffer = Buffer.from(textOverlay);
 
-  // Load and process avatar if available
   let avatarBuffer: Buffer | null = null;
   if (data.avatar) {
     try {
@@ -103,7 +102,11 @@ export async function generateWinnerImageJPEG(data: WinnerImageData): Promise<Bu
       if (avatarResponse.ok) {
         const avatarArrayBuffer = await avatarResponse.arrayBuffer();
         avatarBuffer = await sharp(Buffer.from(avatarArrayBuffer))
-          .resize(avatarSize, avatarSize)
+          .resize(avatarSize, avatarSize, {
+            fit: 'cover',
+            position: 'center',
+            kernel: sharp.kernel.lanczos3, // High quality resize algorithm
+          })
           .composite([{
             input: Buffer.from(`
               <svg width="${avatarSize}" height="${avatarSize}">
@@ -113,7 +116,7 @@ export async function generateWinnerImageJPEG(data: WinnerImageData): Promise<Bu
             top: 0,
             left: 0,
           }])
-          .png()
+          .png({ quality: 100, compressionLevel: 6 })
           .toBuffer();
       }
     } catch (e) {
@@ -150,7 +153,7 @@ export async function generateWinnerImageJPEG(data: WinnerImageData): Promise<Bu
 
   const finalImage = await sharp(background)
     .composite(composites)
-    .jpeg({ 
+    .jpeg({
       quality: 95,
       mozjpeg: true,
       progressive: true,

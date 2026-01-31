@@ -38,7 +38,7 @@ export default function GiveawayTool() {
   // Input State
   const [url, setUrl] = useState("");
   const [isDemo, setIsDemo] = useState(false);
-  
+
 
   // Rules State
   const [winnerCount, setWinnerCount] = useState(1);
@@ -115,7 +115,7 @@ export default function GiveawayTool() {
         ...entry,
         fraudScore: entry.fraudScore || 0,
       }));
-      
+
       setFetchedEntries(entries);
       setIsDemo(data.demo === true);
       setStep("options");
@@ -184,9 +184,12 @@ export default function GiveawayTool() {
         }
       }
 
-      // 3. Mentions Filter
+      // 3. Mentions Filter - count actual @username patterns, not just @ symbols
       if (rules.requireMention) {
-        const mentionCount = (entry.comment?.match(/@/g) || []).length;
+        // Match @username patterns (Instagram usernames: letters, numbers, underscores, periods)
+        const mentionRegex = /@([a-zA-Z0-9_.]+)/g;
+        const mentions = entry.comment?.match(mentionRegex) || [];
+        const mentionCount = mentions.length;
         if (mentionCount < rules.mentions) {
           continue;
         }
@@ -227,19 +230,22 @@ export default function GiveawayTool() {
     // Simulate picking delay
     setTimeout(() => {
       let selectedWinners: Entry[] = [];
-      
+
       if (enableBonusChances) {
         // Weighted selection based on mention count
         const weightedPool: Entry[] = [];
         validEntries.forEach(entry => {
-          const mentionCount = (entry.comment?.match(/@/g) || []).length;
+          // Count actual @username mentions, not just @ symbols
+          const mentionRegex = /@([a-zA-Z0-9_.]+)/g;
+          const mentions = entry.comment?.match(mentionRegex) || [];
+          const mentionCount = mentions.length;
           // Base entry + 1 extra entry per mention beyond the minimum
           const entries = 1 + Math.max(0, mentionCount - minMentions);
           for (let i = 0; i < entries; i++) {
             weightedPool.push(entry);
           }
         });
-        
+
         // Shuffle and pick unique winners
         const shuffled = [...weightedPool].sort(() => 0.5 - Math.random());
         const seen = new Set<string>();
@@ -254,7 +260,7 @@ export default function GiveawayTool() {
         const shuffled = [...validEntries].sort(() => 0.5 - Math.random());
         selectedWinners = shuffled.slice(0, winnerCount);
       }
-      
+
       setWinners(selectedWinners);
       setStep("results");
     }, 3000);
@@ -394,18 +400,18 @@ export default function GiveawayTool() {
                 className="neo-box p-4 sm:p-8 md:p-12 bg-white"
               >
                 <form onSubmit={handleFetch} className="space-y-6">
-                    <div className="space-y-2">
-                      <Label className="text-lg sm:text-xl font-bold uppercase">Instagram Post URL</Label>
-                      <Input
-                        placeholder="https://www.instagram.com/p/DB1234567/"
-                        className="neo-input text-lg"
-                        value={url}
-                        onChange={(e) => setUrl(e.target.value)}
-                      />
-                      <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4" /> Works with Posts and Reels.
-                      </p>
-                    </div>
+                  <div className="space-y-2">
+                    <Label className="text-lg sm:text-xl font-bold uppercase">Instagram Post URL</Label>
+                    <Input
+                      placeholder="https://www.instagram.com/p/DB1234567/"
+                      className="neo-input text-lg"
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                    />
+                    <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" /> Works with Posts and Reels.
+                    </p>
+                  </div>
 
                   <Button type="submit" className="w-full neo-btn-primary text-lg sm:text-xl py-4 sm:py-6 bg-[#E1306C] hover:bg-[#C13584] border-black text-white mt-4">
                     <Search className="mr-2 w-5 h-5 sm:w-6 sm:h-6" />
@@ -481,53 +487,53 @@ export default function GiveawayTool() {
                   </div>
 
                   {/* Comment Filters */}
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 bg-white border-2 border-slate-200">
-                          <Label className="font-bold text-lg uppercase flex items-center gap-2 cursor-pointer" htmlFor="mention-switch">
-                            <Users className="w-5 h-5" /> Require Mentions?
-                          </Label>
-                          <Switch
-                            id="mention-switch"
-                            checked={requireMention}
-                            onCheckedChange={setRequireMention}
-                            className="data-[state=checked]:bg-black border-2 border-black"
-                          />
-                        </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-white border-2 border-slate-200">
+                      <Label className="font-bold text-lg uppercase flex items-center gap-2 cursor-pointer" htmlFor="mention-switch">
+                        <Users className="w-5 h-5" /> Require Mentions?
+                      </Label>
+                      <Switch
+                        id="mention-switch"
+                        checked={requireMention}
+                        onCheckedChange={setRequireMention}
+                        className="data-[state=checked]:bg-black border-2 border-black"
+                      />
+                    </div>
 
-                        {requireMention && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            className="pl-4 border-l-4 border-black space-y-2"
-                          >
-                            <Label className="font-bold text-sm uppercase">Minimum Friends Tagged</Label>
-                            <Select value={minMentions.toString()} onValueChange={(v) => setMinMentions(parseInt(v))}>
-                              <SelectTrigger className="neo-input">
-                                <SelectValue placeholder="Select..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="1">1 Friend (@tag)</SelectItem>
-                                <SelectItem value="2">2 Friends (@tag @tag)</SelectItem>
-                                <SelectItem value="3">3 Friends</SelectItem>
-                                <SelectItem value="4">4 Friends</SelectItem>
-                                <SelectItem value="5">5 Friends</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </motion.div>
-                        )}
-                      </div>
+                    {requireMention && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="pl-4 border-l-4 border-black space-y-2"
+                      >
+                        <Label className="font-bold text-sm uppercase">Minimum Friends Tagged</Label>
+                        <Select value={minMentions.toString()} onValueChange={(v) => setMinMentions(parseInt(v))}>
+                          <SelectTrigger className="neo-input">
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 Friend (@tag)</SelectItem>
+                            <SelectItem value="2">2 Friends (@tag @tag)</SelectItem>
+                            <SelectItem value="3">3 Friends</SelectItem>
+                            <SelectItem value="4">4 Friends</SelectItem>
+                            <SelectItem value="5">5 Friends</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </motion.div>
+                    )}
+                  </div>
 
-                      <div className="space-y-4">
-                        <Label className="font-bold text-lg uppercase flex items-center gap-2">
-                          <Hash className="w-5 h-5" /> Must Include Hashtag
-                        </Label>
-                        <Input
-                          placeholder="e.g. #giveaway"
-                          className="neo-input"
-                          value={filterKeyword}
-                          onChange={(e) => setFilterKeyword(e.target.value)}
-                        />
-                      </div>
+                  <div className="space-y-4">
+                    <Label className="font-bold text-lg uppercase flex items-center gap-2">
+                      <Hash className="w-5 h-5" /> Must Include Hashtag
+                    </Label>
+                    <Input
+                      placeholder="e.g. #giveaway"
+                      className="neo-input"
+                      value={filterKeyword}
+                      onChange={(e) => setFilterKeyword(e.target.value)}
+                    />
+                  </div>
 
                   {/* Bonus Chances Toggle */}
                   <div className="space-y-4">
@@ -878,7 +884,7 @@ export default function GiveawayTool() {
                                   comment: winner.comment,
                                 }),
                               });
-                              
+
                               if (response.ok) {
                                 const blob = await response.blob();
                                 const url = window.URL.createObjectURL(blob);
@@ -928,7 +934,7 @@ export default function GiveawayTool() {
                         const emailsToSend = winners
                           .map(w => ({ winner: w, email: winnerEmails[w.id] }))
                           .filter(item => item.email && item.email.includes('@'));
-                        
+
                         if (emailsToSend.length === 0) {
                           toast({
                             title: "No Emails",
@@ -992,7 +998,7 @@ export default function GiveawayTool() {
                   Pick a date and time for this giveaway to run automatically.
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="py-6 space-y-6 overflow-y-auto flex-1 min-h-0">
                 {/* Important Notice */}
                 <div className="bg-blue-50 border-2 border-blue-500 rounded-md p-4 flex items-start gap-3">
@@ -1052,7 +1058,7 @@ export default function GiveawayTool() {
                           const now = new Date();
                           const selected = new Date(date);
                           const isToday = selected.toDateString() === now.toDateString();
-                          
+
                           if (isToday) {
                             const minTime = new Date(now.getTime() + 15 * 60 * 1000);
                             selected.setHours(minTime.getHours(), minTime.getMinutes(), 0, 0);
@@ -1092,22 +1098,22 @@ export default function GiveawayTool() {
                         today.setHours(0, 0, 0, 0);
                         const checkDate = new Date(date);
                         checkDate.setHours(0, 0, 0, 0);
-                        
+
                         // Don't allow dates before today
                         if (checkDate < today) {
                           return true;
                         }
-                        
+
                         // Don't allow dates more than 1 month in advance
                         const maxDate = new Date();
                         maxDate.setMonth(maxDate.getMonth() + 1);
                         maxDate.setHours(23, 59, 59, 999);
-                        
+
                         return checkDate > maxDate;
                       }}
-                  />
+                    />
+                  </div>
                 </div>
-              </div>
 
                 {/* Time Selection with Scrollable Pickers */}
                 <div className="space-y-3">
@@ -1122,14 +1128,14 @@ export default function GiveawayTool() {
                           const currentMinutes = scheduleTime ? scheduleTime.split(":")[1] : "00";
                           const newTime = `${value.padStart(2, "0")}:${currentMinutes}`;
                           setScheduleTime(newTime);
-                          
+
                           // Auto-adjust minutes if needed for today + current hour
                           if (scheduleDate) {
                             const now = new Date();
                             const selected = new Date(scheduleDate);
                             const isToday = selected.toDateString() === now.toDateString();
                             const selectedHour = parseInt(value, 10);
-                            
+
                             if (isToday && selectedHour === now.getHours()) {
                               const minTime = new Date(now.getTime() + 15 * 60 * 1000);
                               let minMinute = minTime.getMinutes();
@@ -1138,7 +1144,7 @@ export default function GiveawayTool() {
                                 minMinute = minMinute + 1;
                               }
                               const currentMinuteValue = parseInt(currentMinutes, 10);
-                              
+
                               if (currentMinuteValue < minMinute) {
                                 setScheduleTime(`${value.padStart(2, "0")}:${String(minMinute).padStart(2, "0")}`);
                               }
@@ -1156,7 +1162,7 @@ export default function GiveawayTool() {
                               const now = new Date();
                               const selected = new Date(scheduleDate);
                               const isToday = selected.toDateString() === now.toDateString();
-                              
+
                               if (isToday) {
                                 const minTime = new Date(now.getTime() + 15 * 60 * 1000);
                                 const minHour = minTime.getHours();
@@ -1206,7 +1212,7 @@ export default function GiveawayTool() {
                               const selected = new Date(scheduleDate);
                               const isToday = selected.toDateString() === now.toDateString();
                               const [selectedHour] = scheduleTime.split(":").map(Number);
-                              
+
                               if (isToday && selectedHour === now.getHours()) {
                                 const minTime = new Date(now.getTime() + 15 * 60 * 1000);
                                 let minMinute = minTime.getMinutes();
@@ -1226,7 +1232,7 @@ export default function GiveawayTool() {
                                   );
                                 }).filter(Boolean);
                               }
-                              
+
                               // For future hours today, show all minutes
                               if (isToday && selectedHour > now.getHours()) {
                                 return Array.from({ length: 60 }, (_, i) => (
@@ -1236,7 +1242,7 @@ export default function GiveawayTool() {
                                 ));
                               }
                             }
-                            
+
                             // For future dates, show all minutes
                             return Array.from({ length: 60 }, (_, i) => (
                               <SelectItem key={i} value={String(i).padStart(2, "0")} className="text-lg py-3">

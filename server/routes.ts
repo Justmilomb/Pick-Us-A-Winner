@@ -43,13 +43,13 @@ export async function registerRoutes(
   // ============================================
   // GLOBAL MIDDLEWARE
   // ============================================
-  
+
   // Apply global rate limiting to all /api routes
   app.use("/api", globalRateLimiter);
-  
+
   // Apply block check to all /api routes
   app.use("/api", blockCheckMiddleware);
-  
+
   // Apply request validation to all /api routes
   app.use("/api", validateRequest);
 
@@ -79,18 +79,18 @@ export async function registerRoutes(
   // Redeem a purchase token
   app.post("/api/credits/redeem", (req, res) => {
     const { token } = req.body;
-    
+
     if (!token || typeof token !== "string") {
       return res.status(400).json({ error: "Missing or invalid token" });
     }
-    
+
     const ip = getClientIP(req);
     const result = redeemPurchaseToken(ip, token);
-    
+
     if (!result.success) {
       return res.status(400).json({ error: result.error });
     }
-    
+
     const status = checkCredits(ip);
     return res.json({
       success: true,
@@ -104,13 +104,13 @@ export async function registerRoutes(
   // ============================================
 
   // URL Validation endpoint (no API cost - just validates format)
-  app.post("/api/instagram/validate", 
+  app.post("/api/instagram/validate",
     validateInstagramRequest,
     async (req, res) => {
       try {
         const { url } = req.body;
         const postId = extractPostId(url);
-        
+
         if (!postId) {
           return res.status(400).json({
             valid: false,
@@ -143,7 +143,6 @@ export async function registerRoutes(
   app.post("/api/instagram/comments",
     validateInstagramRequest,
     instagramRateLimiter,
-    creditCheckMiddleware,
     createTrackingMiddleware("instagram"),
     async (req, res) => {
       try {
@@ -157,7 +156,7 @@ export async function registerRoutes(
           });
         }
 
-        // Demo mode - return mock data (doesn't consume credits)
+        // Demo mode - return mock data
         if (demo) {
           const mockComments = generateMockComments(150);
 
@@ -173,20 +172,11 @@ export async function registerRoutes(
             })),
             total: mockComments.length,
             demo: true,
-            message: "Demo mode - no credits consumed.",
+            message: "Demo mode - sample data loaded.",
           });
         }
 
-        // CONSUME CREDIT BEFORE API CALL
-        const consumed = consumeCredit(ip);
-        if (!consumed) {
-          return res.status(402).json({
-            error: "No credits remaining. Please purchase credits to continue.",
-            purchaseRequired: true
-          });
-        }
-
-        // Real API call (credit already consumed)
+        // Real API call - payment handled via UI flow
         const result = await fetchInstagramComments(postId);
 
         // Fraud detection
@@ -198,7 +188,7 @@ export async function registerRoutes(
         const entriesWithFraud = result.comments.map((c: any) => {
           let fraudScore = 0;
           const usernameCount = usernameCounts.get(c.username) || 0;
-          
+
           if (usernameCount > 1) fraudScore += usernameCount * 10;
           if (c.text && c.text.length < 5) fraudScore += 5;
           if (c.text && /^[\p{Emoji}\s]+$/u.test(c.text)) fraudScore += 3;
@@ -251,7 +241,7 @@ export async function registerRoutes(
         error: `Scheduled time must be at least 15 minutes from now.`
       };
     }
-    
+
     const maxDate = new Date();
     maxDate.setMonth(maxDate.getMonth() + 1);
     if (scheduledFor > maxDate) {
@@ -260,7 +250,7 @@ export async function registerRoutes(
         error: `Scheduled time cannot be more than 1 month in advance.`
       };
     }
-    
+
     return { valid: true };
   }
 
@@ -311,9 +301,9 @@ export async function registerRoutes(
           const { getScheduleEmailHTML, getScheduleEmailText } = await import("./email-templates");
           const baseUrl = process.env.BASE_URL || req.protocol + "://" + req.get("host");
           const accessLink = `${baseUrl}/schedule/${(giveaway as any).accessToken}`;
-          
+
           const scheduledDateFormatted = format(scheduledDate, "MMMM do, yyyy 'at' h:mm a");
-          
+
           await sendEmail({
             to: contactEmail,
             subject: "Your Giveaway Has Been Scheduled! 🎉",
@@ -351,14 +341,14 @@ export async function registerRoutes(
   app.get("/api/giveaways/:token", async (req, res) => {
     try {
       const { token } = req.params;
-      
+
       // Validate token format (UUID)
       if (!token || token.length < 30) {
         return res.status(400).json({ error: "Invalid token format" });
       }
-      
+
       const giveaway = await storage.getGiveawayByToken(token);
-      
+
       if (!giveaway) {
         return res.status(404).json({ error: "Giveaway not found" });
       }
@@ -473,11 +463,11 @@ export async function registerRoutes(
         const safePrize = prize ? prize.slice(0, 100) : undefined;
 
         const { generateWinnerImageJPEG } = await import("./image");
-        const imageBuffer = await generateWinnerImageJPEG({ 
-          username: safeUsername, 
-          avatar, 
-          comment: safeComment, 
-          prize: safePrize 
+        const imageBuffer = await generateWinnerImageJPEG({
+          username: safeUsername,
+          avatar,
+          comment: safeComment,
+          prize: safePrize
         });
 
         res.setHeader('Content-Type', 'image/jpeg');
@@ -553,7 +543,7 @@ export async function registerRoutes(
     async (req, res) => {
       try {
         const allGiveaways = await storage.getAllGiveaways();
-        
+
         const stats = {
           totalGiveaways: allGiveaways.length,
           completedGiveaways: allGiveaways.filter((g: any) => g.status === 'completed').length,
@@ -636,7 +626,7 @@ Sitemap: https://giveaway-engine.com/sitemap.xml
   app.get("/sitemap.xml", (_req, res) => {
     const baseUrl = "https://giveaway-engine.com";
     const currentDate = new Date().toISOString().split("T")[0];
-    
+
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
