@@ -236,7 +236,8 @@ export async function registerRoutes(
         }
 
         // Payment successful - now make the API call
-        const result = await fetchInstagramComments(postId);
+        // Pass the full URL so we can extract the username from it
+        const result = await fetchInstagramComments(url);
 
         // Fraud detection
         const usernameCounts = new Map<string, number>();

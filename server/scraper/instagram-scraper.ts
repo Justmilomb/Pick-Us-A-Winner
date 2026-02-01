@@ -38,8 +38,12 @@ export class InstagramScraper {
             log(`Using proxy: ${proxy.host}:${proxy.port}`, "scraper");
         }
 
+        // Set headless to false to see the browser (for debugging)
+        // Set SCRAPER_HEADLESS=true in .env to hide the browser (for production)
+        const isHeadless = process.env.SCRAPER_HEADLESS === "true";
+        log(`Launching browser (headless: ${isHeadless})...`, "scraper");
         const browser = await puppeteer.launch({
-            headless: true,
+            headless: isHeadless,
             args,
             defaultViewport: { width: 1366, height: 768 },
         });
@@ -83,118 +87,677 @@ export class InstagramScraper {
     }
 
     /**
-     * Scroll page to load more comments (Instagram lazy-loads)
+     * Scroll within the comments section (right side of the post page)
      */
-    private async scrollToLoadComments(page: Page, maxScrolls: number = 10): Promise<void> {
+    private async scrollCommentsSection(page: Page, maxScrolls: number = 300): Promise<void> {
+        let noProgressCount = 0;
+        let lastCommentCount = 0;
+
         for (let i = 0; i < maxScrolls; i++) {
-            // Scroll down
-            await page.evaluate(() => {
-                window.scrollBy(0, window.innerHeight);
+            // Click any buttons to load more comments or expand replies
+            const clickedExpand = await page.evaluate(() => {
+                const elements = Array.from(document.querySelectorAll('span, button, div, svg'));
+                let clicked: string[] = [];
+                
+                for (const el of elements) {
+                    const text = (el.textContent || '').trim();
+                    const ariaLabel = el.getAttribute('aria-label') || '';
+                    
+                    // Look for "View all X replies" or "View replies (X)" patterns
+                    if (/^(View all \d+ replies?|View \d+ replies?|View replies)/i.test(text) ||
+                        /^—— View/i.test(text)) {
+                        (el as HTMLElement).click();
+                        clicked.push(text);
+                    }
+                    
+                    // Look for "+" button to load more comments (Instagram uses this)
+                    if (text === '+' || ariaLabel.includes('Load more') || ariaLabel.includes('more comments')) {
+                        (el as HTMLElement).click();
+                        clicked.push('+ (load more)');
+                    }
+                    
+                    // Look for "Load more comments" text
+                    if (/load more comments/i.test(text)) {
+                        (el as HTMLElement).click();
+                        clicked.push(text);
+                    }
+                }
+                
+                return clicked.length > 0 ? clicked : null;
             });
 
-            await this.randomDelay(500, 1500);
-
-            // Check if "Load more comments" button exists
-            try {
-                const loadMoreButton = await page.$('button:has-text("Load more comments")');
-                if (loadMoreButton) {
-                    await loadMoreButton.click();
-                    await this.randomDelay(1000, 2000);
-                }
-            } catch (e) {
-                // Button might not exist or already clicked
+            if (clickedExpand && clickedExpand.length > 0) {
+                log(`Clicked ${clickedExpand.length} expand buttons`, "scraper");
+                await this.randomDelay(2000, 3000);
             }
 
-            // Check if we've reached the bottom
-            const isAtBottom = await page.evaluate(() => {
-                return window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
+            // Find and scroll the comments container incrementally
+            const scrolled = await page.evaluate(() => {
+                // The comments section is usually a scrollable container next to the media
+                // Look for elements that have scrollable overflow
+                const allElements = Array.from(document.querySelectorAll('div, section, ul'));
+                
+                for (const el of allElements) {
+                    const htmlEl = el as HTMLElement;
+                    const style = window.getComputedStyle(htmlEl);
+                    const hasScroll = style.overflowY === 'scroll' || style.overflowY === 'auto';
+                    const canScroll = htmlEl.scrollHeight > htmlEl.clientHeight + 50;
+                    
+                    // Check if this element contains comments (has usernames/links)
+                    const hasComments = htmlEl.querySelectorAll('a[href^="/"]').length > 3;
+                    
+                    if (hasScroll && canScroll && hasComments) {
+                        const before = htmlEl.scrollTop;
+                        // Scroll incrementally (500px at a time) instead of jumping to bottom
+                        // This triggers lazy loading better
+                        htmlEl.scrollTop = Math.min(htmlEl.scrollTop + 500, htmlEl.scrollHeight);
+                        const after = htmlEl.scrollTop;
+                        if (after > before) {
+                            return { scrolled: true, scrollAmount: after - before, atBottom: after + htmlEl.clientHeight >= htmlEl.scrollHeight - 10 };
+                        }
+                    }
+                }
+                
+                // Alternative: scroll inside article or main content area
+                const article = document.querySelector('article');
+                if (article) {
+                    const scrollableParent = article.closest('div[style*="overflow"]') || 
+                                            article.parentElement;
+                    if (scrollableParent) {
+                        const htmlEl = scrollableParent as HTMLElement;
+                        if (htmlEl.scrollHeight > htmlEl.clientHeight) {
+                            htmlEl.scrollTop = Math.min(htmlEl.scrollTop + 500, htmlEl.scrollHeight);
+                            return { scrolled: true, scrollAmount: 500, atBottom: false };
+                        }
+                    }
+                }
+                
+                return { scrolled: false, scrollAmount: 0, atBottom: true };
             });
 
-            if (isAtBottom && i > 2) {
-                break;
+            if (scrolled.scrolled) {
+                if (i % 20 === 0) {
+                    log(`Scrolled comments (+${scrolled.scrollAmount}px) - iteration ${i + 1}${scrolled.atBottom ? ' (at bottom)' : ''}`, "scraper");
+                }
+            }
+
+            // Wait for comments to load (1.5-2.5 seconds for speed)
+            await this.randomDelay(1500, 2500);
+
+            // Count comments by parsing body text (more accurate than DOM)
+            const currentCount = await page.evaluate(() => {
+                const bodyText = document.body.innerText || '';
+                const lines = bodyText.split('\\n');
+                let count = 0;
+                let inComment = false;
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    // Check if this line is a username
+                    if (/^[a-zA-Z0-9._]{1,30}$/.test(line)) {
+                        // Check if next non-empty line is a timestamp
+                        let nextLineIdx = i + 1;
+                        while (nextLineIdx < lines.length && lines[nextLineIdx].trim() === '') {
+                            nextLineIdx++;
+                        }
+                        if (nextLineIdx < lines.length && /^(Edited\\s*•?\\s*)?\\d+\\s*[hdwm]$/i.test(lines[nextLineIdx].trim())) {
+                            count++;
+                            inComment = true;
+                        }
+                    }
+                }
+                return count;
+            });
+
+            if (currentCount === lastCommentCount) {
+                noProgressCount++;
+                // Only stop if we've had no progress for 10 iterations (was 5)
+                if (noProgressCount >= 10) {
+                    log(`No new comments after ${noProgressCount} iterations, stopping at ${currentCount} comments`, "scraper");
+                    break;
+                }
+            } else {
+                noProgressCount = 0;
+                lastCommentCount = currentCount;
+                if (i % 10 === 0 || currentCount % 50 === 0) {
+                    log(`Found ~${currentCount} comments so far... (iteration ${i + 1})`, "scraper");
+                }
             }
         }
+        
+        log(`Finished scrolling. Total comments detected: ~${lastCommentCount}`, "scraper");
     }
 
     /**
      * Extract comments from the page
      */
     private async extractComments(page: Page): Promise<InstagramComment[]> {
-        const comments = await page.evaluate(() => {
-            const commentElements: InstagramComment[] = [];
-            
-            // Instagram comment selectors (may need to be updated if Instagram changes their DOM)
-            // Try multiple selectors for robustness
-            const selectors = [
-                'ul[role="list"] > li', // Main comment list
-                'div[role="dialog"] ul li', // Comments in modal
-                'article ul li', // Comments in post view
-            ];
-
-            let commentNodes: Element[] = [];
-            for (const selector of selectors) {
-                const nodes = Array.from(document.querySelectorAll(selector));
-                if (nodes.length > 0) {
-                    commentNodes = nodes;
-                    break;
-                }
-            }
-
-            for (const node of commentNodes) {
-                try {
-                    // Extract username
-                    const usernameLink = node.querySelector('a[href^="/"]');
-                    const username = usernameLink?.textContent?.trim() || 
-                                   usernameLink?.getAttribute('href')?.replace('/', '') || 
-                                   'unknown';
-
-                    // Extract comment text
-                    const textElement = node.querySelector('span') || node;
-                    const text = textElement.textContent?.trim() || '';
-
-                    // Skip if no text or username
-                    if (!text || username === 'unknown') {
-                        continue;
+        // First, let's debug what's on the page
+        const debugInfo = await page.evaluate(`
+            (function() {
+                var info = {
+                    url: window.location.href,
+                    totalLi: document.querySelectorAll('ul li').length,
+                    totalDivs: document.querySelectorAll('div').length,
+                    totalLinks: document.querySelectorAll('a[href^="/"]').length,
+                    totalSpans: document.querySelectorAll('span').length,
+                    bodyText: document.body.innerText.substring(0, 500),
+                    linksWithProfiles: []
+                };
+                
+                // Find all links that look like profile links
+                var links = document.querySelectorAll('a[href^="/"]');
+                for (var i = 0; i < links.length && info.linksWithProfiles.length < 15; i++) {
+                    var href = links[i].getAttribute('href') || '';
+                    if (href.includes('/p/') || href.includes('/reel/') || href.includes('/explore')) continue;
+                    var parts = href.replace(/^\\//, '').split('/');
+                    if (parts[0] && parts[0].length > 0 && parts[0].length < 30) {
+                        var parent = links[i].parentElement;
+                        var grandparent = parent ? parent.parentElement : null;
+                        info.linksWithProfiles.push({
+                            href: href,
+                            text: links[i].textContent,
+                            parentText: parent ? parent.textContent.substring(0, 100) : '',
+                            grandparentTag: grandparent ? grandparent.tagName : ''
+                        });
                     }
-
-                    // Extract avatar
-                    const img = node.querySelector('img');
-                    const avatar = img?.getAttribute('src') || undefined;
-
-                    // Extract timestamp (if available)
-                    const timeElement = node.querySelector('time');
-                    const timestamp = timeElement?.getAttribute('datetime') || new Date().toISOString();
-
-                    // Generate ID from username + text hash
-                    const id = `${username}_${text.substring(0, 20)}`.replace(/[^a-zA-Z0-9_]/g, '_');
-
-                    commentElements.push({
-                        id,
-                        username,
-                        text,
-                        timestamp,
-                        likes: 0, // Instagram doesn't show comment likes in the main view easily
-                        avatar,
-                    });
-                } catch (e) {
-                    // Skip malformed comments
-                    continue;
                 }
-            }
+                
+                return info;
+            })()
+        `);
+        log(`Debug URL: ${(debugInfo as any).url}`, "scraper");
+        log(`Debug: li=${(debugInfo as any).totalLi}, divs=${(debugInfo as any).totalDivs}, links=${(debugInfo as any).totalLinks}, spans=${(debugInfo as any).totalSpans}`, "scraper");
+        log(`Body text preview: ${(debugInfo as any).bodyText.substring(0, 300)}`, "scraper");
+        log(`Profile links found: ${JSON.stringify((debugInfo as any).linksWithProfiles.slice(0, 5), null, 2)}`, "scraper");
 
-            return commentElements;
-        });
+        // Extract comments by parsing the body text - Instagram uses complex DOM
+        const comments = await page.evaluate(`
+            (function() {
+                var results = [];
+                var seen = {};
+                
+                // Get the full page text
+                var bodyText = document.body.innerText || '';
+                
+                // Pattern: username\\n\\n[timestamp]\\ncomment\\n[1 like]\\nReply
+                // Regex to match: username (1-30 chars, alphanumeric/underscore/dot)
+                //                  optional whitespace/newlines
+                //                  optional "Edited •" 
+                //                  timestamp (\\d+[hdwm] or similar)
+                //                  comment text (until "X like" or "Reply" or next username)
+                
+                // Match pattern: username, then timestamp, then comment
+                // Username pattern: ^[a-zA-Z0-9._]{1,30}$
+                // After username: optional whitespace, then timestamp (\\d+[hdwm]), then comment
+                
+                // Split by lines and process
+                var lines = bodyText.split('\\n');
+                var currentComment = null;
+                
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i].trim();
+                    
+                    // Check if this line is a username (alphanumeric with dots/underscores, 1-30 chars)
+                    if (/^[a-zA-Z0-9._]{1,30}$/.test(line)) {
+                        // Check if next lines contain timestamp pattern
+                        var timestampPattern = /^(Edited\\s*•?\\s*)?\\d+\\s*[hdwm]$/i;
+                        var nextLineIdx = i + 1;
+                        while (nextLineIdx < lines.length && lines[nextLineIdx].trim() === '') {
+                            nextLineIdx++;
+                        }
+                        
+                        if (nextLineIdx < lines.length && timestampPattern.test(lines[nextLineIdx].trim())) {
+                            // This looks like a comment username!
+                            // Save previous comment if exists
+                            if (currentComment && currentComment.text && currentComment.text.length > 0) {
+                                var key = currentComment.username + ':' + currentComment.text.substring(0, 30);
+                                if (!seen[key]) {
+                                    seen[key] = true;
+                                    results.push(currentComment);
+                                }
+                            }
+                            
+                            // Start new comment
+                            currentComment = {
+                                id: line + '_' + Date.now() + '_' + Math.random().toString(36).substring(7),
+                                username: line,
+                                text: '',
+                                timestamp: new Date().toISOString(),
+                                likes: 0,
+                                avatar: null
+                            };
+                            
+                            // Skip timestamp line
+                            i = nextLineIdx;
+                            continue;
+                        }
+                    }
+                    
+                    // If we have a current comment, collect text
+                    if (currentComment) {
+                        // Skip empty lines, timestamps, "X like", "Reply", "View replies"
+                        if (line.length === 0) continue;
+                        if (/^(Edited\\s*•?\\s*)?\\d+\\s*[hdwm]$/i.test(line)) continue;
+                        if (/^\\d+\\s*likes?$/i.test(line)) continue;
+                        if (/^Reply$/i.test(line)) {
+                            // End of comment
+                            if (currentComment.text.trim().length > 0) {
+                                var key = currentComment.username + ':' + currentComment.text.substring(0, 30);
+                                if (!seen[key]) {
+                                    seen[key] = true;
+                                    results.push(currentComment);
+                                }
+                            }
+                            currentComment = null;
+                            continue;
+                        }
+                        if (/^View.*replies?/i.test(line)) continue;
+                        if (/^See translation$/i.test(line)) continue;
+                        
+                        // This is comment text
+                        if (currentComment.text) {
+                            currentComment.text += ' ' + line;
+                        } else {
+                            currentComment.text = line;
+                        }
+                    }
+                }
+                
+                // Save last comment if exists
+                if (currentComment && currentComment.text && currentComment.text.trim().length > 0) {
+                    var key = currentComment.username + ':' + currentComment.text.substring(0, 30);
+                    if (!seen[key]) {
+                        results.push(currentComment);
+                    }
+                }
+                
+                // Get avatars from DOM by finding images near username text
+                // Instagram structure: img (avatar) -> link (username) -> span (comment text)
+                var allImages = document.querySelectorAll('img');
+                var usernameToAvatar = {};
+                
+                for (var imgIdx = 0; imgIdx < allImages.length; imgIdx++) {
+                    var img = allImages[imgIdx];
+                    var src = img.getAttribute('src') || '';
+                    
+                    // Check if this looks like a profile picture (small, circular, in comment area)
+                    // Profile pics are usually small (150x150 or similar)
+                    var width = img.width || 0;
+                    var height = img.height || 0;
+                    var isSmall = (width > 0 && width < 200) || (height > 0 && height < 200);
+                    var isProfilePic = src.includes('scontent') || src.includes('cdninstagram') || 
+                                      src.includes('profile') || (isSmall && width === height);
+                    
+                    if (!isProfilePic) continue;
+                    
+                    // Look for username near this image
+                    // Walk up the DOM tree to find text that matches a username
+                    var parent = img.parentElement;
+                    var searchDepth = 0;
+                    while (parent && searchDepth < 5) {
+                        // Look for links or spans with username text
+                        var links = parent.querySelectorAll('a[href^="/"], span');
+                        for (var linkIdx = 0; linkIdx < links.length; linkIdx++) {
+                            var link = links[linkIdx];
+                            var href = link.getAttribute('href') || '';
+                            var text = (link.textContent || '').trim();
+                            
+                            // Check if this is a profile link
+                            if (href.startsWith('/') && !href.includes('/p/') && !href.includes('/reel/') &&
+                                !href.includes('/explore') && !href.includes('/direct/')) {
+                                var username = href.replace(/^\\//, '').replace(/\\/$/, '').split('/')[0];
+                                if (username && username.length > 1 && username.length < 30 && 
+                                    /^[a-zA-Z0-9._]+$/.test(username)) {
+                                    usernameToAvatar[username] = src;
+                                    break;
+                                }
+                            }
+                            
+                            // Also check if text matches a username pattern
+                            if (/^[a-zA-Z0-9._]{1,30}$/.test(text)) {
+                                usernameToAvatar[text] = src;
+                            }
+                        }
+                        parent = parent.parentElement;
+                        searchDepth++;
+                    }
+                }
+                
+                // Match avatars to comments
+                for (var i = 0; i < results.length; i++) {
+                    var comment = results[i];
+                    if (usernameToAvatar[comment.username]) {
+                        comment.avatar = usernameToAvatar[comment.username];
+                    }
+                }
+                
+                return results;
+            })()
+        `);
 
-        // Remove duplicates based on username + text
+        log(`Raw extraction found ${(comments as any[]).length} comments`, "scraper");
+
+        // Remove duplicates and validate
         const uniqueComments = new Map<string, InstagramComment>();
-        for (const comment of comments) {
+        for (const comment of comments as any[]) {
             const key = `${comment.username}:${comment.text}`;
-            if (!uniqueComments.has(key)) {
-                uniqueComments.set(key, comment);
+            if (!uniqueComments.has(key) && comment.text && comment.text.length > 0) {
+                uniqueComments.set(key, {
+                    id: comment.id,
+                    username: comment.username,
+                    text: comment.text,
+                    timestamp: comment.timestamp,
+                    likes: comment.likes || 0,
+                    avatar: comment.avatar,
+                });
             }
         }
 
         return Array.from(uniqueComments.values());
+    }
+
+    /**
+     * Extract post code and username from URL
+     */
+    private parsePostUrl(postUrl: string): { postCode: string; username?: string } {
+        // Extract post code from /p/CODE, /reel/CODE, or /tv/CODE
+        const postMatch = postUrl.match(/\/(p|reel|tv)\/([A-Za-z0-9_-]+)/);
+        const postCode = postMatch ? postMatch[2] : '';
+        
+        // Try to extract username if present in URL
+        // Format: instagram.com/USERNAME/reel/CODE or instagram.com/USERNAME/p/CODE
+        // But NOT: instagram.com/reel/CODE (no username)
+        const urlParts = postUrl.replace(/https?:\/\/(www\.)?instagram\.com\/?/, '').split('/');
+        
+        // If URL is like: educatingmummy/reel/DTlbeqxjDLg
+        // urlParts = ['educatingmummy', 'reel', 'DTlbeqxjDLg']
+        // If URL is like: reel/DTlbeqxjDLg
+        // urlParts = ['reel', 'DTlbeqxjDLg']
+        
+        let username: string | undefined;
+        if (urlParts.length >= 3 && ['p', 'reel', 'tv'].includes(urlParts[1])) {
+            // Username is in position 0
+            username = urlParts[0];
+        }
+        
+        log(`Parsed URL: postCode=${postCode}, username=${username || 'not found'}`, "scraper");
+        return { postCode, username };
+    }
+
+    /**
+     * Find username by navigating to the post first
+     */
+    private async findPostUsername(page: Page, postUrl: string): Promise<string | null> {
+        try {
+            log(`Navigating to post to find username: ${postUrl}`, "scraper");
+            await page.goto(postUrl, { waitUntil: "networkidle2", timeout: 30000 });
+            await this.randomDelay(3000, 4000);
+            
+            // Find the username from the post page
+            const username = await page.evaluate(() => {
+                // Helper to extract username from href
+                const extractFromHref = (href: string | null): string | null => {
+                    if (!href) return null;
+                    // Remove leading/trailing slashes and get first path segment
+                    const clean = href.replace(/^\/+/, '').replace(/\/+$/, '').split('/')[0];
+                    // Validate it looks like a username (not a special page)
+                    if (clean && clean.length > 0 && 
+                        !['p', 'reel', 'tv', 'explore', 'accounts', 'direct', 'stories'].includes(clean) &&
+                        !clean.includes('?')) {
+                        return clean;
+                    }
+                    return null;
+                };
+
+                // Strategy 1: Look in the header for the username link
+                const headerLinks = document.querySelectorAll('header a[href^="/"]');
+                for (const link of headerLinks) {
+                    const username = extractFromHref(link.getAttribute('href'));
+                    if (username) {
+                        console.log('Found username in header:', username);
+                        return username;
+                    }
+                }
+
+                // Strategy 2: Look for username near the top of the post (first link that looks like a profile)
+                const allLinks = document.querySelectorAll('a[href^="/"]');
+                for (const link of allLinks) {
+                    const href = link.getAttribute('href') || '';
+                    // Skip non-profile links
+                    if (href.includes('/p/') || href.includes('/reel/') || href.includes('/tv/') ||
+                        href.includes('/explore') || href.includes('/accounts') || href.includes('/direct')) {
+                        continue;
+                    }
+                    const username = extractFromHref(href);
+                    if (username) {
+                        console.log('Found username from link:', username);
+                        return username;
+                    }
+                }
+
+                // Strategy 3: Look for text that looks like a username (with @ or followed by verified badge)
+                const spans = document.querySelectorAll('span, a');
+                for (const el of spans) {
+                    const text = (el.textContent || '').trim();
+                    // Look for usernames (alphanumeric, underscores, dots, 1-30 chars)
+                    if (/^[a-zA-Z0-9_.]{1,30}$/.test(text) && text.length > 2) {
+                        // Check if this element or parent has a link to a profile
+                        const parentLink = el.closest('a[href^="/"]');
+                        if (parentLink) {
+                            const href = parentLink.getAttribute('href') || '';
+                            if (!href.includes('/p/') && !href.includes('/reel/')) {
+                                console.log('Found username from text:', text);
+                                return text;
+                            }
+                        }
+                    }
+                }
+
+                console.log('Could not find username on page');
+                return null;
+            });
+            
+            if (username) {
+                log(`Found username from post page: ${username}`, "scraper");
+            } else {
+                log("Could not find username on post page", "scraper");
+            }
+            
+            return username;
+        } catch (e) {
+            log(`Error finding username: ${e}`, "scraper");
+            return null;
+        }
+    }
+
+    /**
+     * Navigate to user's profile and click on the specific post
+     */
+    private async openPostFromProfile(page: Page, username: string, postCode: string): Promise<boolean> {
+        try {
+            // Navigate to user's profile
+            const profileUrl = `https://www.instagram.com/${username}/`;
+            log(`Navigating to profile: ${profileUrl}`, "scraper");
+            await page.goto(profileUrl, { waitUntil: "networkidle2", timeout: 30000 });
+            await this.randomDelay(2000, 3000);
+
+            // Wait for the grid to load
+            await page.waitForSelector('article a[href*="/p/"], article a[href*="/reel/"]', { timeout: 10000 });
+            
+            // Find and click the specific post
+            log(`Looking for post ${postCode} in grid...`, "scraper");
+            const postFound = await page.evaluate((targetPostCode) => {
+                const postLinks = Array.from(document.querySelectorAll('article a[href*="/p/"], article a[href*="/reel/"]'));
+                for (const link of postLinks) {
+                    const href = link.getAttribute('href') || '';
+                    if (href.includes(targetPostCode)) {
+                        (link as HTMLElement).click();
+                        return true;
+                    }
+                }
+                return false;
+            }, postCode);
+
+            if (postFound) {
+                log("Clicked on post from grid, waiting for modal...", "scraper");
+                await this.randomDelay(2000, 3000);
+                
+                // Wait for modal to appear
+                await page.waitForSelector('div[role="dialog"]', { timeout: 10000 }).catch(() => {
+                    log("Modal not found, but continuing...", "scraper");
+                });
+                
+                return true;
+            }
+
+            log("Post not found in visible grid", "scraper");
+            return false;
+        } catch (e) {
+            log(`Error opening post from profile: ${e}`, "scraper");
+            return false;
+        }
+    }
+
+    /**
+     * Extract comments from Instagram API response JSON
+     */
+    private extractCommentsFromApiResponse(data: any): InstagramComment[] {
+        const comments: InstagramComment[] = [];
+        
+        // Recursively search for comment data in the response
+        const findComments = (obj: any, path: string = ''): void => {
+            if (!obj || typeof obj !== 'object') return;
+            
+            // Look for common Instagram comment structures
+            if (Array.isArray(obj)) {
+                for (const item of obj) {
+                    findComments(item, path);
+                }
+                return;
+            }
+            
+            // Check if this object looks like a comment
+            if (obj.owner && obj.text) {
+                const username = obj.owner.username || obj.owner?.username || obj.user?.username;
+                if (username && obj.text) {
+                    comments.push({
+                        id: obj.id || obj.pk || `${username}_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+                        username: username,
+                        text: obj.text || '',
+                        timestamp: obj.created_at || obj.timestamp || new Date().toISOString(),
+                        likes: obj.like_count || obj.likes_count || 0,
+                        avatar: obj.owner?.profile_pic_url || obj.owner?.profile_picture_url || 
+                                obj.user?.profile_pic_url || undefined,
+                    });
+                }
+            }
+            
+            // Check for nested comment structures
+            if (obj.edge_media_to_comment?.edges) {
+                for (const edge of obj.edge_media_to_comment.edges) {
+                    if (edge.node) {
+                        const node = edge.node;
+                        const username = node.owner?.username || node.user?.username;
+                        if (username && node.text) {
+                            comments.push({
+                                id: node.id || `${username}_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+                                username: username,
+                                text: node.text,
+                                timestamp: node.created_at || node.timestamp || new Date().toISOString(),
+                                likes: node.like_count || 0,
+                                avatar: node.owner?.profile_pic_url || node.user?.profile_pic_url || undefined,
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Check for items array (common in GraphQL responses)
+            if (obj.items) {
+                for (const item of obj.items) {
+                    findComments(item, path);
+                }
+            }
+            
+            // Check for data array
+            if (obj.data) {
+                findComments(obj.data, path);
+            }
+            
+            // Recursively check all properties
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    findComments(obj[key], `${path}.${key}`);
+                }
+            }
+        };
+        
+        findComments(data);
+        return comments;
+    }
+
+    /**
+     * Fast scrolling that stops when no new API responses arrive
+     */
+    private async scrollCommentsSectionFast(
+        page: Page, 
+        capturedComments: Map<string, InstagramComment>,
+        lastApiResponseTime: { value: number }
+    ): Promise<void> {
+        let noNewCommentsCount = 0;
+        let lastCommentCount = capturedComments.size;
+        const maxScrolls = 200;
+        const maxNoProgress = 10; // Stop after 10 scrolls with no new comments
+        
+        for (let i = 0; i < maxScrolls; i++) {
+            // Click expand buttons quickly
+            await page.evaluate(() => {
+                const elements = Array.from(document.querySelectorAll('span, button, div'));
+                for (const el of elements) {
+                    const text = (el.textContent || '').trim();
+                    if (/^(View all \d+ replies?|View \d+ replies?|View replies|load more comments)/i.test(text) ||
+                        text === '+' || el.getAttribute('aria-label')?.includes('Load more')) {
+                        (el as HTMLElement).click();
+                    }
+                }
+            });
+            
+            // Fast scroll
+            await page.evaluate(() => {
+                const allElements = Array.from(document.querySelectorAll('div, section, ul'));
+                for (const el of allElements) {
+                    const htmlEl = el as HTMLElement;
+                    const style = window.getComputedStyle(htmlEl);
+                    if ((style.overflowY === 'scroll' || style.overflowY === 'auto') &&
+                        htmlEl.scrollHeight > htmlEl.clientHeight + 50) {
+                        htmlEl.scrollTop = Math.min(htmlEl.scrollTop + 500, htmlEl.scrollHeight);
+                        break;
+                    }
+                }
+            });
+            
+            // Short delay for API calls to complete
+            await this.randomDelay(300, 500);
+            
+            // Check if we got new comments from API
+            const currentCount = capturedComments.size;
+            if (currentCount > lastCommentCount) {
+                noNewCommentsCount = 0;
+                lastCommentCount = currentCount;
+                if (i % 20 === 0) {
+                    log(`Fast scrolling: ${currentCount} comments captured so far...`, "scraper");
+                }
+            } else {
+                noNewCommentsCount++;
+                if (noNewCommentsCount >= maxNoProgress) {
+                    log(`No new comments after ${maxNoProgress} scrolls, stopping at ${currentCount} comments`, "scraper");
+                    break;
+                }
+            }
+        }
+        
+        log(`Fast scrolling complete. Total comments captured: ${capturedComments.size}`, "scraper");
     }
 
     /**
@@ -219,33 +782,97 @@ export class InstagramScraper {
                 throw new Error("Failed to login to Instagram");
             }
 
-            // Navigate to post
-            log(`Navigating to post: ${postUrl}`, "scraper");
-            await page.goto(postUrl, {
-                waitUntil: "networkidle2",
-                timeout: 30000,
+            // Set up network interception to capture API responses
+            const capturedComments = new Map<string, InstagramComment>();
+            const lastApiResponseTime = { value: Date.now() };
+            
+            page.on('response', async (response) => {
+                const url = response.url();
+                
+                // Check if this is an Instagram API/GraphQL endpoint
+                // Instagram uses various endpoints: graphql, api/v1, web API, etc.
+                if (url.includes('graphql') || url.includes('/api/v1/') || 
+                    url.includes('/api/graphql/') || url.includes('query_hash') ||
+                    url.includes('comments') || url.includes('edge_media_to_comment') ||
+                    (url.includes('instagram.com') && (url.includes('/api/') || url.includes('?query_hash=')))) {
+                    try {
+                        const responseText = await response.text();
+                        if (!responseText || responseText.length < 100) return;
+                        
+                        // Try to parse as JSON
+                        let data: any;
+                        try {
+                            data = JSON.parse(responseText);
+                        } catch {
+                            return; // Not JSON, skip
+                        }
+                        
+                        // Extract comments from various Instagram API response formats
+                        const comments = this.extractCommentsFromApiResponse(data);
+                        for (const comment of comments) {
+                            if (comment.username && comment.text) {
+                                const key = `${comment.username}:${comment.text.substring(0, 50)}`;
+                                if (!capturedComments.has(key)) {
+                                    capturedComments.set(key, comment);
+                                    lastApiResponseTime.value = Date.now();
+                                }
+                            }
+                        }
+                        
+                        if (comments.length > 0) {
+                            log(`Captured ${comments.length} comments from API (total: ${capturedComments.size})`, "scraper");
+                        }
+                    } catch (error) {
+                        // Silently ignore parsing errors
+                    }
+                }
             });
 
-            await this.randomDelay(2000, 4000);
+            // Navigate directly to the post
+            log(`Navigating to post: ${postUrl}`, "scraper");
+            await page.goto(postUrl, { waitUntil: "networkidle2", timeout: 30000 });
+            await this.randomDelay(2000, 3000);
 
-            // Click "View all comments" if it exists
-            try {
-                const viewAllButton = await page.$('button:has-text("View all"), a:has-text("View all")');
-                if (viewAllButton) {
-                    await viewAllButton.click();
-                    await this.randomDelay(2000, 3000);
+            // First, click "View all X comments" button if present
+            log("Looking for 'View all comments' button...", "scraper");
+            const clickedViewAll = await page.evaluate(() => {
+                const elements = Array.from(document.querySelectorAll('span, button, div, a'));
+                for (const el of elements) {
+                    const text = (el.textContent || '').trim();
+                    // Match patterns like "View all 2,000 comments" or "View all 156 comments"
+                    if (/^View all \d[\d,]* comments?$/i.test(text)) {
+                        (el as HTMLElement).click();
+                        return text;
+                    }
                 }
-            } catch (e) {
-                // Button might not exist
+                return null;
+            });
+            
+            if (clickedViewAll) {
+                log(`Clicked: "${clickedViewAll}"`, "scraper");
+                await this.randomDelay(3000, 4000);
+            } else {
+                log("No 'View all comments' button found, comments may already be visible", "scraper");
             }
 
-            // Scroll to load all comments
-            log("Scrolling to load comments...", "scraper");
-            await this.scrollToLoadComments(page, 20);
+            // Scroll within the comments section quickly (network interception is doing the work)
+            log("Scrolling comments section to trigger API calls...", "scraper");
+            await this.scrollCommentsSectionFast(page, capturedComments, lastApiResponseTime);
 
-            // Extract comments
-            log("Extracting comments...", "scraper");
-            const comments = await this.extractComments(page);
+            // Extract comments from DOM as fallback
+            log("Extracting comments from DOM (fallback)...", "scraper");
+            const domComments = await this.extractComments(page);
+            
+            // Combine network-captured comments with DOM-extracted ones
+            const allComments = Array.from(capturedComments.values());
+            for (const domComment of domComments) {
+                const key = `${domComment.username}:${domComment.text.substring(0, 50)}`;
+                if (!capturedComments.has(key)) {
+                    allComments.push(domComment);
+                }
+            }
+            
+            const comments = allComments;
 
             // Get post info
             const postInfo = await page.evaluate(() => {

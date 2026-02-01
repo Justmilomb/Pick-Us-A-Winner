@@ -2,18 +2,40 @@
   "usage": {
     "127.0.0.1": {
       "ip": "127.0.0.1",
-      "credits": 3,
+      "credits": 25,
       "freeCreditsUsed": 2,
-      "totalRequests": 12,
-      "instagramCalls": 6,
+      "totalRequests": 35,
+      "instagramCalls": 29,
       "giveawaysCreated": 0,
       "emailsSent": 0,
       "imagesGenerated": 6,
-      "lastActivity": "2026-01-31T01:20:33.081Z",
+      "lastActivity": "2026-01-31T11:01:08.610Z",
       "suspicious": true,
       "blocked": false,
       "purchaseTokens": [
-        "PAY_7b281288-9dcb-44ed-aae2-3d9ed57195c6"
+        "PAY_7b281288-9dcb-44ed-aae2-3d9ed57195c6",
+        "PAY_6cc51ada-b38e-4c69-81d7-426ba269a35f",
+        "PAY_ea99d3c8-7d11-4b7b-ab1e-98ac1fa60f05",
+        "PAY_3f43d393-98b7-4807-b180-894c788d384c",
+        "PAY_b3ea8dc6-3cfb-4d7e-9aac-13bb500a44c4",
+        "PAY_67c1b9a7-f937-4eee-91cb-0d568775c17e",
+        "PAY_0e022104-5177-48bc-8d7f-3c1e339fd811",
+        "PAY_9fcc6a76-a9a9-45f4-bd22-98f42e8b834a",
+        "PAY_ded706cb-f8f5-425b-9eb7-6cac7521e2e0",
+        "PAY_6c38f4d7-328d-49e1-928f-7613f81aa3ec",
+        "PAY_e9d25f74-ea11-4256-986a-b73c5d2757d7",
+        "PAY_3f8eb560-e965-4b7b-8801-835ed203fef4",
+        "PAY_7d6ed87d-489d-414e-8bfc-768404a65249",
+        "PAY_f54ebd5e-cf4c-4415-9cc0-b52f4bba4208",
+        "PAY_967bde59-6e53-4ab4-ba6e-36de88c658ee",
+        "PAY_5bae2643-f767-4795-9f29-fa370253de67",
+        "PAY_fd280f78-a38e-47c2-b049-cc733cf50e6c",
+        "PAY_f75d2b25-25a9-407e-9b96-4aae7d24ad2b",
+        "PAY_2345a8a9-4436-4179-9483-e48838ba944a",
+        "PAY_e739fe82-eeae-4c19-bcdf-23c2cee0ad21",
+        "PAY_a64e0657-c2ec-4575-99fe-aeaef0fdd67e",
+        "PAY_abdbe5cd-00f3-4430-b4f2-b58896892996",
+        "PAY_07c055fb-3e1e-4be1-b99e-68184de7b5f5"
       ]
     }
   },
@@ -23,6 +45,142 @@
       "createdAt": "2026-01-28T22:55:33.415Z",
       "usedBy": "127.0.0.1",
       "usedAt": "2026-01-28T22:55:33.462Z"
+    },
+    "PAY_6cc51ada-b38e-4c69-81d7-426ba269a35f": {
+      "credits": 1,
+      "createdAt": "2026-01-31T09:33:57.515Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T09:33:57.520Z"
+    },
+    "PAY_ea99d3c8-7d11-4b7b-ab1e-98ac1fa60f05": {
+      "credits": 1,
+      "createdAt": "2026-01-31T09:41:55.851Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T09:41:55.857Z"
+    },
+    "PAY_3f43d393-98b7-4807-b180-894c788d384c": {
+      "credits": 1,
+      "createdAt": "2026-01-31T09:43:36.096Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T09:43:36.110Z"
+    },
+    "PAY_b3ea8dc6-3cfb-4d7e-9aac-13bb500a44c4": {
+      "credits": 1,
+      "createdAt": "2026-01-31T09:45:24.861Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T09:45:24.867Z"
+    },
+    "PAY_67c1b9a7-f937-4eee-91cb-0d568775c17e": {
+      "credits": 1,
+      "createdAt": "2026-01-31T09:49:23.484Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T09:49:23.490Z"
+    },
+    "PAY_0e022104-5177-48bc-8d7f-3c1e339fd811": {
+      "credits": 1,
+      "createdAt": "2026-01-31T09:54:53.334Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T09:54:53.338Z"
+    },
+    "PAY_9fcc6a76-a9a9-45f4-bd22-98f42e8b834a": {
+      "credits": 1,
+      "createdAt": "2026-01-31T09:55:50.656Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T09:55:50.661Z"
+    },
+    "PAY_ded706cb-f8f5-425b-9eb7-6cac7521e2e0": {
+      "credits": 1,
+      "createdAt": "2026-01-31T09:58:48.807Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T09:58:48.812Z"
+    },
+    "PAY_6c38f4d7-328d-49e1-928f-7613f81aa3ec": {
+      "credits": 1,
+      "createdAt": "2026-01-31T10:04:02.264Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T10:04:02.269Z"
+    },
+    "PAY_e9d25f74-ea11-4256-986a-b73c5d2757d7": {
+      "credits": 1,
+      "createdAt": "2026-01-31T10:05:31.684Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T10:05:31.689Z"
+    },
+    "PAY_3f8eb560-e965-4b7b-8801-835ed203fef4": {
+      "credits": 1,
+      "createdAt": "2026-01-31T10:06:10.416Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T10:06:10.421Z"
+    },
+    "PAY_7d6ed87d-489d-414e-8bfc-768404a65249": {
+      "credits": 1,
+      "createdAt": "2026-01-31T10:24:06.133Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T10:24:06.138Z"
+    },
+    "PAY_f54ebd5e-cf4c-4415-9cc0-b52f4bba4208": {
+      "credits": 1,
+      "createdAt": "2026-01-31T10:26:22.300Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T10:26:22.305Z"
+    },
+    "PAY_967bde59-6e53-4ab4-ba6e-36de88c658ee": {
+      "credits": 1,
+      "createdAt": "2026-01-31T10:29:45.892Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T10:29:45.898Z"
+    },
+    "PAY_5bae2643-f767-4795-9f29-fa370253de67": {
+      "credits": 1,
+      "createdAt": "2026-01-31T10:31:55.865Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T10:31:55.870Z"
+    },
+    "PAY_fd280f78-a38e-47c2-b049-cc733cf50e6c": {
+      "credits": 1,
+      "createdAt": "2026-01-31T10:34:54.376Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T10:34:54.382Z"
+    },
+    "PAY_f75d2b25-25a9-407e-9b96-4aae7d24ad2b": {
+      "credits": 1,
+      "createdAt": "2026-01-31T10:36:33.417Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T10:36:33.422Z"
+    },
+    "PAY_2345a8a9-4436-4179-9483-e48838ba944a": {
+      "credits": 1,
+      "createdAt": "2026-01-31T10:39:35.620Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T10:39:35.625Z"
+    },
+    "PAY_e739fe82-eeae-4c19-bcdf-23c2cee0ad21": {
+      "credits": 1,
+      "createdAt": "2026-01-31T10:44:05.840Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T10:44:05.845Z"
+    },
+    "PAY_a64e0657-c2ec-4575-99fe-aeaef0fdd67e": {
+      "credits": 1,
+      "createdAt": "2026-01-31T10:45:06.589Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T10:45:06.599Z"
+    },
+    "PAY_02f320ab-6890-4feb-a5fe-5c46980e4751": {
+      "credits": 1,
+      "createdAt": "2026-01-31T10:51:45.351Z"
+    },
+    "PAY_abdbe5cd-00f3-4430-b4f2-b58896892996": {
+      "credits": 1,
+      "createdAt": "2026-01-31T10:51:57.261Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T10:51:57.266Z"
+    },
+    "PAY_07c055fb-3e1e-4be1-b99e-68184de7b5f5": {
+      "credits": 1,
+      "createdAt": "2026-01-31T11:01:08.605Z",
+      "usedBy": "127.0.0.1",
+      "usedAt": "2026-01-31T11:01:08.611Z"
     }
   }
 }
