@@ -1,6 +1,7 @@
 import { log } from "./log";
 import { ApifyClient } from 'apify-client';
 import { InstagramScraper } from "./scraper/instagram-scraper";
+import { z } from "zod";
 
 export interface InstagramComment {
     id: string;
@@ -29,6 +30,21 @@ if (!process.env.APIFY_TOKEN) {
 
 const client = new ApifyClient({
     token: process.env.APIFY_TOKEN || "",
+});
+
+const InstagramCommentSchema = z.object({
+    id: z.string(),
+    ownerUsername: z.string().optional(),
+    user: z.object({ username: z.string().optional(), profile_pic_url: z.string().optional() }).optional(),
+    text: z.string().optional(),
+    timestamp: z.string().optional(),
+    likesCount: z.number().optional(),
+    ownerProfilePicUrl: z.string().optional(),
+    userProfilePicUrl: z.string().optional(),
+});
+
+const ApifyResponseSchema = z.object({
+    items: z.array(InstagramCommentSchema),
 });
 
 /**
@@ -166,10 +182,20 @@ async function fetchWithApify(
     
     log(`Apify run completed. Run ID: ${run.id}, Status: ${run.status}, Actor: ${actorId}`, "instagram");
     
-    const { items } = await client.dataset(run.defaultDatasetId).listItems();
+    const { items: rawItems } = await client.dataset(run.defaultDatasetId).listItems();
     
-    log(`Raw items from Apify dataset: ${items.length}`, "instagram");
+    log(`Raw items from Apify dataset: ${rawItems.length}`, "instagram");
     
+    // Validate with Zod
+    const items = rawItems.map((item: any) => {
+        const parsed = InstagramCommentSchema.safeParse(item);
+        if (!parsed.success) {
+            log(`Invalid item from Apify: ${JSON.stringify(parsed.error.format())}`, "instagram");
+            return null;
+        }
+        return parsed.data;
+    }).filter(i => i !== null) as z.infer<typeof InstagramCommentSchema>[];
+
     // IMPORTANT: If you're seeing only 15 comments, you need to upgrade your Apify subscription
     if (items.length <= 15) {
         log(`⚠️ Only ${items.length} items returned. Free tier limit is 15 comments. Upgrade Apify for more.`, "instagram");
@@ -182,7 +208,7 @@ async function fetchWithApify(
     }
     
     const comments: InstagramComment[] = items
-        .map((item: any): InstagramComment | null => {
+        .map((item): InstagramComment | null => {
             const username = item.ownerUsername || item.user?.username;
             // Only skip if BOTH username and text are missing
             if (!username && !item.text) return null;

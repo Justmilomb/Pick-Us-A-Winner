@@ -19,18 +19,18 @@ export class InstagramScraper {
         // Development mode: use headless but with faster settings
         isHeadless: process.env.SCRAPER_HEADLESS !== "false", // Default to headless
         // Scroll delays (optimized for speed while maintaining reliability)
-        scrollDelayFast: 300,        // Fast scroll when actively collecting
-        scrollDelayNormal: 600,      // Normal scroll when making progress
-        scrollDelayStuck: 1500,      // When stuck, wait a bit longer
-        scrollDelayBottom: 2000,     // At bottom, wait for final responses
+        scrollDelayFast: parseInt(process.env.SCRAPER_SCROLL_DELAY_FAST || "300"),
+        scrollDelayNormal: parseInt(process.env.SCRAPER_SCROLL_DELAY_NORMAL || "600"),
+        scrollDelayStuck: parseInt(process.env.SCRAPER_SCROLL_DELAY_STUCK || "1500"),
+        scrollDelayBottom: parseInt(process.env.SCRAPER_SCROLL_DELAY_BOTTOM || "2000"),
         
         // Scroll limits
-        maxScrolls: 500,             // Reduced from 1000 - we should get results faster
-        maxNoProgress: 15,          // Reduced from 25 - more responsive
+        maxScrolls: parseInt(process.env.SCRAPER_MAX_SCROLLS || "500"),
+        maxNoProgress: parseInt(process.env.SCRAPER_MAX_NO_PROGRESS || "15"),
         
         // Enable parallel processing
-        enableParallel: true,
-        parallelExtractionDelay: 50, // Extract DOM comments during scroll delays
+        enableParallel: process.env.SCRAPER_ENABLE_PARALLEL !== "false",
+        parallelExtractionDelay: parseInt(process.env.SCRAPER_PARALLEL_DELAY || "50"),
     };
 
     constructor() {

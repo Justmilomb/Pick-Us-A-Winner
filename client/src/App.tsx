@@ -24,8 +24,8 @@ function Router() {
       <Route path="/tool" component={GiveawayTool} />
       <Route path="/analytics" component={AnalyticsPage} />
       <Route path="/schedule/:token" component={SchedulePage} />
-      {/* <Route path="/login" component={LoginPage} />
-      <Route path="/register" component={RegisterPage} /> */}
+      <Route path="/login" component={LoginPage} />
+      <Route path="/register" component={RegisterPage} />
       <Route path="/coming-soon" component={ComingSoon} />
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/terms" component={TermsOfService} />
