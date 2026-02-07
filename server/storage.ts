@@ -12,7 +12,7 @@ export interface IStorage {
   // Giveaway methods
   createGiveaway(giveaway: InsertGiveaway): Promise<Giveaway>;
   getPendingGiveaways(): Promise<Giveaway[]>;
-  updateGiveawayStatus(id: string, status: string, winners?: any): Promise<void>;
+  updateGiveawayStatus(id: string, status: "pending" | "completed" | "failed", winners?: any): Promise<void>;
   getUserGiveaways(userId: string): Promise<Giveaway[]>;
   getAllGiveaways(): Promise<Giveaway[]>;
   getGiveawayByToken(token: string): Promise<Giveaway | undefined>;
@@ -83,6 +83,7 @@ export class MemStorage implements IStorage {
     const user: User = {
       ...insertUser,
       id,
+      username: null,
       createdAt: new Date()
     };
     this.users.set(id, user);
@@ -98,7 +99,7 @@ export class MemStorage implements IStorage {
       id,
       createdAt: new Date(),
       winners: null,
-      status: insertGiveaway.status || "pending",
+      status: (insertGiveaway.status as any) || "pending",
       accessToken: accessToken as any
     };
     this.giveaways.set(id, giveaway);
@@ -113,7 +114,7 @@ export class MemStorage implements IStorage {
     );
   }
 
-  async updateGiveawayStatus(id: string, status: string, winners?: any): Promise<void> {
+  async updateGiveawayStatus(id: string, status: "pending" | "completed" | "failed", winners?: any): Promise<void> {
     const giveaway = this.giveaways.get(id);
     if (giveaway) {
       giveaway.status = status;

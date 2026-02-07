@@ -1,4 +1,4 @@
-import { Browser, Page, Cookie } from "puppeteer";
+import { Browser, Page, Cookie, ElementHandle } from "puppeteer";
 import { log } from "../log";
 import * as fs from "fs";
 import * as path from "path";
@@ -187,21 +187,21 @@ export class SessionManager {
             }
             
             // Find username input using multiple selectors
-            let usernameInput = await page.$('input[name="username"]');
+            let usernameInput = await page.$('input[name="username"]') as ElementHandle<HTMLInputElement> | null;
             if (!usernameInput) {
-                usernameInput = await page.$('input[aria-label*="username" i]');
+                usernameInput = await page.$('input[aria-label*="username" i]') as ElementHandle<HTMLInputElement> | null;
             }
             if (!usernameInput) {
-                usernameInput = await page.$('input[aria-label*="phone" i]');
+                usernameInput = await page.$('input[aria-label*="phone" i]') as ElementHandle<HTMLInputElement> | null;
             }
             if (!usernameInput) {
                 throw new Error("Could not find username input field");
             }
 
             // Find password input
-            let passwordInput = await page.$('input[name="password"]');
+            let passwordInput = await page.$('input[name="password"]') as ElementHandle<HTMLInputElement> | null;
             if (!passwordInput) {
-                passwordInput = await page.$('input[type="password"]');
+                passwordInput = await page.$('input[type="password"]') as ElementHandle<HTMLInputElement> | null;
             }
             if (!passwordInput) {
                 throw new Error("Could not find password input field");
@@ -213,12 +213,17 @@ export class SessionManager {
             await passwordInput.type(password, { delay: 100 });
             
             // Find and click login button
-            let loginButton = await page.$('button[type="submit"]');
+            let loginButton = await page.$('button[type="submit"]') as ElementHandle<HTMLButtonElement> | null;
             if (!loginButton) {
-                loginButton = await page.$('button:has-text("Log in")');
-            }
-            if (!loginButton) {
-                loginButton = await page.$('button:has-text("Log In")');
+                // Use XPath or evaluate for text content search
+                const buttons = await page.$$('button');
+                for (const btn of buttons) {
+                    const text = await page.evaluate(el => el.textContent, btn);
+                    if (text && (text.includes('Log in') || text.includes('Log In'))) {
+                        loginButton = btn as ElementHandle<HTMLButtonElement>;
+                        break;
+                    }
+                }
             }
             if (!loginButton) {
                 throw new Error("Could not find login button");

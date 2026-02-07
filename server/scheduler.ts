@@ -43,14 +43,14 @@ async function processGiveaway(giveaway: any) {
 
             // Keyword Filter
             if (config.keyword) {
-                if (!entry.comment || !entry.comment.toLowerCase().includes(config.keyword.toLowerCase())) {
+                if (!entry.text || !entry.text.toLowerCase().includes(config.keyword.toLowerCase())) {
                     continue;
                 }
             }
 
             // Mentions Filter
             if (config.minMentions > 0) {
-                const mentionCount = (entry.comment?.match(/@/g) || []).length;
+                const mentionCount = (entry.text?.match(/@/g) || []).length;
                 if (mentionCount < config.minMentions) {
                     continue;
                 }
@@ -75,7 +75,7 @@ async function processGiveaway(giveaway: any) {
             // Weighted selection based on mention count
             const weightedPool: any[] = [];
             validCandidates.forEach((entry: any) => {
-                const mentionCount = (entry.comment?.match(/@/g) || []).length;
+                const mentionCount = (entry.text?.match(/@/g) || []).length;
                 // Base entry + 1 extra entry per mention beyond the minimum
                 const entries = 1 + Math.max(0, mentionCount - (config.minMentions || 0));
                 for (let i = 0; i < entries; i++) {

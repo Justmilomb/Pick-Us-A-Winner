@@ -14,13 +14,32 @@ export class InstagramScraper {
     private proxyManager: ProxyManager;
     private sessionManager: SessionManager;
 
+    // Configuration
+    private config = {
+        // Development mode: use headless but with faster settings
+        isHeadless: process.env.SCRAPER_HEADLESS !== "false", // Default to headless
+        // Scroll delays (optimized for speed while maintaining reliability)
+        scrollDelayFast: 300,        // Fast scroll when actively collecting
+        scrollDelayNormal: 600,      // Normal scroll when making progress
+        scrollDelayStuck: 1500,      // When stuck, wait a bit longer
+        scrollDelayBottom: 2000,     // At bottom, wait for final responses
+        
+        // Scroll limits
+        maxScrolls: 500,             // Reduced from 1000 - we should get results faster
+        maxNoProgress: 15,          // Reduced from 25 - more responsive
+        
+        // Enable parallel processing
+        enableParallel: true,
+        parallelExtractionDelay: 50, // Extract DOM comments during scroll delays
+    };
+
     constructor() {
         this.proxyManager = new ProxyManager();
         this.sessionManager = new SessionManager();
     }
 
     /**
-     * Launch browser with proxy if available
+     * Launch browser with optimized settings
      */
     private async launchBrowser(): Promise<Browser> {
         const args = [
@@ -31,6 +50,14 @@ export class InstagramScraper {
             "--disable-gpu",
             "--window-size=1366,768",
             "--disable-blink-features=AutomationControlled",
+            // Performance optimizations
+            "--disable-extensions",
+            "--disable-default-apps",
+            "--disable-sync",
+            "--no-first-run",
+            "--metrics-recording-only",
+            "--mute-audio",
+            "--no-zygote",
         ];
 
         const proxy = this.proxyManager.getNextProxy();
@@ -39,14 +66,13 @@ export class InstagramScraper {
             log(`Using proxy: ${proxy.host}:${proxy.port}`, "scraper");
         }
 
-        // Set headless to false to see the browser (for debugging)
-        // Set SCRAPER_HEADLESS=true in .env to hide the browser (for production)
-        const isHeadless = process.env.SCRAPER_HEADLESS === "true";
-        log(`Launching browser (headless: ${isHeadless})...`, "scraper");
+        log(`Launching browser (headless: ${this.config.isHeadless})...`, "scraper");
         const browser = await puppeteer.launch({
-            headless: isHeadless,
+            headless: this.config.isHeadless,
             args,
             defaultViewport: { width: 1366, height: 768 },
+            // Disable loading of unnecessary resources for speed
+            ignoreHTTPSErrors: true,
         });
 
         return browser;
@@ -80,81 +106,89 @@ export class InstagramScraper {
     }
 
     /**
-     * Wait for a random amount of time (human-like behavior)
+     * Wait for a random amount of time (human-like behavior) - optimized
      */
-    private async randomDelay(min: number = 1000, max: number = 3000): Promise<void> {
+    private async randomDelay(min: number = 300, max: number = 800): Promise<void> {
         const delay = Math.floor(Math.random() * (max - min + 1)) + min;
         await new Promise(resolve => setTimeout(resolve, delay));
     }
 
     /**
-     * CRITICAL FIX 1: Enhanced button clicking for loading comments
+     * FIXED: Enhanced button clicking for loading comments
      * This handles more variations of Instagram's comment loading buttons
      */
     private async clickLoadMoreButtons(page: Page): Promise<number> {
         const clicked = await page.evaluate(() => {
-            const elements = Array.from(document.querySelectorAll('span, button, div, a, svg'));
+            const elements = Array.from(document.querySelectorAll('span, button, div, a, svg, article'));
             let clickedCount = 0;
             
             for (const el of elements) {
-                const text = (el.textContent || '').trim();
-                const ariaLabel = el.getAttribute('aria-label') || '';
-                const className = el.className || '';
-                
-                // Pattern 1: "View all X comments" with comma separators (e.g., "View all 2,000 comments")
-                if (/^View all\s+[\d,]+\s+comments?$/i.test(text)) {
-                    (el as HTMLElement).click();
-                    clickedCount++;
-                }
-                
-                // Pattern 2: "View X replies" or "View all X replies"
-                else if (/^View (all\s+)?[\d,]+\s+replies?$/i.test(text)) {
-                    (el as HTMLElement).click();
-                    clickedCount++;
-                }
-                
-                // Pattern 3: "View replies" without number
-                else if (/^View replies?$/i.test(text)) {
-                    (el as HTMLElement).click();
-                    clickedCount++;
-                }
-                
-                // Pattern 4: Text starting with "——" (Instagram's visual ellipsis for collapsed replies)
-                else if (/^——/i.test(text)) {
-                    (el as HTMLElement).click();
-                    clickedCount++;
-                }
-                
-                // Pattern 5: Any element with text "Load more" (case insensitive)
-                else if (/load more/i.test(text) || /show more/i.test(text)) {
-                    (el as HTMLElement).click();
-                    clickedCount++;
-                }
-                
-                // Pattern 6: Plus button with "Load more" in aria-label
-                else if ((text === '+' || text.trim() === '+') &&
-                    (ariaLabel.includes('Load more') || ariaLabel.includes('more comment'))) {
-                    (el as HTMLElement).click();
-                    clickedCount++;
-                }
-                
-                // Pattern 7: Instagram's specific class for view all buttons
-                else if (typeof className === 'string' && (className.includes('_acan') || className.includes('_acao'))) {
-                    // Check if nearby text indicates comment loading
-                    const parent = el.parentElement;
-                    if (parent && /view|comment|reply|load/i.test(parent.textContent || '')) {
+                try {
+                    const text = (el.textContent || '').trim();
+                    const ariaLabel = el.getAttribute('aria-label') || '';
+                    const className = el.className || '';
+                    const tagName = el.tagName.toLowerCase();
+                    
+                    // Only click interactive elements
+                    if (!['button', 'a', 'div', 'span'].includes(tagName)) continue;
+                    if (el.getAttribute('role') === 'img') continue;
+                    
+                    // Pattern 1: "View all X comments" with comma separators
+                    if (/^View all\s+[\d,]+\s+comments?$/i.test(text)) {
                         (el as HTMLElement).click();
                         clickedCount++;
                     }
-                }
-                
-                // Pattern 8: Buttons whose parent contains comment loading text
-                else {
-                    const parent = el.parentElement;
-                    if (parent && /^view (all\s+)?[\d,]*(comments?|replies?)$/i.test(parent.textContent || '')) {
+                    
+                    // Pattern 2: "View X replies" or "View all X replies"
+                    else if (/^View (all\s+)?[\d,]+\s+replies?$/i.test(text)) {
                         (el as HTMLElement).click();
                         clickedCount++;
                     }
+                    
+                    // Pattern 3: "View replies" without number
+                    else if (/^View replies?$/i.test(text)) {
+                        (el as HTMLElement).click();
+                        clickedCount++;
+                    }
+                    
+                    // Pattern 4: Text starting with "——" (Instagram's visual ellipsis)
+                    else if (/^——/i.test(text) && ['button', 'a'].includes(tagName)) {
+                        (el as HTMLElement).click();
+                        clickedCount++;
+                    }
+                    
+                    // Pattern 5: "Load more" or "Show more" - ONLY in buttons/links
+                    else if (/load more/i.test(text) || /show more/i.test(text)) {
+                        if (['button', 'a'].includes(tagName)) {
+                            (el as HTMLElement).click();
+                            clickedCount++;
+                        }
+                    }
+                    
+                    // Pattern 6: Plus button with specific aria-label
+                    else if ((text === '+' || text.trim() === '+') && tagName === 'button') {
+                        if (ariaLabel.includes('Load more') || ariaLabel.includes('more comment') ||
+                            ariaLabel.includes('Load more comments')) {
+                            (el as HTMLElement).click();
+                            clickedCount++;
+                        }
+                    }
+                    
+                    // Pattern 7: Instagram's specific class patterns (CAUTIOUS clicking)
+                    else if (typeof className === 'string') {
+                        // Instagram's comment loading button classes
+                        const hasCommentClass = className.includes('_acan') || className.includes('_acao');
+                        const hasLoadClass = /_a9\-\-|_a9_0/i.test(className);
+                        
+                        if ((hasCommentClass || hasLoadClass) && tagName === 'button' && 
+                            (ariaLabel.includes('comment') || ariaLabel.includes('reply') ||
+                             text.includes('comment') || text.includes('reply'))) {
+                            (el as HTMLElement).click();
+                            clickedCount++;
+                        }
+                    }
+                } catch (e) {
+                    // Ignore click errors - element might not be clickable
                 }
             }
             
@@ -162,48 +196,46 @@ export class InstagramScraper {
         });
 
         if (clicked > 0) {
-            log(`Clicked ${clicked} comment loading button(s)`, "scraper");
-            // Wait longer after clicking load more to allow Instagram to fetch data
-            await this.randomDelay(2000, 3500);
+            log(`✓ Clicked ${clicked} comment loading button(s)`, "scraper");
+            // Shorter wait after clicking
+            await this.randomDelay(800, 1500);
         }
 
         return clicked;
     }
 
     /**
-     * CRITICAL FIX 2: Improved scroll logic with better bottom detection and patience
+     * FIXED: Optimized scroll logic with much faster performance
      * 
      * Key improvements:
-     * - Increased maxScrolls to 1000 (was 200 in fast version)
-     * - Increased noProgress threshold to 25 (was 10)
-     * - Better scrollable element detection
-     * - Adjustable scroll distance based on viewport
-     * - More reliable bottom detection
+     * - Reduced all delays significantly
+     * - Parallel DOM extraction during scroll delays
+     * - Better early exit conditions
+     * - More adaptive scrolling based on progress
      */
     private async scrollCommentsSection(
         page: Page,
         capturedComments: Map<string, InstagramComment>,
         lastApiResponseTime: { value: number },
-        maxScrolls: number = 1000,
+        maxScrolls: number = this.config.maxScrolls,
         targetCommentCount: number = 2000
     ): Promise<void> {
         let noProgressCount = 0;
         let lastCommentCount = capturedComments.size;
         let consecutiveZeroScrolls = 0;
-        const maxNoProgress = 25; // Was 10 - give Instagram more time to load batches
-        const maxZeroScrolls = 50; // Completely stuck after this many zero scrolls
+        let currentDelayMode = 'fast'; // 'fast', 'normal', 'stuck', 'bottom'
+        const maxNoProgress = this.config.maxNoProgress;
+        const maxZeroScrolls = 15; // Reduced from 50
         
-        log(`Starting scroll loop: target=${targetCommentCount}, maxScrolls=${maxScrolls}, maxNoProgress=${maxNoProgress}`, "scraper");
+        log(`Starting scroll loop: target=${targetCommentCount}, maxScrolls=${maxScrolls}`, "scraper");
 
         for (let i = 0; i < maxScrolls; i++) {
-            // Periodically click load more buttons (every 10 iterations)
-            if (i % 10 === 0) {
+            // Click load more buttons periodically (less frequently - every 20 iterations)
+            if (i % 20 === 0 && i > 0) {
                 await this.clickLoadMoreButtons(page);
             }
 
-            // CRITICAL FIX 3: Better scroll distance calculation
-            // Instagram loads comments in batches, so we need to scroll enough to trigger loading
-            // but not so much that we skip over comments
+            // Optimized scroll distance calculation
             const scrollResult = await page.evaluate(() => {
                 let bestScrollAmount = 0;
                 let bestElement: HTMLElement | null = null;
@@ -211,7 +243,6 @@ export class InstagramScraper {
                 let atBottom = false;
 
                 // Strategy 1: Look for the main comments container
-                // Instagram's comments are typically in a scrollable div within the dialog
                 const allElements = Array.from(document.querySelectorAll('div, section, ul, article'));
                 
                 for (const el of allElements) {
@@ -225,18 +256,16 @@ export class InstagramScraper {
                     if (!canScroll) continue;
                     
                     // Check if this element contains comments
-                    // Look for profile links or username patterns
                     const hasProfileLinks = htmlEl.querySelectorAll('a[href^="/"][href$="/"]').length > 3;
                     const hasUsernamePattern = /@[a-zA-Z0-9._]+/.test(htmlEl.textContent || '');
                     
                     if (hasProfileLinks || hasUsernamePattern) {
-                        // This looks like a comments container!
                         foundScrollable = true;
                         
-                        // Calculate optimal scroll amount
+                        // Larger scroll amount for speed
                         const scrollAmount = Math.min(
-                            Math.max(htmlEl.clientHeight * 0.6, 400), // At least 400px or 60% of viewport
-                            htmlEl.scrollHeight - htmlEl.scrollTop - htmlEl.clientHeight // Don't overshoot
+                            Math.max(htmlEl.clientHeight * 0.9, 600),
+                            htmlEl.scrollHeight - htmlEl.scrollTop - htmlEl.clientHeight
                         );
                         
                         if (scrollAmount > bestScrollAmount) {
@@ -246,14 +275,14 @@ export class InstagramScraper {
                     }
                 }
 
-                // Strategy 2: Document body scroll (for mobile/desktop views)
+                // Strategy 2: Document body scroll fallback
                 if (bestScrollAmount === 0) {
                     const htmlEl = document.body;
                     const canScroll = htmlEl.scrollHeight > htmlEl.clientHeight + 100;
                     if (canScroll && htmlEl.textContent && htmlEl.textContent.length > 1000) {
                         foundScrollable = true;
                         bestScrollAmount = Math.min(
-                            window.innerHeight * 0.7,
+                            window.innerHeight * 0.8,
                             htmlEl.scrollHeight - htmlEl.scrollTop - htmlEl.clientHeight
                         );
                         bestElement = htmlEl;
@@ -268,7 +297,6 @@ export class InstagramScraper {
                     const after = bestElement.scrollTop;
                     actuallyScrolled = after - before;
                     
-                    // Check if at bottom
                     atBottom = (after + bestElement.clientHeight) >= (bestElement.scrollHeight - 20);
                 }
 
@@ -282,45 +310,86 @@ export class InstagramScraper {
 
             if (!scrollResult.foundScrollable) {
                 log("WARNING: No scrollable comments container found!", "scraper");
-                // Try to scroll the page anyway as fallback
+                // Quick fallback scroll
                 await page.evaluate(() => {
-                    window.scrollBy(0, 500);
+                    window.scrollBy(0, 300);
                 });
-                await this.randomDelay(1000, 1500);
+                await this.randomDelay(300, 600);
                 continue;
             }
 
             // Track consecutive zero scrolls
             if (!scrollResult.scrolled || scrollResult.scrollAmount === 0) {
                 consecutiveZeroScrolls++;
+                currentDelayMode = 'stuck';
             } else {
                 consecutiveZeroScrolls = 0;
+                currentDelayMode = 'fast';
             }
 
-            // Log progress periodically
-            if (i % 20 === 0 || scrollResult.atBottom) {
-                log(`Scroll ${i + 1}/${maxScrolls}: +${scrollResult.scrollAmount}px, ` +
-                    `${capturedComments.size} comments, atBottom=${scrollResult.atBottom}`, "scraper");
-            }
-
-            // CRITICAL FIX 4: Adaptive delay based on scroll state
-            // When we're actively scrolling, use shorter delays
-            // When stuck or at bottom, use longer delays to allow API responses
+            // Determine delay based on state
+            let delayMin: number, delayMax: number;
+            
             if (scrollResult.atBottom || consecutiveZeroScrolls > 5) {
-                // Longer delay when at bottom or stuck - give API time to respond
-                await this.randomDelay(2000, 4000);
+                delayMin = this.config.scrollDelayBottom - 500;
+                delayMax = this.config.scrollDelayBottom;
+                currentDelayMode = 'bottom';
+            } else if (currentDelayMode === 'stuck') {
+                delayMin = this.config.scrollDelayStuck - 500;
+                delayMax = this.config.scrollDelayStuck;
             } else if (scrollResult.scrolled) {
-                // Normal delay when scrolling successfully
-                await this.randomDelay(800, 1500); // Increased from 300-500ms
+                // Normal scrolling - use fast delay
+                if (capturedComments.size > lastCommentCount) {
+                    delayMin = this.config.scrollDelayFast;
+                    delayMax = this.config.scrollDelayFast + 200;
+                } else {
+                    delayMin = this.config.scrollDelayNormal;
+                    delayMax = this.config.scrollDelayNormal + 300;
+                }
             } else {
-                // Short delay when scroll had no effect (will likely exit soon)
-                await this.randomDelay(500, 1000);
+                delayMin = 300;
+                delayMax = 600;
+            }
+
+            // Parallel: Extract DOM comments while waiting for scroll
+            const scrollPromise = this.randomDelay(delayMin, delayMax);
+            let extractionPromise: Promise<void> | null = null;
+            
+            if (this.config.enableParallel) {
+                extractionPromise = (async () => {
+                    try {
+                        await new Promise(r => setTimeout(r, this.config.parallelExtractionDelay));
+                        const domComments = await this.extractComments(page);
+                        let newCount = 0;
+                        for (const comment of domComments) {
+                            const key = `${comment.username}:${comment.text.substring(0, 50)}`;
+                            if (!capturedComments.has(key)) {
+                                capturedComments.set(key, comment);
+                                newCount++;
+                            }
+                        }
+                        if (newCount > 0) {
+                            lastApiResponseTime.value = Date.now();
+                        }
+                    } catch (e) {
+                        // Ignore extraction errors during scroll
+                    }
+                })();
+                await Promise.all([scrollPromise, extractionPromise]);
+            } else {
+                await scrollPromise;
+            }
+
+            // Log progress periodically (less frequently)
+            if (i % 25 === 0 || scrollResult.atBottom) {
+                log(`Scroll ${i + 1}/${maxScrolls}: +${scrollResult.scrollAmount}px, ` +
+                    `${capturedComments.size} comments, mode=${currentDelayMode}`, "scraper");
             }
 
             // Check if we've reached the target
             const currentCount = capturedComments.size;
             if (currentCount >= targetCommentCount) {
-                log(`Reached target comment count: ${currentCount}`, "scraper");
+                log(`✓ Reached target comment count: ${currentCount}`, "scraper");
                 break;
             }
 
@@ -329,11 +398,9 @@ export class InstagramScraper {
                 noProgressCount = 0;
                 lastCommentCount = currentCount;
                 
-                if (currentCount % 100 === 0) {
-                    const percentageValue = currentCount / targetCommentCount;
-                    const percentageDisplay = Math.round(percentageValue * 100 * 10) / 10;
-                    const progressMsg = `Progress: ${currentCount} comments captured (${percentageDisplay.toFixed(1)}%)`;
-                    log(progressMsg, "scraper");
+                if (currentCount % 250 === 0) {
+                    const percentage = ((currentCount / targetCommentCount) * 100).toFixed(1);
+                    log(`Progress: ${currentCount} comments (${percentage}%)`, "scraper");
                 }
             } else {
                 noProgressCount++;
@@ -353,7 +420,6 @@ export class InstagramScraper {
             // Check if at bottom for several consecutive iterations
             if (scrollResult.atBottom) {
                 log(`At bottom of comments (iteration ${i + 1})`, "scraper");
-                // Give it a few more iterations in case more comments load
                 if (capturedComments.size > 0 && noProgressCount >= 5) {
                     log(`Bottom confirmed with no progress. Stopping at ${currentCount} comments.`, "scraper");
                     break;
@@ -365,48 +431,22 @@ export class InstagramScraper {
     }
 
     /**
-     * CRITICAL FIX 5: Enhanced comment extraction with multiple strategies
+     * FIXED: Enhanced comment extraction with better error handling
      */
     private async extractComments(page: Page): Promise<InstagramComment[]> {
-        const debugInfo = await page.evaluate(() => {
-            const info = {
-                url: window.location.href,
-                totalDivs: document.querySelectorAll('div').length,
-                totalLinks: document.querySelectorAll('a').length,
-                totalSpans: document.querySelectorAll('span').length,
-                scrollableElements: 0,
-                bodyTextSample: document.body.innerText.substring(0, 500),
-            };
-
-            // Count scrollable elements
-            const allElements = document.querySelectorAll('div, section, article');
-            for (const el of allElements) {
-                const style = window.getComputedStyle(el as HTMLElement);
-                if (style.overflowY === 'scroll' || style.overflowY === 'auto') {
-                    if ((el as HTMLElement).scrollHeight > (el as HTMLElement).clientHeight) {
-                        info.scrollableElements++;
-                    }
-                }
-            }
-
-            return info;
-        });
-
-        log(`DOM debug: ${debugInfo.totalDivs} divs, ${debugInfo.totalLinks} links, ${debugInfo.scrollableElements} scrollable elements`, "scraper");
-        log(`URL: ${debugInfo.url}`, "scraper");
-
-        // Strategy 1: DOM-based extraction (parsing the rendered page structure)
         const domComments = await page.evaluate(() => {
             const results = new Map<string, any>();
             const seenKeys = new Set<string>();
 
-            // Helper function to generate unique key
+            // SAFE: Generate unique key function (no __name variable)
             const generateKey = (username: string, text: string): string => {
                 return `${username.toLowerCase()}:${text.substring(0, 50).toLowerCase()}`;
             };
 
-            // Strategy 1a: Look for Instagram's comment items in the DOM
-            // Instagram typically structures comments as: li/div > a (username) + span (text)
+            const usernamePattern = /^[a-zA-Z0-9._]{1,30}$/;
+            const timestampPattern = /^(Edited\s*•?\s*)?\d+\s*[hdwm]$/i;
+
+            // Strategy 1: DOM-based extraction from comment items
             const commentItems = document.querySelectorAll('ul li, article div');
             
             for (const item of commentItems) {
@@ -415,43 +455,34 @@ export class InstagramScraper {
                 if (!usernameLink) continue;
 
                 const href = usernameLink.getAttribute('href') || '';
-                // Must be a profile link (not a post link)
+                // Must be a profile link
                 if (href.includes('/p/') || href.includes('/reel/') || href.includes('/tv/')) continue;
 
-                // Extract username
                 let username = href.replace(/^\//, '').replace(/\/$/, '').split('/')[0];
-                if (!username || username.length > 30 || !/^[a-zA-Z0-9._]+$/.test(username)) continue;
+                if (!username || username.length > 30 || !usernamePattern.test(username)) continue;
 
                 // Look for comment text near the username
-                // It could be in a span, div, or text node
                 let text = '';
                 const nearbyElements = Array.from(item.querySelectorAll('span, div'));
                 
                 for (const el of nearbyElements) {
                     const elText = (el.textContent || '').trim();
-                    // Skip very short text (likely a timestamp or count)
                     if (elText.length < 3) continue;
-                    // Skip usernames
-                    if (/^[a-zA-Z0-9._]{1,30}$/.test(elText)) continue;
-                    // Skip timestamps
-                    if (/^(Edited\s*•?\s*)?\d+\s*[hdwm]$/i.test(elText)) continue;
-                    // Skip "X likes" text
+                    if (usernamePattern.test(elText)) continue;
+                    if (timestampPattern.test(elText)) continue;
                     if (/^\d+\s*likes?$/i.test(elText)) continue;
-                    // Skip button labels
                     if (/^(Reply|View|Load|Like|Save|Share|More)$/i.test(elText)) continue;
                     
-                    // Found comment text!
                     text = elText;
                     break;
                 }
 
                 if (!text) continue;
 
-                // Check if we've seen this comment
                 const key = generateKey(username, text);
                 if (seenKeys.has(key)) continue;
 
-                // Get avatar if available (img before username link)
+                // Get avatar if available
                 let avatar: string | undefined;
                 const parent = usernameLink.parentElement;
                 if (parent) {
@@ -477,12 +508,9 @@ export class InstagramScraper {
                 results.set(username, comment);
             }
 
-            // Strategy 1b: Alternative approach - parse from body text
-            // This catches comments that might be in unusual DOM structures
+            // Strategy 2: Parse from body text
             const bodyText = document.body.innerText || '';
             const lines = bodyText.split('\n');
-            const usernamePattern = /^[a-zA-Z0-9._]{1,30}$/;
-            const timestampPattern = /^(Edited\s*•?\s*)?\d+\s*[hdwm]$/i;
             
             let currentUsername: string | null = null;
             let currentText: string[] = [];
@@ -491,13 +519,11 @@ export class InstagramScraper {
                 const line = lines[i].trim();
                 if (!line) continue;
                 
-                // Check if this is a username
                 if (usernamePattern.test(line) && i + 1 < lines.length) {
                     const nextLine = lines[i + 1].trim();
                     
-                    // Check if next line is a timestamp
                     if (timestampPattern.test(nextLine)) {
-                        // Save previous comment if exists
+                        // Save previous comment
                         if (currentUsername && currentText.length > 0) {
                             const text = currentText.join(' ').trim();
                             const key = generateKey(currentUsername, text);
@@ -513,23 +539,17 @@ export class InstagramScraper {
                             }
                         }
                         
-                        // Start new comment
                         currentUsername = line;
                         currentText = [];
-                        i++; // Skip timestamp line
+                        i++;
                         continue;
                     }
                 }
                 
-                // Collect text for current comment
                 if (currentUsername) {
-                    // Skip timestamps
                     if (timestampPattern.test(line)) continue;
-                    // Skip "X likes"
                     if (/^\d+\s*likes?$/i.test(line)) continue;
-                    // Skip "Reply"
                     if (/^Reply$/i.test(line)) {
-                        // End of comment
                         if (currentText.length > 0) {
                             const text = currentText.join(' ').trim();
                             const key = generateKey(currentUsername, text);
@@ -548,11 +568,8 @@ export class InstagramScraper {
                         currentText = [];
                         continue;
                     }
-                    // Skip "View replies" etc.
                     if (/^View/i.test(line)) continue;
-                    // Skip "See translation"
                     if (/^See translation$/i.test(line)) continue;
-                    // Skip empty lines
                     if (!line) continue;
                     
                     currentText.push(line);
@@ -597,8 +614,7 @@ export class InstagramScraper {
     }
 
     /**
-     * CRITICAL FIX 6: Enhanced API response extraction
-     * Handles more GraphQL response structures
+     * FIXED: enhanced API response extraction with more patterns
      */
     private extractCommentsFromApiResponse(data: any): InstagramComment[] {
         const comments: InstagramComment[] = [];
@@ -616,7 +632,7 @@ export class InstagramScraper {
             
             // Pattern 1: Direct comment object with owner and text
             if (obj.owner && obj.text && typeof obj.owner === 'object') {
-                const username = obj.owner.username || obj.owner?.username || obj.user?.username;
+                const username = obj.owner.username || obj.user?.username;
                 if (username && obj.text) {
                     comments.push({
                         id: obj.id || obj.pk || `${username}_${Date.now()}_${Math.random().toString(36).substring(7)}`,
@@ -624,8 +640,7 @@ export class InstagramScraper {
                         text: obj.text,
                         timestamp: obj.created_at || obj.timestamp || new Date().toISOString(),
                         likes: obj.like_count || obj.likes_count || 0,
-                        avatar: obj.owner?.profile_pic_url || obj.owner?.profile_picture_url || 
-                                obj.user?.profile_pic_url || undefined,
+                        avatar: obj.owner?.profile_pic_url || obj.user?.profile_pic_url || undefined,
                     });
                 }
             }
@@ -647,7 +662,6 @@ export class InstagramScraper {
                             });
                         }
                         
-                        // Recursively check for threaded replies
                         if (node.edge_threaded_comments?.edges) {
                             findComments(node, path + '.edge_threaded_comments');
                         }
@@ -655,44 +669,23 @@ export class InstagramScraper {
                 }
             }
             
-            // Pattern 3: Comments array directly
+            // Pattern 3-6: Common API structures
             if (obj.comments && Array.isArray(obj.comments)) {
                 findComments(obj.comments, path + '.comments');
             }
-            
-            // Pattern 4: Items array (common in API responses)
             if (obj.items && Array.isArray(obj.items)) {
                 findComments(obj.items, path + '.items');
             }
-            
-            // Pattern 5: Data wrapper
             if (obj.data) {
                 findComments(obj.data, path + '.data');
             }
-            
-            // Pattern 6: Page info with edges
             if (obj.page_info?.edges) {
                 findComments(obj.page_info.edges, path + '.page_info.edges');
             }
 
-            // Pattern 7: Recursive search for text/owner pairs
-            // This catches comments in unusual structures
-            if (obj.text && typeof obj.text === 'string' && obj.text.length > 2) {
-                // Look for username nearby in the object tree
-                const parentPath = path.split('.');
-                for (let i = 0; i < parentPath.length; i++) {
-                    const key = parentPath.slice(-i - 1)[0];
-                    if (key === 'owner' || key === 'user') {
-                        // Found username field, go back up to get username value
-                        // We can't easily go back up, so skip this pattern for now
-                        break;
-                    }
-                }
-            }
-            
             // Recursively check all properties
             for (const key in obj) {
-                if (obj.hasOwnProperty(key) && key !== '__proto__') {
+                if (obj.hasOwnProperty(key) && key !== '__proto__' && key !== 'constructor') {
                     findComments(obj[key], `${path}.${key}`);
                 }
             }
@@ -713,16 +706,16 @@ export class InstagramScraper {
     }
 
     /**
-     * CRITICAL FIX 7: Main fetch function with improved logic
+     * FIXED: Main fetch function with optimized performance
      * 
      * Key improvements:
-     * - Better initial button clicking
-    * - Enhanced network interception
-     * - Hybrid scrolling with patience
-     * - DOM extraction as fallback
+     * - Parallel DOM extraction during scroll
+     * - Faster overall operation
+     * - Better error handling
      */
     async fetchComments(postUrl: string, targetCommentCount: number = 2000): Promise<FetchCommentsResult> {
         log(`Starting comment scraper for: ${postUrl} (target: ${targetCommentCount})`, "scraper");
+        const startTime = Date.now();
 
         try {
             // Launch browser
@@ -734,7 +727,7 @@ export class InstagramScraper {
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             );
 
-            // Enable request interception for network debugging
+            // Enable request interception for performance
             await page.setRequestInterception(true);
             page.on('request', (req) => {
                 // Block images and unnecessary resources for speed
@@ -753,19 +746,17 @@ export class InstagramScraper {
                 throw new Error("Failed to login to Instagram");
             }
 
-            // Set up network interception to capture API responses
+            // Set up network interception for API responses
             const capturedComments = new Map<string, InstagramComment>();
             const lastApiResponseTime = { value: Date.now() };
-            const apiResponseLog: number[] = [];
             
             page.on('response', async (response) => {
                 const url = response.url();
                 const status = response.status();
                 
-                // Only log successful responses to avoid noise
                 if (status < 200 || status >= 400) return;
 
-                // Check if this is an Instagram API endpoint that might contain comments
+                // Check for Instagram API endpoints
                 const isInstagramApi = 
                     url.includes('graphql') || 
                     url.includes('/api/v1/') || 
@@ -786,7 +777,7 @@ export class InstagramScraper {
                     try {
                         data = JSON.parse(responseText);
                     } catch {
-                        return; // Not JSON, skip
+                        return;
                     }
                     
                     const comments = this.extractCommentsFromApiResponse(data);
@@ -805,71 +796,43 @@ export class InstagramScraper {
                     
                     if (newCount > 0) {
                         lastApiResponseTime.value = Date.now();
-                        apiResponseLog.push(Date.now());
-                        // Keep only last 100 timestamps
-                        if (apiResponseLog.length > 100) {
-                            apiResponseLog.shift();
-                        }
-                        
                         log(`API: +${newCount} comments (total: ${capturedComments.size})`, "scraper");
                     }
                 } catch (error) {
-                    // Silently ignore parsing errors - might be binary data or HTML
+                    // Silently ignore parsing errors
                 }
             });
 
             // Navigate to the post
             log(`Navigating to post: ${postUrl}`, "scraper");
             await page.goto(postUrl, { waitUntil: "networkidle2", timeout: 60000 });
-            await this.randomDelay(3000, 5000);
-
-            // CRITICAL FIX 8: Aggressive button clicking initially
-            // Try multiple times to find and click "View all comments"
-            log("Looking for 'View all comments' button...", "scraper");
-            let totalClicked = 0;
-            
-            // Attempt 1: Immediate click
-            let clicked = await this.clickLoadMoreButtons(page);
-            totalClicked += clicked;
-            
-            // Wait and attempt 2: After page settles
             await this.randomDelay(2000, 3000);
-            clicked = await this.clickLoadMoreButtons(page);
-            totalClicked += clicked;
-            
-            // Attempt 3: After scrolling a bit
-            await page.evaluate(() => {
-                window.scrollBy(0, 300);
-            });
-            await this.randomDelay(1500, 2500);
-            clicked = await this.clickLoadMoreButtons(page);
-            totalClicked += clicked;
 
-            log(`Total buttons clicked initially: ${totalClicked}`, "scraper");
+            // Initial button clicking
+            log("Looking for 'View all comments' buttons...", "scraper");
+            await this.clickLoadMoreButtons(page);
+            await this.randomDelay(1000, 1500);
+            await this.clickLoadMoreButtons(page);
 
-            // CRITICAL FIX 9: Hybrid approach - scroll and extract
-            // First, scroll to capture network responses
+            // Phase 1: Scroll to capture API responses (optimized)
             log("Phase 1: Scrolling to capture API responses...", "scraper");
-            await this.scrollCommentsSection(page, capturedComments, lastApiResponseTime, 1000, targetCommentCount);
+            await this.scrollCommentsSection(page, capturedComments, lastApiResponseTime, this.config.maxScrolls, targetCommentCount);
 
-            // Phase 2: Check if we got enough comments from API
+            // Phase 2: Check results and extract from DOM if needed
             const apiCommentCount = capturedComments.size;
             log(`API captured ${apiCommentCount} comments`, "scraper");
 
-            // If we didn't get enough, extract from DOM
             let domComments: InstagramComment[] = [];
             if (apiCommentCount < targetCommentCount) {
                 log("Phase 2: Extracting comments from DOM...", "scraper");
-                await this.randomDelay(2000, 3000);
+                await this.randomDelay(1000, 1500);
                 domComments = await this.extractComments(page);
                 log(`DOM extracted ${domComments.length} comments`, "scraper");
             }
 
-            // Merge API and DOM comments (DOM as fallback/new comments)
+            // Merge comments
             const allComments = Array.from(capturedComments.values());
-            const domOnly = new Set<string>(
-                Array.from(capturedComments.keys())
-            );
+            const domOnly = new Set<string>(Array.from(capturedComments.keys()));
 
             for (const domComment of domComments) {
                 const key = `${domComment.username}:${domComment.text.substring(0, 50)}`;
@@ -885,22 +848,18 @@ export class InstagramScraper {
                 const url = window.location.href;
                 const match = url.match(/\/(p|reel|tv)\/([A-Za-z0-9_-]+)/);
                 const id = match ? match[2] : undefined;
-
-                return {
-                    id,
-                };
+                return { id };
             });
 
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
             await page.close();
 
-            log(`Extraction complete. Total comments: ${comments.length} (API: ${apiCommentCount}, DOM: ${domComments.length})`, "scraper");
+            log(`✓ Extraction complete in ${elapsed}s. Total comments: ${comments.length} (API: ${apiCommentCount}, DOM: ${domComments.length})`, "scraper");
 
             return {
                 comments,
                 total: comments.length,
-                postInfo: postInfo.id ? {
-                    id: postInfo.id,
-                } : undefined,
+                postInfo: postInfo.id ? { id: postInfo.id } : undefined,
             };
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);

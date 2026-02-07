@@ -26,7 +26,7 @@ interface Entry {
   id: string;
   username: string;
   avatar?: string;
-  comment?: string;
+  comment: string;
   platform: "instagram";
   timestamp?: string;
   fraudScore?: number;
