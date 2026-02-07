@@ -1,0 +1,58 @@
+SECURITY SCAN REPORT: giveaway-engine
+Time: Saturday, February 7th, 2026
+
+EXECUTIVE SUMMARY
+The project contains CRITICAL security vulnerabilities, primarily regarding secret management and data exposure. Immediate action is required to prevent credential leakage and user data exposure.
+
+1. CRITICAL: SECRETS EXPOSURE
+   - Issue: The `.env` file containing real API keys and passwords is NOT in `.gitignore`.
+   - Risk: Committing this file will expose:
+     - Instagram Credentials (username/password)
+     - Apify API Token
+     - Gmail App Password (SMTP)
+     - Admin API Key
+   - Location: `D:\Coding\giveaway-engine\.env`
+   - Fix: Add `.env` to `.gitignore` immediately. Rotate all exposed keys if the repo has ever been pushed.
+
+2. CRITICAL: SENSITIVE DATA IN GIT
+   - Issue: Session files and debug screenshots are not ignored.
+   - Files exposed:
+     - `.instagram-session.json` (Contains valid session cookies/tokens)
+     - `login-debug.png`, `login-error.png` (May contain screenshots of credentials/PII)
+   - Fix: Add these files to `.gitignore` and remove them from git history.
+
+3. HARDCODED SECRETS & LOGGING
+   - Issue: `server/index.ts` logs `INSTAGRAM_USERNAME` and substrings of `APIFY_TOKEN`.
+   - Risk: Logs may be persisted or exposed.
+   - Fix: Redact sensitive data in logs.
+   - Issue: `ADMIN_API_KEY` is hardcoded in `.env` but also referenced in code. Ensure it's strong and rotated.
+
+4. DEPENDENCY VULNERABILITIES
+   - `puppeteer`: ^22.0.0 (Current is v24+). Update recommended.
+   - `express`: v5.0.1 (Good).
+   - `drizzle-orm`: v0.39.3 (Active).
+   - `nodemailer`: v7.0.13 (Good).
+   - Recommendation: Run `npm audit` to check for specific CVEs.
+
+5. AUTHENTICATION & SECURITY LOGIC
+   - Rate Limiting: Implemented (`server/security.ts`) with reasonable limits (100/15m global, 5/1h Instagram).
+   - Privacy: `security-data.json` stores IP addresses in plain text. Ensure this file is never served statically or committed.
+   - Admin Auth: Relies on a single `ADMIN_API_KEY` header. Consider a more robust auth method (OAuth/Session) for admin actions.
+
+6. INSTAGRAM SCRAPER SECURITY
+   - Puppeteer Launch Args: Uses `--no-sandbox`. This is often necessary for Docker/VPS but reduces isolation. Ensure the node process runs as a non-root user in production.
+   - Session Handling: `session-manager.ts` handles logic, but the session file itself is the risk (see point 2).
+
+RECOMMENDED ACTIONS
+1. [IMMEDIATE] Edit `.gitignore` to include:
+   .env
+   .instagram-session.json
+   security-data.json
+   *.png
+   *.log
+2. [IMMEDIATE] Rotate the exposed Instagram password, Apify token, and SMTP password.
+3. [HIGH] Remove sensitive files from git history if already pushed (`git filter-repo` or `BFG`).
+4. [MEDIUM] Update `puppeteer` to the latest version.
+5. [MEDIUM] Refactor logging in `server/index.ts` to strictly redact PII/Tokens.
+
+No immediate SQL injection vectors found (Drizzle ORM used correctly). Rate limiting is active.

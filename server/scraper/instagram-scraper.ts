@@ -17,7 +17,7 @@ export class InstagramScraper {
     // Configuration
     private config = {
         // Development mode: use headless but with faster settings
-        isHeadless: process.env.SCRAPER_HEADLESS !== "false", // Default to headless
+        isHeadless: process.env.SCRAPER_HEADLESS === "true", // Default to visible browser for debugging
         // Scroll delays (optimized for speed while maintaining reliability)
         scrollDelayFast: parseInt(process.env.SCRAPER_SCROLL_DELAY_FAST || "300"),
         scrollDelayNormal: parseInt(process.env.SCRAPER_SCROLL_DELAY_NORMAL || "600"),

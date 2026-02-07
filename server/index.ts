@@ -86,7 +86,7 @@ import { startScheduler } from "./scheduler";
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    console.error("Internal Server Error:", err);
+    log(`Internal Server Error: ${message}`, "error");
 
     if (res.headersSent) {
       return next(err);

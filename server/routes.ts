@@ -134,7 +134,7 @@ export async function registerRoutes(
         message: "Payment successful. You can now fetch comments."
       });
     } catch (error) {
-      console.error("Payment Error:", error);
+      log(`Payment Error: ${error}`, "error");
       return res.status(500).json({
         error: "Payment processing failed. Please try again."
       });
@@ -276,7 +276,7 @@ export async function registerRoutes(
           },
         });
       } catch (error) {
-        console.error("Instagram Comments API Error:", error);
+        log(`Instagram Comments API Error: ${error}`, "error");
         return res.status(500).json({
           error: error instanceof Error ? error.message : "Failed to fetch comments"
         });
@@ -379,7 +379,7 @@ export async function registerRoutes(
 
         return res.status(201).json(giveaway);
       } catch (error) {
-        console.error("Schedule Giveaway Error:", error);
+        log(`Schedule Giveaway Error: ${error}`, "error");
         return res.status(500).json({ error: "Failed to schedule giveaway" });
       }
     }
@@ -412,7 +412,7 @@ export async function registerRoutes(
 
       return res.json(giveaway);
     } catch (error) {
-      console.error("Get Giveaway Error:", error);
+      log(`Get Giveaway Error: ${error}`, "error");
       return res.status(500).json({ error: "Failed to fetch giveaway" });
     }
   });
@@ -460,7 +460,7 @@ export async function registerRoutes(
 
       return res.json(updated);
     } catch (error) {
-      console.error("Update Giveaway Error:", error);
+      log(`Update Giveaway Error: ${error}`, "error");
       return res.status(500).json({ error: "Failed to update giveaway" });
     }
   });
@@ -493,7 +493,7 @@ export async function registerRoutes(
 
       return res.json({ success: true, message: "Giveaway cancelled successfully" });
     } catch (error) {
-      console.error("Delete Giveaway Error:", error);
+      log(`Delete Giveaway Error: ${error}`, "error");
       return res.status(500).json({ error: "Failed to delete giveaway" });
     }
   });
@@ -532,7 +532,7 @@ export async function registerRoutes(
         res.setHeader('Cache-Control', 'no-cache');
         res.send(imageBuffer);
       } catch (error) {
-        console.error("Image Generation Error:", error);
+        log(`Image Generation Error: ${error}`, "error");
         return res.status(500).json({
           error: error instanceof Error ? error.message : "Failed to generate image"
         });
@@ -583,7 +583,7 @@ export async function registerRoutes(
           results,
         });
       } catch (error) {
-        console.error("Send Winning Emails Error:", error);
+        log(`Send Winning Emails Error: ${error}`, "error");
         return res.status(500).json({
           error: error instanceof Error ? error.message : "Failed to send winning emails"
         });
@@ -613,7 +613,7 @@ export async function registerRoutes(
 
         return res.json(stats);
       } catch (error) {
-        console.error("Analytics Error:", error);
+        log(`Analytics Error: ${error}`, "error");
         return res.status(500).json({
           error: error instanceof Error ? error.message : "Failed to fetch analytics"
         });
