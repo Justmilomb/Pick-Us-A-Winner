@@ -16,20 +16,40 @@ interface AdBannerProps {
   slot?: string;
   className?: string;
   format?: "horizontal" | "vertical" | "box";
+  type?: "custom" | "adsense";
+  adsenseClientId?: string;
 }
 
-export function AdBanner({ slot = "default", className = "", format = "horizontal" }: AdBannerProps) {
-  // Fetch a random ad
+export function AdBanner({
+  slot = "default",
+  className = "",
+  format = "horizontal",
+  type = "custom",
+  adsenseClientId
+}: AdBannerProps) {
+  // Fetch a random ad (only for custom type)
   const { data, isLoading } = useQuery<AdResponse>({
-    queryKey: ["ad", slot], // Add slot to key to potentially allow different ads per slot
+    queryKey: ["ad", slot],
     queryFn: async () => {
       const res = await fetch("/api/ads/random");
       if (!res.ok) throw new Error("Failed to fetch ad");
       return res.json();
     },
+    enabled: type === "custom", // Disable query if using adsense
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5, // Keep same ad for 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
+
+  useEffect(() => {
+    if (type === "adsense") {
+      try {
+        // @ts-ignore
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (e) {
+        console.error("AdSense script error", e);
+      }
+    }
+  }, [type]);
 
   const handleClick = async () => {
     if (data?.ad) {
@@ -40,6 +60,22 @@ export function AdBanner({ slot = "default", className = "", format = "horizonta
       }
     }
   };
+
+  if (type === "adsense") {
+    // Standard AdSense format
+    return (
+      <div className={`overflow-hidden flex justify-center ${className}`}>
+        <ins
+          className="adsbygoogle"
+          style={{ display: 'block' }}
+          data-ad-client={adsenseClientId || "ca-pub-XXXXXXXXXXXXXXXX"} // Placeholder
+          data-ad-slot={slot}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        ></ins>
+      </div>
+    );
+  }
 
   if (isLoading || !data?.ad) {
     // Show placeholder or nothing if no ad
