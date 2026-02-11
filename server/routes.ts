@@ -1,9 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import {
-  fetchInstagramComments,
-  generateMockComments,
+fetchInstagramComments,
   extractPostId,
 } from "./instagram";
 import { InstagramScraper } from "./scraper/instagram-scraper";
@@ -135,7 +133,7 @@ export async function registerRoutes(
     instagramRateLimiter,
     async (req, res) => {
       try {
-        const { url, demo, paymentToken } = req.body;
+        const { url, paymentToken } = req.body;
 
         const postId = extractPostId(url);
         if (!postId) {
@@ -144,25 +142,8 @@ export async function registerRoutes(
           });
         }
 
-        // Demo mode - return mock data (FREE)
-        if (demo) {
-          const mockComments = generateMockComments(150);
+        // Demo mode removed
 
-          return res.json({
-            entries: mockComments.map(c => ({
-              id: c.id,
-              username: c.username,
-              avatar: c.avatar,
-              comment: c.text,
-              platform: "instagram" as const,
-              timestamp: c.timestamp,
-              fraudScore: 0,
-            })),
-            total: mockComments.length,
-            demo: true,
-            message: "Demo mode - sample data loaded.",
-          });
-        }
 
         // PAYMENT REQUIRED - must have valid payment token
         if (!paymentToken || typeof paymentToken !== "string") {
@@ -480,92 +461,7 @@ export async function registerRoutes(
   // IMAGE & EMAIL ENDPOINTS - PROTECTED
   // ============================================
 
-  // Winner Image Generator
-  app.post("/api/generate-winner-image",
-    imageRateLimiter,
-    async (req, res) => {
-      try {
-        const { username, avatar, comment, prize } = req.body;
 
-        if (!username || typeof username !== "string") {
-          return res.status(400).json({ error: "Username is required" });
-        }
-
-        // Sanitize inputs
-        const safeUsername = username.slice(0, 50);
-        const safeComment = comment ? comment.slice(0, 500) : undefined;
-        const safePrize = prize ? prize.slice(0, 100) : undefined;
-
-        const { generateWinnerImageJPEG } = await import("./image");
-        const imageBuffer = await generateWinnerImageJPEG({
-          username: safeUsername,
-          avatar,
-          comment: safeComment,
-          prize: safePrize
-        });
-
-        res.setHeader('Content-Type', 'image/jpeg');
-        res.setHeader('Content-Disposition', `attachment; filename="winner-${safeUsername}.jpg"`);
-        res.setHeader('Cache-Control', 'no-cache');
-        res.send(imageBuffer);
-      } catch (error) {
-        log(`Image Generation Error: ${error}`, "error");
-        return res.status(500).json({
-          error: error instanceof Error ? error.message : "Failed to generate image"
-        });
-      }
-    }
-  );
-
-  // Send Winning Emails
-  app.post("/api/send-winning-emails",
-    emailRateLimiter,
-    validateEmailRequest,
-    async (req, res) => {
-      try {
-        const { winners } = req.body;
-
-        const { sendEmail } = await import("./email");
-        const { getWinnerEmailHTML, getWinnerEmailText } = await import("./email-templates");
-        const results = [];
-
-        for (const winner of winners) {
-          if (!winner.email || !winner.username) {
-            continue;
-          }
-
-          const sent = await sendEmail({
-            to: winner.email,
-            subject: "🎉 Congratulations! You're a Giveaway Winner!",
-            text: getWinnerEmailText({
-              username: winner.username,
-              comment: winner.comment,
-              prize: winner.prize,
-            }),
-            html: getWinnerEmailHTML({
-              username: winner.username,
-              comment: winner.comment,
-              prize: winner.prize,
-            }),
-          });
-
-          results.push({ username: winner.username, email: winner.email, sent });
-        }
-
-        return res.json({
-          success: true,
-          sent: results.filter(r => r.sent).length,
-          total: results.length,
-          results,
-        });
-      } catch (error) {
-        log(`Send Winning Emails Error: ${error}`, "error");
-        return res.status(500).json({
-          error: error instanceof Error ? error.message : "Failed to send winning emails"
-        });
-      }
-    }
-  );
 
   // ============================================
   // ANALYTICS - ADMIN ONLY

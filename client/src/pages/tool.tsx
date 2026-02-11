@@ -25,13 +25,11 @@ import { useLocation } from "wouter";
 interface Entry {
   id: string;
   username: string;
-  avatar?: string;
   comment: string;
   platform: "instagram";
   timestamp?: string;
   fraudScore?: number;
   userId?: string;
-  followsYou?: boolean;
 }
 
 export default function GiveawayTool() {
@@ -39,7 +37,6 @@ export default function GiveawayTool() {
 
   // Input State
   const [url, setUrl] = useState("");
-  const [isDemo, setIsDemo] = useState(false);
   const [paymentToken, setPaymentToken] = useState<string | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
@@ -68,7 +65,6 @@ export default function GiveawayTool() {
   const [scheduleEmail, setScheduleEmail] = useState("");
   const [isScheduled, setIsScheduled] = useState(false);
   const [winnerEmails, setWinnerEmails] = useState<Record<string, string>>({});
-  const [sendWinningEmails, setSendWinningEmails] = useState(false);
   const [customTheme, setCustomTheme] = useState<"default" | "dark" | "pink" | "custom">("default");
   const [customColor, setCustomColor] = useState("#E1306C");
   const [customizationOpen, setCustomizationOpen] = useState(false);
@@ -98,48 +94,7 @@ export default function GiveawayTool() {
       return;
     }
 
-    // If demo mode, fetch immediately (free)
-    if (isDemo) {
-      setStep("fetching");
-      try {
-        const response = await fetch("/api/instagram/comments", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url, demo: true }),
-        });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Failed to fetch");
-
-        const entries = (data.entries || []).map((entry: any) => ({
-          ...entry,
-          fraudScore: entry.fraudScore || 0,
-        }));
-
-        setFetchedEntries(entries);
-        setIsDemo(true);
-        setStep("options");
-
-        const initialValid = filterEntries(entries, {
-          keyword: "",
-          mentions: 1,
-          requireMention: false,
-          duplicates: true,
-          blockList: blockList,
-          excludeFraud: excludeFraud
-        });
-        setValidEntries(initialValid);
-
-        toast({ title: "Demo Mode", description: `Loaded ${entries.length > 200 ? "200+" : entries.length} sample entries` });
-      } catch (error) {
-        setFetchError(error instanceof Error ? error.message : "Unknown error");
-        setStep("input");
-        toast({ title: "Error", description: "Failed to load demo data", variant: "destructive" });
-      }
-      return;
-    }
-
-    // Non-demo: go to payment step first
+    // If url is valid, go to payment step directly (Demo mode removed)
     setStep("payment");
   };
 
@@ -172,7 +127,7 @@ export default function GiveawayTool() {
       const response = await fetch("/api/instagram/comments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, demo: false, paymentToken: token }),
+        body: JSON.stringify({ url, paymentToken: token }),
       });
 
       const data = await response.json();
@@ -187,7 +142,6 @@ export default function GiveawayTool() {
       }));
 
       setFetchedEntries(entries);
-      setIsDemo(false);
       setStep("options");
 
       const initialValid = filterEntries(entries, {
@@ -297,6 +251,16 @@ export default function GiveawayTool() {
     setTimeout(async () => {
       let selectedWinners: Entry[] = [];
 
+      // Helper for Fisher-Yates shuffle
+      const shuffle = <T,>(array: T[]) => {
+        const newArray = [...array];
+        for (let i = newArray.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+        }
+        return newArray;
+      };
+
       if (enableBonusChances) {
         // Weighted selection based on mention count
         const weightedPool: Entry[] = [];
@@ -312,8 +276,8 @@ export default function GiveawayTool() {
           }
         });
 
-        // Shuffle and pick unique winners
-        const shuffled = [...weightedPool].sort(() => 0.5 - Math.random());
+        // Fisher-Yates shuffle
+        const shuffled = shuffle(weightedPool);
         const seen = new Set<string>();
         for (const entry of shuffled) {
           if (!seen.has(entry.username) && selectedWinners.length < winnerCount) {
@@ -322,36 +286,14 @@ export default function GiveawayTool() {
           }
         }
       } else {
-        // Regular random selection
-        const shuffled = [...validEntries].sort(() => 0.5 - Math.random());
+        // Regular Fisher-Yates shuffle
+        const shuffled = shuffle(validEntries);
         selectedWinners = shuffled.slice(0, winnerCount);
       }
 
       setWinners(selectedWinners);
       setStep("results");
-
-      // Check follow status for winners that have userIds
-      const winnersWithUserId = selectedWinners.filter(w => w.userId);
-      if (winnersWithUserId.length > 0 && !isDemo) {
-        try {
-          const response = await fetch("/api/instagram/check-followers", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              userIds: winnersWithUserId.map(w => w.userId),
-            }),
-          });
-          if (response.ok) {
-            const { results } = await response.json();
-            setWinners(prev => prev.map(w => ({
-              ...w,
-              followsYou: w.userId ? results[w.userId] : undefined,
-            })));
-          }
-        } catch {
-          // Silently fail — follow status is optional
-        }
-      }
+      // Follower check removed
     }, 3000);
   };
 
@@ -361,7 +303,6 @@ export default function GiveawayTool() {
     // retain inputs for convenience
     setFetchedEntries([]);
     setValidEntries([]);
-    setIsDemo(false);
     setFetchError(null);
     setPaymentToken(null);
   };
@@ -508,9 +449,8 @@ export default function GiveawayTool() {
                     Fetch Comments
                   </Button>
 
-                  <div className="flex items-center justify-center gap-2 mt-4">
-                    <Checkbox id="demo-mode" checked={isDemo} onCheckedChange={(v) => setIsDemo(v as boolean)} />
-                    <Label htmlFor="demo-mode" className="text-sm font-medium text-muted-foreground cursor-pointer">simulate (demo mode)</Label>
+                  <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
+                    <p>Demo & simulation mode has been disabled for fair play.</p>
                   </div>
                 </form>
               </motion.div>
@@ -717,25 +657,7 @@ export default function GiveawayTool() {
                     <span className="font-black text-3xl">{validEntries.length > 200 ? "200+" : validEntries.length}</span>
                   </div>
 
-                  {/* Winning Emails Toggle */}
-                  <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-300 rounded">
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <Label className="font-bold text-lg uppercase cursor-pointer" htmlFor="email-switch">
-                          Send Winning Emails?
-                        </Label>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Collect emails and notify winners automatically
-                        </p>
-                      </div>
-                      <Switch
-                        id="email-switch"
-                        checked={sendWinningEmails}
-                        onCheckedChange={setSendWinningEmails}
-                        className="data-[state=checked]:bg-black border-2 border-black"
-                      />
-                    </div>
-                  </div>
+                  {/* Winning Emails Toggle Removed */}
 
                   <Button
                     onClick={handlePickWinners}
@@ -968,124 +890,16 @@ export default function GiveawayTool() {
                   {winners.map((winner, index) => (
                     <div key={winner.id} className="space-y-4">
                       <WinnerCard winner={winner} index={index} />
-                      <div className="space-y-2">
-                        {sendWinningEmails && (
-                          <Input
-                            type="email"
-                            placeholder="Winner's email (optional)"
-                            className="neo-input"
-                            value={winnerEmails[winner.id] || ""}
-                            onChange={(e) => setWinnerEmails({ ...winnerEmails, [winner.id]: e.target.value })}
-                          />
-                        )}
-                        <Button
-                          onClick={async () => {
-                            try {
-                              const response = await fetch("/api/generate-winner-image", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  username: winner.username,
-                                  avatar: winner.avatar,
-                                  comment: winner.comment,
-                                }),
-                              });
-
-                              if (response.ok) {
-                                const blob = await response.blob();
-                                const url = window.URL.createObjectURL(blob);
-                                const a = document.createElement("a");
-                                a.href = url;
-                                a.download = `winner-${winner.username}.jpg`;
-                                document.body.appendChild(a);
-                                a.click();
-                                window.URL.revokeObjectURL(url);
-                                document.body.removeChild(a);
-                                toast({
-                                  title: "Downloaded!",
-                                  description: "Winner image saved. You can convert SVG to PNG using any online tool.",
-                                });
-                              } else {
-                                throw new Error("Failed to generate image");
-                              }
-                            } catch (error) {
-                              toast({
-                                title: "Error",
-                                description: "Failed to download winner image",
-                                variant: "destructive",
-                              });
-                            }
-                          }}
-                          variant="outline"
-                          className="w-full border-2 border-[#E1306C] text-[#E1306C] hover:bg-[#E1306C] hover:text-white"
-                        >
-                          <Instagram className="mr-2 w-4 h-4" /> Download Story Image
-                        </Button>
-                      </div>
                     </div>
                   ))}
+
                 </div>
 
                 <div className="flex justify-center py-6">
                   <AdBanner format="horizontal" />
                 </div>
 
-                {sendWinningEmails && (
-                  <div className="bg-yellow-50 border-2 border-yellow-300 p-4 rounded">
-                    <div className="flex items-center justify-between mb-4">
-                      <Label className="font-bold text-lg uppercase">Send Winning Emails</Label>
-                    </div>
-                    <Button
-                      onClick={async () => {
-                        const emailsToSend = winners
-                          .map(w => ({ winner: w, email: winnerEmails[w.id] }))
-                          .filter(item => item.email && item.email.includes('@'));
 
-                        if (emailsToSend.length === 0) {
-                          toast({
-                            title: "No Emails",
-                            description: "Please enter at least one winner email",
-                            variant: "destructive",
-                          });
-                          return;
-                        }
-
-                        try {
-                          const response = await fetch("/api/send-winning-emails", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                              winners: emailsToSend.map(item => ({
-                                username: item.winner.username,
-                                email: item.email,
-                                comment: item.winner.comment,
-                                avatar: item.winner.avatar,
-                              })),
-                            }),
-                          });
-
-                          if (response.ok) {
-                            toast({
-                              title: "Emails Sent!",
-                              description: `Sent winning notifications to ${emailsToSend.length} winner(s)`,
-                            });
-                          } else {
-                            throw new Error("Failed to send emails");
-                          }
-                        } catch (error) {
-                          toast({
-                            title: "Error",
-                            description: "Failed to send winning emails",
-                            variant: "destructive",
-                          });
-                        }
-                      }}
-                      className="w-full bg-green-500 hover:bg-green-600 text-white"
-                    >
-                      Send Emails to Winners
-                    </Button>
-                  </div>
-                )}
 
                 <div className="flex justify-center pt-8">
                   <Button onClick={resetTool} variant="outline" className="border-2 border-black text-lg py-6 px-8 hover:bg-black hover:text-white transition-colors">

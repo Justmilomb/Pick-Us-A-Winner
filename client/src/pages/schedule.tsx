@@ -268,9 +268,8 @@ export default function SchedulePage() {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-4xl font-black uppercase">Manage Giveaway</h1>
             <span
-              className={`px-4 py-2 rounded-full border-2 font-bold uppercase text-sm ${
-                statusColors[giveaway.status] || statusColors.pending
-              }`}
+              className={`px-4 py-2 rounded-full border-2 font-bold uppercase text-sm ${statusColors[giveaway.status] || statusColors.pending
+                }`}
             >
               {giveaway.status}
             </span>
@@ -283,14 +282,20 @@ export default function SchedulePage() {
                 <p className="font-bold text-lg">
                   Scheduled for: {format(scheduledDate, "MMMM d, yyyy 'at' HH:mm")}
                 </p>
-                {showCountdown && timeRemaining !== null && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
-                    <Clock className="w-4 h-4" />
-                    {formatTimeRemaining(timeRemaining)} remaining
-                  </p>
-                )}
               </div>
             </div>
+
+            {showCountdown && timeRemaining !== null && (
+              <div className="mt-6 mb-2">
+                <div className="bg-black text-white p-6 rounded-lg border-4 border-slate-200 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] text-center">
+                  <p className="text-sm font-bold uppercase tracking-widest text-slate-300 mb-2">Time Remaining</p>
+                  <div className="text-4xl sm:text-6xl font-black font-mono tracking-tighter flex items-center justify-center gap-4">
+                    <Clock className="w-8 h-8 sm:w-12 sm:h-12 animate-pulse text-[#E1306C]" />
+                    {formatTimeRemaining(timeRemaining)}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {isLocked && (

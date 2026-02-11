@@ -288,39 +288,4 @@ async function fetchWithCustomScraper(postUrl: string): Promise<FetchCommentsRes
     }
 }
 
-/**
- * Generate mock comments for testing/demo
- */
-export function generateMockComments(count: number = 150): InstagramComment[] {
-    const users = [
-        "skater_boi_99", "sarah_crafts", "tech_guru_x", "dance_queen", "crypto_king",
-        "coffee_lover", "pixel_art", "music_vibes", "travel_bug", "fitness_freak",
-        "foodie_life", "gamer_girl", "dev_dude", "artist_anna", "photo_phil",
-        "nature_nate", "book_worm", "yoga_yara", "chef_charlie", "run_riley"
-    ];
 
-    const comments: InstagramComment[] = [];
-
-    for (let i = 0; i < count; i++) {
-        const username = users[Math.floor(Math.random() * users.length)];
-        const mentionsCount = Math.floor(Math.random() * 4);
-        const hasHashtag = Math.random() > 0.5;
-
-        let text = "Love this giveaway! ";
-        if (hasHashtag) text += "#giveaway #win ";
-        for (let m = 0; m < mentionsCount; m++) {
-            text += `@friend${m + 1} `;
-        }
-
-        comments.push({
-            id: `mock-${i}`,
-            username,
-            text: text.trim(),
-            timestamp: new Date(Date.now() - Math.random() * 86400000 * 7).toISOString(),
-            likes: Math.floor(Math.random() * 50),
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
-        });
-    }
-
-    return comments;
-}

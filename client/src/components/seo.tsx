@@ -11,15 +11,15 @@ interface SEOProps {
   structuredData?: object;
 }
 
-const defaultTitle = "PickUsAWinner - Free Instagram Giveaway Winner Picker";
-const defaultDescription = "The fastest and fairest way to pick winners for your Instagram giveaways. Automated, transparent, and 100% free.";
+const defaultTitle = "PickUsAWinner - The Fairest Instagram Giveaway Tool";
+const defaultDescription = "Secure, transparent, and certified random winner picking for Instagram giveaways. Filter comments, detect fraud, and pick winners fairly.";
 const defaultImage = "https://giveaway-engine.com/opengraph.jpg";
 const baseUrl = "https://giveaway-engine.com";
 
 export function SEO({
   title,
   description = defaultDescription,
-  keywords = "instagram giveaway picker, random winner selector, giveaway tool, instagram contest, social media giveaway, winner picker, instagram comments, giveaway generator, fair giveaway, transparent giveaway",
+  keywords = "instagram giveaway picker, random winner selector, fair giveaway tool, fraud detection, instagram contest, social media giveaway, winner picker, secure giveaway",
   image = defaultImage,
   url,
   type = "website",
