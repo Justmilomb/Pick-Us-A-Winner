@@ -53,9 +53,14 @@ app.use((req, res, next) => {
 });
 
 import { startScheduler } from "./scheduler";
+import { scraperRelay } from "./scraper-relay";
 
 (async () => {
   await registerRoutes(httpServer, app);
+
+  // Initialize WebSocket relay for local scraper
+  scraperRelay.init(httpServer);
+  log("Scraper relay initialized. Local workers can connect via /ws/scraper");
 
   if (process.env.APIFY_TOKEN) {
     const t = process.env.APIFY_TOKEN;

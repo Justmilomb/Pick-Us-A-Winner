@@ -2,6 +2,7 @@ import { log } from "./log";
 import { ApifyClient } from 'apify-client';
 import { InstagramScraper } from "./scraper/instagram-scraper";
 import { z } from "zod";
+import { scraperRelay } from "./scraper-relay";
 
 export interface InstagramComment {
     id: string;
@@ -84,10 +85,23 @@ export async function fetchInstagramComments(
     const useApify = process.env.USE_APIFY === "true";
     const hasCredentials = !!(process.env.INSTAGRAM_USERNAME?.trim() && process.env.INSTAGRAM_PASSWORD?.trim());
     const hasApifyToken = !!(process.env.APIFY_TOKEN?.trim());
+    const workerConnected = scraperRelay.isWorkerConnected();
 
     const postUrl = postCode.startsWith("http") ? postCode : `https://www.instagram.com/p/${postCode}/`;
 
-    log(`Strategies available: Credentials=${hasCredentials}, Apify=${hasApifyToken}`, "instagram");
+    log(`Strategies available: Relay=${workerConnected}, Credentials=${hasCredentials}, Apify=${hasApifyToken}`, "instagram");
+
+    // Strategy 0: WebSocket Relay to local worker (HIGHEST PRIORITY)
+    if (workerConnected) {
+        log(`Using relay to local worker for post: ${postCode}`, "instagram");
+        try {
+            return await scraperRelay.scrape(postUrl);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            log(`Relay scrape failed: ${errorMessage}`, "error");
+            // Fall through to other strategies
+        }
+    }
 
     // Strategy 1: Explicit Apify
     if (useApify) {
@@ -98,7 +112,7 @@ export async function fetchInstagramComments(
         return await fetchWithApify(postCode, postUrl);
     }
 
-    // Strategy 2: Custom Scraper (Explicit or Persistent Credentials)
+    // Strategy 2: Custom Scraper (local Puppeteer, only works if Chrome is available)
     if (useCustomScraper || hasCredentials) {
         log(`Using custom scraper for post: ${postCode} (Strategy: ${useCustomScraper ? 'Explicit' : 'Credentials'})`, "instagram");
 
@@ -112,13 +126,11 @@ export async function fetchInstagramComments(
             const errorMessage = error instanceof Error ? error.message : String(error);
             log(`Custom scraper failed: ${errorMessage}`, "error");
 
-            // Only fallback if we actually have a valid token
             if (hasApifyToken) {
                 log("Attempting fallback to Apify...", "instagram");
                 return await fetchWithApify(postCode, postUrl);
             }
 
-            // If no fallback possible, rethrow with helpful message
             throw new Error(`Custom scraper failed: ${errorMessage}. (No Apify token available for fallback)`);
         }
     }
@@ -131,7 +143,7 @@ export async function fetchInstagramComments(
 
     // No strategies available
     throw new Error(
-        "Configuration Error: To use the Local Scraper, you MUST set 'INSTAGRAM_USERNAME' and 'INSTAGRAM_PASSWORD' in your Render Environment Variables."
+        "No scraper available. Please start the local worker on your computer (npm run scraper:worker) or configure Apify."
     );
 }
 
