@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-fetchInstagramComments,
+import {
+  fetchInstagramComments,
   extractPostId,
 } from "./instagram";
 import { InstagramScraper } from "./scraper/instagram-scraper";
@@ -535,6 +536,144 @@ export async function registerRoutes(
       security: "enabled"
     });
   });
+
+  // ============================================
+  // AD ENDPOINTS
+  // ============================================
+
+  // Get a random active ad
+  app.get("/api/ads/random", async (req, res) => {
+    try {
+      const ads = await storage.getActiveAds();
+      if (ads.length === 0) {
+        return res.json({ ad: null });
+      }
+
+      // Simple random selection
+      const randomAd = ads[Math.floor(Math.random() * ads.length)];
+
+      // Async increment view stats (don't await to keep response fast)
+      storage.incrementAdStats(randomAd.id, 'view').catch(err =>
+        console.error("Failed to increment ad view:", err)
+      );
+
+      return res.json({ ad: randomAd });
+    } catch (error) {
+      log(`Get Random Ad Error: ${error}`, "error");
+      return res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to fetch ad"
+      });
+    }
+  });
+
+  // Track ad click
+  app.post("/api/ads/:id/click", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const ad = await storage.getAd(id);
+
+      if (!ad) {
+        return res.status(404).json({ error: "Ad not found" });
+      }
+
+      await storage.incrementAdStats(id, 'click');
+      return res.json({ success: true });
+    } catch (error) {
+      log(`Track Ad Click Error: ${error}`, "error");
+      return res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to track click"
+      });
+    }
+  });
+
+  // Admin: Get all ads
+  app.get("/api/admin/ads",
+    adminAuthMiddleware,
+    async (req, res) => {
+      try {
+        const ads = await storage.getAllAds();
+        return res.json(ads);
+      } catch (error) {
+        log(`Get All Ads Error: ${error}`, "error");
+        return res.status(500).json({
+          error: error instanceof Error ? error.message : "Failed to fetch ads"
+        });
+      }
+    }
+  );
+
+  // Admin: Create ad
+  app.post("/api/admin/ads",
+    adminAuthMiddleware,
+    async (req, res) => {
+      try {
+        const { imageUrl, linkUrl } = req.body;
+
+        if (!imageUrl || !linkUrl) {
+          return res.status(400).json({ error: "Image URL and Link URL are required" });
+        }
+
+        const ad = await storage.createAd({
+          imageUrl,
+          linkUrl,
+          active: true
+        });
+
+        return res.status(201).json(ad);
+      } catch (error) {
+        log(`Create Ad Error: ${error}`, "error");
+        return res.status(500).json({
+          error: error instanceof Error ? error.message : "Failed to create ad"
+        });
+      }
+    }
+  );
+
+  // Admin: Update ad
+  app.put("/api/admin/ads/:id",
+    adminAuthMiddleware,
+    async (req, res) => {
+      try {
+        const { id } = req.params;
+        const updates = req.body;
+
+        const ad = await storage.updateAd(id, updates);
+
+        if (!ad) {
+          return res.status(404).json({ error: "Ad not found" });
+        }
+
+        return res.json(ad);
+      } catch (error) {
+        log(`Update Ad Error: ${error}`, "error");
+        return res.status(500).json({
+          error: error instanceof Error ? error.message : "Failed to update ad"
+        });
+      }
+    }
+  );
+
+  // Admin: Delete ad
+  app.delete("/api/admin/ads/:id",
+    adminAuthMiddleware,
+    async (req, res) => {
+      try {
+        const { id } = req.params;
+        const success = await storage.deleteAd(id);
+
+        if (!success) {
+          return res.status(404).json({ error: "Ad not found" });
+        }
+
+        return res.json({ success: true });
+      } catch (error) {
+        log(`Delete Ad Error: ${error}`, "error");
+        return res.status(500).json({
+          error: error instanceof Error ? error.message : "Failed to delete ad"
+        });
+      }
+    }
+  );
 
   // ============================================
   // SEO ENDPOINTS

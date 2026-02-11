@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, jsonb, boolean, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -23,6 +23,16 @@ export const giveaways = pgTable("giveaways", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const ads = pgTable("ads", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  imageUrl: text("image_url").notNull(),
+  linkUrl: text("link_url").notNull(),
+  active: boolean("active").default(true).notNull(),
+  clicks: integer("clicks").default(0).notNull(),
+  impressions: integer("impressions").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   firstName: true,
   password: true,
@@ -36,7 +46,15 @@ export const insertGiveawaySchema = createInsertSchema(giveaways).pick({
   config: true,
 });
 
+export const insertAdSchema = createInsertSchema(ads).pick({
+  imageUrl: true,
+  linkUrl: true,
+  active: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertGiveaway = z.infer<typeof insertGiveawaySchema>;
 export type Giveaway = typeof giveaways.$inferSelect;
+export type InsertAd = z.infer<typeof insertAdSchema>;
+export type Ad = typeof ads.$inferSelect;
