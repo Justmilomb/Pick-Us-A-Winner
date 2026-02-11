@@ -477,7 +477,7 @@ export default function GiveawayTool() {
                   />
                 </div>
                 <p className="text-sm sm:text-base text-muted-foreground font-medium mt-2">Connecting to Instagram...</p>
-                <AdBanner className="mt-8" />
+                <AdBanner type="adsense" className="mt-8" slot="YOUR_AD_SLOT_ID" />
               </motion.div>
             )}
 

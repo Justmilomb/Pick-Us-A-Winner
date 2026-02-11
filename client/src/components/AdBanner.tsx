@@ -68,7 +68,7 @@ export function AdBanner({
         <ins
           className="adsbygoogle"
           style={{ display: 'block' }}
-          data-ad-client={adsenseClientId || "ca-pub-XXXXXXXXXXXXXXXX"} // Placeholder
+          data-ad-client={adsenseClientId || "ca-pub-3154339896678246"} // Placeholder
           data-ad-slot={slot}
           data-ad-format="auto"
           data-full-width-responsive="true"

@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { ArrowRight, CheckCircle, Zap, ShieldCheck, Sparkles } from "lucide-react";
 import heroImage from "@/assets/hero-giveaway.png";
 import { SEO } from "@/components/seo";
+import { AdBanner } from "@/components/AdBanner";
 
 export default function Home() {
   const faqStructuredData = {
@@ -125,6 +126,11 @@ export default function Home() {
             <span>Verified Random • Pick Us A Winner • Anti-Cheat • Open Source • Verified Random • Anti-Cheat</span>
             <span>Verified Random • Pick Us A Winner • Anti-Cheat • Open Source • Verified Random • Anti-Cheat</span>
           </div>
+        </section>
+
+        {/* AdSense Banner */}
+        <section className="container mx-auto px-4">
+          <AdBanner type="adsense" className="w-full" slot="YOUR_AD_SLOT_ID" />
         </section>
 
         {/* Steps Section */}

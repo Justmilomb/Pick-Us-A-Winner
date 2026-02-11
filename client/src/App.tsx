@@ -7,9 +7,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import GiveawayTool from "@/pages/tool";
-import LoginPage from "@/pages/auth/login";
-import RegisterPage from "@/pages/auth/register";
-import { AuthProvider } from "@/hooks/use-user";
 import { ProtectedRoute } from "@/lib/protected-route";
 import ComingSoon from "@/pages/coming-soon";
 import PrivacyPolicy from "@/pages/privacy";
@@ -24,8 +21,6 @@ function Router() {
       <Route path="/tool" component={GiveawayTool} />
       <Route path="/analytics" component={AnalyticsPage} />
       <Route path="/schedule/:token" component={SchedulePage} />
-      <Route path="/login" component={LoginPage} />
-      <Route path="/register" component={RegisterPage} />
       <Route path="/coming-soon" component={ComingSoon} />
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/terms" component={TermsOfService} />
@@ -38,12 +33,10 @@ function App() {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
       </QueryClientProvider>
     </HelmetProvider>
   );
