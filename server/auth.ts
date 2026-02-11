@@ -50,8 +50,8 @@ export function setupAuth(app: Express) {
 
     passport.use(
         new GoogleStrategy({
-            clientID: "575777924531-e580pqkqv6jbfqhkj2r8g3lhn98ocgee.apps.googleusercontent.com",
-            clientSecret: "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",
+            clientID: process.env.GOOGLE_CLIENT_ID || "575777924531-e580pqkqv6jbfqhkj2r8g3lhn98ocgee.apps.googleusercontent.com",
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "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",
             callbackURL: "/api/auth/google/callback"
         }, async (_accessToken: string, _refreshToken: string, profile: any, done: any) => {
             try {
