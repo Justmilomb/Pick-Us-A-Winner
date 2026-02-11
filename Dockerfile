@@ -11,6 +11,21 @@ RUN npm install --omit=dev --legacy-peer-deps
 # Copy the ALREADY BUILT app
 COPY . .
 
+# Install Chromium and dependencies for Puppeteer
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    nodejs \
+    yarn
+
+# Tell Puppeteer where to find Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
 # Setup user
 ENV NODE_ENV=production
 ENV PORT=5000

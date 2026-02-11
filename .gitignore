@@ -26,8 +26,6 @@ logs
 security-data.json
 db.json
 
-# Session Data
-.instagram-session.json
 
 # Debug Images
 login-debug.png

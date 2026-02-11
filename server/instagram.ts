@@ -25,13 +25,13 @@ export interface FetchCommentsResult {
 }
 
 // API Configuration
-if (!process.env.APIFY_TOKEN) {
-    console.warn("APIFY_TOKEN is not set in environment variables. Live data fetching will fail.");
-}
-
-const client = new ApifyClient({
-    token: process.env.APIFY_TOKEN || "",
-});
+const getApifyClient = () => {
+    const token = process.env.APIFY_TOKEN?.trim();
+    if (!token) {
+        throw new Error("APIFY_TOKEN is not set");
+    }
+    return new ApifyClient({ token });
+};
 
 const InstagramCommentSchema = z.object({
     id: z.string(),
@@ -55,9 +55,9 @@ export function extractPostId(url: string): string | null {
     try {
         const urlObj = new URL(url);
         const patterns = [
-            /\/p\/([A-Za-z0-9_-]+)/,
-            /\/reel\/([A-Za-z0-9_-]+)/,
-            /\/tv\/([A-Za-z0-9_-]+)/,
+            /\/p\/([A-Za-z0-9_-]+)/, // Post
+            /\/reel\/([A-Za-z0-9_-]+)/, // Reel
+            /\/tv\/([A-Za-z0-9_-]+)/, // IGTV
         ];
 
         for (const pattern of patterns) {
@@ -82,64 +82,57 @@ export async function fetchInstagramComments(
 ): Promise<FetchCommentsResult> {
     const useCustomScraper = process.env.USE_CUSTOM_SCRAPER === "true";
     const useApify = process.env.USE_APIFY === "true";
-    const hasCredentials = process.env.INSTAGRAM_USERNAME && process.env.INSTAGRAM_PASSWORD;
+    const hasCredentials = !!(process.env.INSTAGRAM_USERNAME?.trim() && process.env.INSTAGRAM_PASSWORD?.trim());
+    const hasApifyToken = !!(process.env.APIFY_TOKEN?.trim());
+
     const postUrl = postCode.startsWith("http") ? postCode : `https://www.instagram.com/p/${postCode}/`;
 
-    // Explicit override: Use custom scraper if USE_CUSTOM_SCRAPER=true
-    if (useCustomScraper) {
-        log(`Using custom scraper for post: ${postCode} (explicit override)`, "instagram");
-        return await fetchWithCustomScraper(postUrl);
-    }
+    log(`Strategies available: Credentials=${hasCredentials}, Apify=${hasApifyToken}`, "instagram");
 
-    // Explicit override: Use Apify if USE_APIFY=true
-    if (useApify && process.env.APIFY_TOKEN) {
-        try {
-            log(`Using Apify for post: ${postCode} (explicit override)`, "instagram");
-            const result = await fetchWithApify(postCode, postUrl);
-            
-            // If Apify only returned 15 comments (free tier limit), fallback to custom scraper if credentials exist
-            if (result.comments.length <= 15 && hasCredentials) {
-                log(`Apify returned only ${result.comments.length} comments (free tier limit). Falling back to custom scraper.`, "instagram");
-                return await fetchWithCustomScraper(postUrl);
-            }
-            
-            return result;
-        } catch (error) {
-            log(`Apify failed: ${error}. Falling back to custom scraper.`, "instagram");
-            if (hasCredentials) {
-                return await fetchWithCustomScraper(postUrl);
-            }
-            throw error;
+    // Strategy 1: Explicit Apify
+    if (useApify) {
+        if (!hasApifyToken) {
+            throw new Error("USE_APIFY is true but APIFY_TOKEN is missing.");
         }
+        log(`Using Apify for post: ${postCode} (explicit override)`, "instagram");
+        return await fetchWithApify(postCode, postUrl);
     }
 
-    // Default: If credentials exist, use custom scraper (prioritized)
-    if (hasCredentials) {
-        log(`Using custom scraper for post: ${postCode} (credentials available)`, "instagram");
-        log(`Credentials check: INSTAGRAM_USERNAME=${process.env.INSTAGRAM_USERNAME ? 'SET' : 'NOT SET'}, INSTAGRAM_PASSWORD=${process.env.INSTAGRAM_PASSWORD ? 'SET' : 'NOT SET'}`, "instagram");
+    // Strategy 2: Custom Scraper (Explicit or Persistent Credentials)
+    if (useCustomScraper || hasCredentials) {
+        log(`Using custom scraper for post: ${postCode} (Strategy: ${useCustomScraper ? 'Explicit' : 'Credentials'})`, "instagram");
+
+        if (!hasCredentials) {
+            throw new Error("Custom scraper requires INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD to be set in environment variables.");
+        }
+
         try {
             return await fetchWithCustomScraper(postUrl);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            log(`Custom scraper failed: ${errorMessage}. Falling back to Apify.`, "error");
-            // Fallback to Apify if custom scraper fails
-            if (process.env.APIFY_TOKEN) {
+            log(`Custom scraper failed: ${errorMessage}`, "error");
+
+            // Only fallback if we actually have a valid token
+            if (hasApifyToken) {
                 log("Attempting fallback to Apify...", "instagram");
                 return await fetchWithApify(postCode, postUrl);
             }
-            throw error;
+
+            // If no fallback possible, rethrow with helpful message
+            throw new Error(`Custom scraper failed: ${errorMessage}. (No Apify token available for fallback)`);
         }
-    } else {
-        log(`No credentials found. INSTAGRAM_USERNAME=${process.env.INSTAGRAM_USERNAME ? 'SET' : 'NOT SET'}, INSTAGRAM_PASSWORD=${process.env.INSTAGRAM_PASSWORD ? 'SET' : 'NOT SET'}`, "instagram");
     }
 
-    // No credentials: Try Apify if token is available
-    if (process.env.APIFY_TOKEN) {
+    // Strategy 3: Apify (Fallback/Default if no credentials)
+    if (hasApifyToken) {
         log(`Using Apify for post: ${postCode} (no credentials available)`, "instagram");
         return await fetchWithApify(postCode, postUrl);
     }
 
-    throw new Error("Neither APIFY_TOKEN nor INSTAGRAM_USERNAME/INSTAGRAM_PASSWORD are configured");
+    // No strategies available
+    throw new Error(
+        "Configuration Error: To use the Local Scraper, you MUST set 'INSTAGRAM_USERNAME' and 'INSTAGRAM_PASSWORD' in your Render Environment Variables."
+    );
 }
 
 /**
@@ -172,21 +165,22 @@ async function fetchWithApify(
     };
 
     log(`Starting Apify run with config: resultsLimit=${input.resultsLimit}, maxItems=${input.maxItems}`, "instagram");
-    
+
     // Try the alternative Instagram Comment Scraper actor
     // Actor ID: apify/instagram-comment-scraper OR the original one
     // Note: The original actor (shu8hvrXbJbY3Eb9W) limits FREE users to 15 comments
     // You need a PAID Apify subscription to get more comments
     const actorId = process.env.APIFY_INSTAGRAM_ACTOR || "shu8hvrXbJbY3Eb9W";
-    
+
+    const client = getApifyClient();
     const run = await client.actor(actorId).call(input);
-    
+
     log(`Apify run completed. Run ID: ${run.id}, Status: ${run.status}, Actor: ${actorId}`, "instagram");
-    
+
     const { items: rawItems } = await client.dataset(run.defaultDatasetId).listItems();
-    
+
     log(`Raw items from Apify dataset: ${rawItems.length}`, "instagram");
-    
+
     // Validate with Zod
     const items = rawItems.map((item: any) => {
         const parsed = InstagramCommentSchema.safeParse(item);
@@ -207,7 +201,7 @@ async function fetchWithApify(
     if (items.length > 0) {
         log(`Sample item keys: ${Object.keys(items[0]).join(', ')}`, "instagram");
     }
-    
+
     const comments: InstagramComment[] = items
         .map((item): InstagramComment | null => {
             const username = item.ownerUsername || item.user?.username;
@@ -226,7 +220,7 @@ async function fetchWithApify(
         .filter((c): c is InstagramComment => c !== null && c.username !== "unknown");
 
     log(`Fetched ${comments.length} valid comments via Apify (from ${items.length} raw items)`, "instagram");
-    
+
     // If we got significantly fewer comments than expected, log a warning
     if (items.length > 0 && comments.length < items.length * 0.5) {
         log(`Warning: Many items filtered out. Check if Apify returned metadata instead of comments.`, "instagram");
@@ -254,7 +248,7 @@ async function fetchWithCustomScraper(postUrl: string): Promise<FetchCommentsRes
     if (!InstagramScraper) {
         throw new Error("Custom scraper not available. Puppeteer may not be installed.");
     }
-    
+
     let scraper: any = null;
     try {
         log("Initializing custom scraper...", "instagram");
