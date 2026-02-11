@@ -31,9 +31,18 @@ class ScraperRelay {
      * Initialize the WebSocket server on the existing HTTP server
      */
     init(httpServer: Server): void {
-        this.wss = new WebSocketServer({
-            server: httpServer,
-            path: "/ws/scraper"
+        this.wss = new WebSocketServer({ noServer: true });
+
+        // Manually handle upgrade events to bypass Express 5's catch-all route
+        // which otherwise intercepts the request and returns HTTP 200
+        httpServer.on("upgrade", (request, socket, head) => {
+            const pathname = new URL(request.url || "", `http://${request.headers.host}`).pathname;
+            if (pathname === "/ws/scraper") {
+                this.wss!.handleUpgrade(request, socket, head, (ws) => {
+                    this.wss!.emit("connection", ws, request);
+                });
+            }
+            // Don't destroy socket for non-matching paths (e.g. Vite HMR uses /vite-hmr)
         });
 
         log("Scraper relay WebSocket server initialized on /ws/scraper", "relay");
