@@ -10,6 +10,7 @@ Full-stack Instagram giveaway runner (PickUsAWinner Engine). Scrapes comments fr
 - **Backend:** Express 5, Passport.js (local strategy), express-session, express-rate-limit
 - **Database:** PostgreSQL 16, Drizzle ORM, drizzle-kit (migrations)
 - **Scraping:** Puppeteer + puppeteer-extra-plugin-stealth, Apify Client (fallback)
+- **Payments:** Stripe (PaymentIntent API + Stripe Elements)
 - **Email:** Nodemailer (SMTP)
 - **Build:** Vite (client), esbuild (server), tsx (dev runner)
 
@@ -20,7 +21,7 @@ client/src/           # React frontend
   pages/              # Route page components (tool, analytics, schedule, auth, home, etc.)
   components/         # Reusable UI (ui/ has shadcn components)
   hooks/              # Custom hooks (use-user, use-toast, use-mobile)
-  lib/                # Utilities (queryClient, protected-route, utils)
+  lib/                # Utilities (queryClient, protected-route, utils, stripe)
   App.tsx             # Root component with Wouter routes
   main.tsx            # React entry point
 
@@ -108,7 +109,9 @@ All under `/api` with global rate limiting, block checking, and request validati
 | `/api/user` | GET | Yes | Get current user |
 | `/api/credits` | GET | No | Check remaining credits (IP-based) |
 | `/api/credits/redeem` | POST | No | Redeem payment token |
-| `/api/payment/process` | POST | No | Process payment (generates token) |
+| `/api/config` | GET | No | Stripe publishable key for frontend |
+| `/api/payment/create-intent` | POST | No | Create Stripe PaymentIntent (returns clientSecret) |
+| `/api/payment/confirm` | POST | No | Verify Stripe payment succeeded, issue purchase token |
 | `/api/instagram/validate` | POST | No | Validate Instagram post URL |
 | `/api/instagram/comments` | POST | No | Fetch comments (consumes credit) |
 | `/api/giveaways` | POST | Yes | Create/schedule a giveaway |
@@ -153,6 +156,8 @@ Required variables (see `.env.example`):
 | `ADMIN_API_KEY` | For admin | Secret for admin endpoints |
 | `SESSION_SECRET` | Production | Session encryption key |
 | `INSTAGRAM_USERNAME`, `INSTAGRAM_PASSWORD` | For scraper | Credentials for custom Puppeteer scraper |
+| `STRIPE_SECRET_KEY` | Yes | Stripe secret key (server-side only) |
+| `STRIPE_PUBLISHABLE_KEY` | Yes | Stripe publishable key (served to frontend via /api/config) |
 | `BASE_URL` | Optional | Domain for email links (auto-detected if not set) |
 | `PORT` | Optional | Server port (default: 5000) |
 

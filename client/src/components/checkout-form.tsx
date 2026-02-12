@@ -46,15 +46,18 @@ export function CheckoutForm({ onSuccess, onCancel }: CheckoutFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement
-        options={{
-          layout: "tabs",
-        }}
-      />
+    <form onSubmit={handleSubmit} className="space-y-6 w-full min-w-0">
+      <div className="w-full min-w-0 overflow-hidden">
+        <PaymentElement
+          options={{
+            layout: "tabs",
+            paymentMethodOrder: ["card", "apple_pay", "google_pay", "link"],
+          }}
+        />
+      </div>
 
       {errorMessage && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 border-2 border-red-300 text-red-800 text-sm font-medium">
+        <div className="flex items-center gap-2 p-3 bg-red-50 border-2 border-red-300 text-red-800 text-xs sm:text-sm font-bold uppercase">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           {errorMessage}
         </div>
@@ -63,7 +66,7 @@ export function CheckoutForm({ onSuccess, onCancel }: CheckoutFormProps) {
       <Button
         type="submit"
         disabled={!stripe || !elements || isProcessing}
-        className="w-full neo-btn-primary bg-[#E1306C] hover:bg-[#C13584] text-white text-xl py-6"
+        className="w-full neo-btn-primary bg-[#E1306C] hover:bg-[#C13584] text-white text-base sm:text-lg md:text-xl py-5 sm:py-6"
       >
         {isProcessing ? (
           <>
@@ -79,7 +82,7 @@ export function CheckoutForm({ onSuccess, onCancel }: CheckoutFormProps) {
         type="button"
         variant="ghost"
         onClick={onCancel}
-        className="w-full mt-2"
+        className="w-full mt-2 text-base sm:text-lg font-bold uppercase"
         disabled={isProcessing}
       >
         Back to URL Input

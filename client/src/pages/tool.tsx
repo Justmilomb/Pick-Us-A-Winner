@@ -30,7 +30,9 @@ const stripeAppearance = {
     colorPrimary: "#000000",
     colorBackground: "#ffffff",
     colorText: "#000000",
-    fontFamily: "inherit",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
+    fontSizeBase: "16px",
+    spacingUnit: "8px",
     borderRadius: "0px",
     fontWeightNormal: "700",
   },
@@ -737,86 +739,86 @@ export default function GiveawayTool() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className={`neo-box ${scheduleDate ? 'p-6 sm:p-12 max-w-2xl' : 'p-4 sm:p-8 max-w-md'} bg-white mx-auto`}
+                className={`neo-box w-full max-w-full min-w-0 overflow-hidden ${scheduleDate ? 'p-4 sm:p-6 md:p-12 max-w-2xl' : 'p-4 sm:p-6 md:p-8 max-w-md'} bg-white mx-auto`}
               >
                 {scheduleDate ? (
                   // Scheduled Payment View (Big Text)
-                  <div className="space-y-8 text-center">
+                  <div className="space-y-6 sm:space-y-8 text-center">
                     <div className="space-y-4">
-                      <h2 className="text-4xl md:text-5xl font-black uppercase leading-tight">
+                      <h2 className="text-2xl sm:text-4xl md:text-5xl font-black uppercase leading-tight">
                         Confirm Schedule
                       </h2>
-                      <p className="text-xl font-bold bg-yellow-300 inline-block px-2 border-2 border-black transform -rotate-1">
+                      <p className="text-base sm:text-xl font-bold bg-yellow-300 inline-block px-2 border-2 border-black transform -rotate-1">
                         For {format(scheduleDate, "MMMM do")} at {scheduleTime}
                       </p>
                     </div>
 
-                    <div className="bg-slate-50 border-4 border-black p-6 md:p-8 space-y-6 text-left">
-                      <div className="flex gap-4 items-start">
-                        <div className="bg-black text-white p-2 rounded-full min-w-[2rem] h-8 flex items-center justify-center font-bold">1</div>
-                        <div>
-                          <h3 className="font-black uppercase text-lg">Full Control</h3>
-                          <p className="font-medium text-slate-600">You can edit your giveaway options anytime up to <span className="font-bold text-black bg-yellow-200 px-1">15 minutes before</span> the scheduled time.</p>
+                    <div className="bg-slate-50 border-4 border-black p-4 sm:p-6 md:p-8 space-y-6 text-left">
+                      <div className="flex gap-3 sm:gap-4 items-start">
+                        <div className="bg-black text-white p-2 rounded-full min-w-[2rem] h-8 flex items-center justify-center font-bold text-sm sm:text-base">1</div>
+                        <div className="min-w-0">
+                          <h3 className="font-black uppercase text-base sm:text-lg">Full Control</h3>
+                          <p className="font-medium text-slate-600 text-sm sm:text-base">You can edit your giveaway options anytime up to <span className="font-bold text-black bg-yellow-200 px-1">15 minutes before</span> the scheduled time.</p>
                         </div>
                       </div>
-                      <div className="flex gap-4 items-start">
-                        <div className="bg-black text-white p-2 rounded-full min-w-[2rem] h-8 flex items-center justify-center font-bold">2</div>
-                        <div>
-                          <h3 className="font-black uppercase text-lg">Instant Delivery</h3>
-                          <p className="font-medium text-slate-600">We will email you a secure link to manage your giveaway and view winners instantly when they are picked.</p>
+                      <div className="flex gap-3 sm:gap-4 items-start">
+                        <div className="bg-black text-white p-2 rounded-full min-w-[2rem] h-8 flex items-center justify-center font-bold text-sm sm:text-base">2</div>
+                        <div className="min-w-0">
+                          <h3 className="font-black uppercase text-base sm:text-lg">Instant Delivery</h3>
+                          <p className="font-medium text-slate-600 text-sm sm:text-base">We will email you a secure link to manage your giveaway and view winners instantly when they are picked.</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-4 max-w-md mx-auto">
+                    <div className="space-y-4 max-w-md mx-auto w-full">
                       <div className="space-y-2 text-left">
-                        <Label className="font-black uppercase text-lg">Enter Your Email</Label>
+                        <Label className="font-black uppercase text-base sm:text-lg">Enter Your Email</Label>
                         <Input
                           placeholder="you@email.com"
                           value={scheduleEmail}
                           onChange={(e) => setScheduleEmail(e.target.value)}
-                          className="neo-input text-xl py-6"
+                          className="neo-input text-base sm:text-lg md:text-xl py-4 sm:py-6"
                         />
                       </div>
 
                       <div className="pt-4 space-y-3">
                         <Button
                           onClick={handleConfirmSchedule}
-                          className="w-full neo-btn-primary bg-[#E1306C] text-white text-2xl py-8"
+                          className="w-full neo-btn-primary bg-[#E1306C] text-white text-base sm:text-lg md:text-xl py-5 sm:py-6 md:py-8"
                         >
                           Pay £5.00 & Schedule
                         </Button>
                         <Button
                           variant="outline"
                           onClick={handleClearSchedule}
-                          className="w-full border-2 border-slate-300 text-slate-600 hover:bg-slate-100"
+                          className="w-full border-2 border-slate-300 text-slate-600 hover:bg-slate-100 text-base sm:text-lg font-bold uppercase"
                         >
                           Clear Schedule
                         </Button>
                       </div>
                     </div>
 
-                    <Button variant="ghost" onClick={() => setStep("options")}>Base options</Button>
+                    <Button variant="ghost" onClick={() => setStep("options")} className="text-base sm:text-lg font-bold uppercase">Base options</Button>
                   </div>
                 ) : (
                   // Instant Payment View - pay first, then fetch comments
                   <>
-                    <div className="text-center mb-8">
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-black">
-                        <span className="text-2xl">💷</span>
+                    <div className="text-center mb-6 sm:mb-8">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-black">
+                        <span className="text-xl sm:text-2xl">💷</span>
                       </div>
-                      <h2 className="text-3xl font-black uppercase mb-2">Pay to Continue</h2>
-                      <p className="text-muted-foreground">One-time payment to access Instagram comments</p>
+                      <h2 className="text-2xl sm:text-3xl font-black uppercase mb-2">Pay to Continue</h2>
+                      <p className="text-sm sm:text-base text-muted-foreground">One-time payment to access Instagram comments</p>
                     </div>
 
-                    <div className="space-y-6 mb-8">
-                      <div className="flex justify-between items-center p-4 border-2 border-black bg-slate-50">
-                        <span className="font-bold uppercase">Giveaway Round</span>
-                        <span className="font-black text-xl">£5.00</span>
+                    <div className="space-y-4 sm:space-y-6 mb-6 sm:mb-8">
+                      <div className="flex justify-between items-center p-3 sm:p-4 border-2 border-black bg-slate-50">
+                        <span className="font-bold uppercase text-sm sm:text-base">Giveaway Round</span>
+                        <span className="font-black text-lg sm:text-xl">£5.00</span>
                       </div>
 
-                      <div className="bg-blue-50 border-2 border-blue-200 p-4 rounded">
-                        <p className="text-sm font-medium text-blue-800">
+                      <div className="bg-blue-50 border-2 border-blue-200 p-3 sm:p-4 rounded">
+                        <p className="text-xs sm:text-sm font-medium text-blue-800">
                           ✓ Fetch all comments from your post<br />
                           ✓ Filter & pick random winners<br />
                           ✓ Download winner announcement image
@@ -825,21 +827,23 @@ export default function GiveawayTool() {
                     </div>
 
                     {clientSecret ? (
-                      <Elements
-                        stripe={getStripe()}
-                        options={{ clientSecret, appearance: stripeAppearance }}
-                      >
-                        <CheckoutForm
-                          onSuccess={handlePaymentSuccess}
-                          onCancel={() => { setClientSecret(null); setStep("input"); }}
-                        />
-                      </Elements>
+                      <div className="w-full min-w-0 overflow-hidden">
+                        <Elements
+                          stripe={getStripe()}
+                          options={{ clientSecret, appearance: stripeAppearance }}
+                        >
+                          <CheckoutForm
+                            onSuccess={handlePaymentSuccess}
+                            onCancel={() => { setClientSecret(null); setStep("input"); }}
+                          />
+                        </Elements>
+                      </div>
                     ) : (
                       <>
                         <Button
                           onClick={handleCreatePaymentIntent}
                           disabled={isCreatingIntent}
-                          className="w-full neo-btn-primary bg-[#E1306C] hover:bg-[#C13584] text-white text-xl py-6"
+                          className="w-full neo-btn-primary bg-[#E1306C] hover:bg-[#C13584] text-white text-base sm:text-lg md:text-xl py-5 sm:py-6"
                         >
                           {isCreatingIntent ? (
                             <>
@@ -854,7 +858,7 @@ export default function GiveawayTool() {
                         <Button
                           variant="ghost"
                           onClick={() => setStep("input")}
-                          className="w-full mt-2"
+                          className="w-full mt-2 text-base sm:text-lg font-bold uppercase"
                         >
                           Back to URL Input
                         </Button>

@@ -81,6 +81,7 @@ export async function registerRoutes(
       const paymentIntent = await stripe.paymentIntents.create({
         amount: 500, // £5.00 in pence
         currency: "gbp",
+        automatic_payment_methods: { enabled: true },
         metadata: { url },
       });
 
