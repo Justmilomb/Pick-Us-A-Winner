@@ -501,3 +501,188 @@ PickUsAWinner Team
 Visit us at: https://pickusawinner.com
   `.trim();
 }
+
+// ============================================
+// CONTACT FORM EMAIL TEMPLATES
+// ============================================
+
+export interface ContactFormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  timestamp: string;
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+/**
+ * Contact Received - sent to support@pickusawinner.com
+ */
+export function getContactReceivedHTML(data: ContactFormData): string {
+  const safeMessage = escapeHtml(data.message).replace(/\n/g, "<br>");
+  const safeSubject = escapeHtml(data.subject);
+  const safeName = escapeHtml(data.name);
+  const safeEmail = escapeHtml(data.email);
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Contact Form Submission</title>
+  ${baseStyles}
+</head>
+<body>
+  <div class="email-container">
+    <div class="email-header">
+      <h1>New Contact Form Submission</h1>
+    </div>
+
+    <div class="email-body">
+      <h2>Message from PickUsAWinner Contact Form</h2>
+
+      <div class="info-box">
+        <h3>Sender Details</h3>
+        <p style="margin: 0 0 8px 0;"><strong>Name:</strong> ${safeName}</p>
+        <p style="margin: 0 0 8px 0;"><strong>Email:</strong> <a href="mailto:${safeEmail}" style="color: #E1306C;">${safeEmail}</a></p>
+        <p style="margin: 0;"><strong>Submitted:</strong> ${escapeHtml(data.timestamp)}</p>
+      </div>
+
+      <div class="info-box">
+        <h3>Subject</h3>
+        <p style="margin: 0; font-size: 18px; font-weight: 600; color: #333;">${safeSubject}</p>
+      </div>
+
+      <h3 style="color: #E1306C; font-size: 18px; margin-top: 24px; margin-bottom: 12px;">Message</h3>
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #E1306C; white-space: pre-wrap;">${safeMessage}</div>
+
+      <p style="font-size: 14px; color: #888888; margin-top: 24px;">
+        Reply directly to this email to respond to ${safeName}. The Reply-To header is set to the sender's address.
+      </p>
+    </div>
+
+    <div class="email-footer">
+      <p><strong>PickUsAWinner</strong></p>
+      <p>Contact form submission from pickusawinner.com</p>
+      <p>
+        <a href="https://pickusawinner.com">Visit Website</a> |
+        <a href="https://pickusawinner.com/contact">Contact Page</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+/**
+ * Contact Auto-Reply - sent to the user who submitted the form
+ */
+export function getContactAutoReplyHTML(data: { name: string }): string {
+  const safeName = escapeHtml(data.name);
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>We Received Your Message</title>
+  ${baseStyles}
+</head>
+<body>
+  <div class="email-container">
+    <div class="email-header">
+      <h1>Thanks for Reaching Out!</h1>
+    </div>
+
+    <div class="email-body">
+      <h2>We Got Your Message</h2>
+      <p>Hi ${safeName},</p>
+
+      <p>Thank you for contacting PickUsAWinner. We've received your message and our team will get back to you as soon as possible.</p>
+
+      <div class="info-box">
+        <h3>What to Expect</h3>
+        <ul>
+          <li>We typically respond within <strong>24–48 hours</strong> during business days</li>
+          <li>For urgent matters, you can reach us at <a href="mailto:support@pickusawinner.com" style="color: #E1306C;">support@pickusawinner.com</a></li>
+          <li>Check your spam folder if you don't see our reply</li>
+        </ul>
+      </div>
+
+      <p>In the meantime, feel free to explore our free Instagram giveaway picker:</p>
+
+      <div style="text-align: center;">
+        <a href="https://pickusawinner.com/tool" class="button">Launch Giveaway Tool</a>
+      </div>
+    </div>
+
+    <div class="email-footer">
+      <p><strong>PickUsAWinner</strong></p>
+      <p>The fastest and fairest way to pick giveaway winners</p>
+      <p>
+        <a href="https://pickusawinner.com">Visit Website</a> |
+        <a href="https://pickusawinner.com/privacy">Privacy Policy</a>
+      </p>
+      <p style="font-size: 12px; color: #aaaaaa; margin-top: 20px;">
+        This is an automated confirmation. Please do not reply to this message.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+export function getContactReceivedText(data: ContactFormData): string {
+  return `
+New Contact Form Submission - PickUsAWinner
+
+Sender Details:
+- Name: ${data.name}
+- Email: ${data.email}
+- Submitted: ${data.timestamp}
+
+Subject: ${data.subject}
+
+Message:
+${data.message}
+
+---
+Reply to this email to respond to the sender.
+  `.trim();
+}
+
+export function getContactAutoReplyText(data: { name: string }): string {
+  return `
+Thanks for Reaching Out! - PickUsAWinner
+
+Hi ${data.name},
+
+Thank you for contacting PickUsAWinner. We've received your message and our team will get back to you as soon as possible.
+
+What to Expect:
+- We typically respond within 24–48 hours during business days
+- For urgent matters: support@pickusawinner.com
+- Check your spam folder if you don't see our reply
+
+In the meantime, try our free Instagram giveaway picker:
+https://pickusawinner.com/tool
+
+Best regards,
+PickUsAWinner Team
+
+---
+Visit us at: https://pickusawinner.com
+  `.trim();
+}

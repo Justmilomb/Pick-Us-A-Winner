@@ -17,6 +17,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/", label: "Home" },
     { href: "/tool", label: "Instagram Picker" },
     { href: "/press", label: "Media Kit" },
+    { href: "/contact", label: "Contact" },
   ];
 
   return (
@@ -172,6 +173,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <p className="font-black uppercase tracking-widest text-sm text-center md:text-left">© 2026 PickUsAWinner. All rights reserved.</p>
             <div className="flex gap-8 font-black uppercase tracking-widest text-[10px] md:text-xs">
               <Link href="/press" className="hover:underline underline-offset-4">Press</Link>
+              <Link href="/contact" className="hover:underline underline-offset-4">Contact</Link>
               <Link href="/privacy" className="hover:underline underline-offset-4">Privacy Policy</Link>
               <Link href="/terms" className="hover:underline underline-offset-4">Terms of Service</Link>
               <span className="text-muted-foreground">Certified Random</span>

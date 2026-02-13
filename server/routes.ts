@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { z } from "zod";
 import { storage } from "./storage";
 import {
   fetchInstagramComments,
@@ -741,6 +742,70 @@ export async function registerRoutes(
   );
 
   // ============================================
+  // CONTACT FORM
+  // ============================================
+
+  const contactSchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters").max(100),
+    email: z.string().email("Invalid email address"),
+    subject: z.string().min(1, "Subject is required").max(200),
+    message: z.string().min(10, "Message must be at least 10 characters").max(5000),
+  });
+
+  app.post("/api/contact", emailRateLimiter, async (req, res) => {
+    try {
+      const parsed = contactSchema.safeParse(req.body);
+      if (!parsed.success) {
+        const msg = parsed.error.errors[0]?.message ?? "Invalid input";
+        return res.status(400).json({ error: msg });
+      }
+      const { name, email, subject, message } = parsed.data;
+
+      const contactEmail = process.env.CONTACT_EMAIL || "support@pickusawinner.com";
+      const timestamp = format(new Date(), "PPpp");
+
+      const { sendEmail } = await import("./email");
+      const {
+        getContactReceivedHTML,
+        getContactReceivedText,
+        getContactAutoReplyHTML,
+        getContactAutoReplyText,
+      } = await import("./email-templates");
+
+      const contactData = { name, email, subject, message, timestamp };
+
+      const supportSent = await sendEmail({
+        to: contactEmail,
+        subject: `[PickUsAWinner Contact] ${subject}`,
+        text: getContactReceivedText(contactData),
+        html: getContactReceivedHTML(contactData),
+        replyTo: email,
+      });
+
+      const autoReplySent = await sendEmail({
+        to: email,
+        subject: "We received your message - PickUsAWinner",
+        text: getContactAutoReplyText({ name }),
+        html: getContactAutoReplyHTML({ name }),
+      });
+
+      if (!supportSent) {
+        log(`[CONTACT] Failed to send to support (${contactEmail})`, "error");
+        return res.status(500).json({ error: "Failed to send message. Please try again later." });
+      }
+
+      if (!autoReplySent) {
+        log(`[CONTACT] Support email sent but auto-reply failed for ${email}`, "warn");
+      }
+
+      return res.json({ success: true });
+    } catch (err) {
+      log(`[CONTACT] Error: ${err}`, "error");
+      return res.status(500).json({ error: "Something went wrong. Please try again later." });
+    }
+  });
+
+  // ============================================
   // SEO ENDPOINTS
   // ============================================
 
@@ -772,6 +837,7 @@ Sitemap: https://giveaway-engine.com/sitemap.xml
       { loc: "/picker", changefreq: "weekly", priority: "0.8" },
       { loc: "/coming-soon", changefreq: "monthly", priority: "0.4" },
       { loc: "/press", changefreq: "monthly", priority: "0.5" },
+      { loc: "/contact", changefreq: "monthly", priority: "0.5" },
       { loc: "/privacy", changefreq: "monthly", priority: "0.5" },
       { loc: "/terms", changefreq: "monthly", priority: "0.5" },
     ];

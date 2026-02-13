@@ -21,6 +21,7 @@ import InstagramScraperPage from "@/pages/instagram-scraper";
 import FacebookPage from "@/pages/facebook-picker";
 import TwitterPage from "@/pages/twitter-picker";
 import PressPage from "@/pages/press";
+import ContactPage from "@/pages/contact";
 
 function Router() {
   return (
@@ -38,6 +39,7 @@ function Router() {
       <Route path="/schedule/:token" component={SchedulePage} />
       <Route path="/coming-soon" component={ComingSoon} />
       <Route path="/press" component={PressPage} />
+      <Route path="/contact" component={ContactPage} />
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/terms" component={TermsOfService} />
       <Route component={NotFound} />
