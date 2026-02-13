@@ -12,8 +12,12 @@ export function serveStatic(app: Express) {
 
   app.use(express.static(distPath));
 
-  // fall through to index.html if the file doesn't exist (Express catch-all)
-  app.get("*", (_req, res) => {
+  // fall through to index.html if the file doesn't exist (Express 5 catch-all)
+  // Express 5 / path-to-regexp requires named wildcard: *splat not *
+  app.get("/", (_req, res) => {
+    res.sendFile(path.resolve(distPath, "index.html"));
+  });
+  app.get("/*splat", (_req, res) => {
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
