@@ -1,7 +1,7 @@
 import Layout from "@/components/layout";
 import { SEO } from "@/components/seo";
 import { Link } from "wouter";
-import { Gift, Link2, Download } from "lucide-react";
+import { Link2, Download } from "lucide-react";
 
 export default function PressPage() {
   const breadcrumbData = {
@@ -58,16 +58,20 @@ export default function PressPage() {
           <p className="text-lg font-medium leading-relaxed">
             Use our logo and branding when writing about PickUsAWinner. Please do not alter the logo or imply endorsement.
           </p>
-          <div className="flex items-center gap-6 p-6 border-2 border-black bg-white">
-            <div className="bg-primary p-4 border-2 border-black">
-              <Gift className="w-16 h-16 text-white" />
-            </div>
-            <div>
-              <p className="font-black text-2xl uppercase italic">
-                <span className="text-primary">Pick</span> Us <span className="text-primary">A</span> Winner
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">#1 Winner Picker</p>
-            </div>
+          <div className="p-6 border-2 border-black bg-white space-y-6">
+            <img
+              src="/pickusawinner-logo.png"
+              alt="Pick Us A Winner - #1 Winner Picker"
+              className="max-w-sm h-auto"
+            />
+            <a
+              href="/pickusawinner-logo.png"
+              download="pickusawinner-logo.png"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-bold border-2 border-black hover:bg-primary hover:border-primary transition-colors"
+            >
+              <Download className="w-5 h-5" />
+              Download Logo (PNG)
+            </a>
           </div>
         </section>
 

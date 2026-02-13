@@ -228,12 +228,15 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Press / As Seen On - encourages backlinks */}
+        {/* Press / Media Kit - encourages backlinks */}
         <section className="container mx-auto px-4 py-8 text-center">
-          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-2">As Seen On</p>
-          <p className="text-base font-medium">
-            Featured on creator blogs and giveaway guides. <Link href="/press" className="text-primary font-bold underline hover:no-underline">Link to us</Link> or get our media kit.
+          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-2">Press & Media</p>
+          <p className="text-base font-medium mb-4">
+            Featured on creator blogs and giveaway guides. Link to us or download our logo.
           </p>
+          <Link href="/press" className="inline-flex items-center gap-2 px-6 py-3 border-2 border-black font-bold hover:bg-black hover:text-white transition-colors">
+            Get Media Kit & Download Logo
+          </Link>
         </section>
 
         {/* Trustpilot Widget */}
