@@ -67,9 +67,9 @@ export default function Home() {
                   transition={{ delay: 0.1 }}
                   className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black leading-[0.85] tracking-tighter italic"
                 >
-                  INSTA <br className="hidden sm:block" />
+                  GIVEAWAY <br className="hidden sm:block" />
                   <span className="text-primary drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] sm:drop-shadow-[6px_6px_0px_rgba(0,0,0,1)] not-italic">
-                    WINNERS.
+                    GENERATOR.
                   </span>
                 </motion.h1>
 
@@ -79,7 +79,7 @@ export default function Home() {
                   transition={{ delay: 0.2 }}
                   className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-slate-800 max-w-xl mx-auto lg:mx-0 leading-tight px-2 sm:px-0"
                 >
-                  Automated, transparent, and built for Instagram creators. Pick winners with 100% confidence.
+                  The #1 Instagram Comment Scraper & Giveaway Picker for creators. Fast, fair, and 100% free.
                 </motion.p>
 
                 <motion.div
@@ -193,7 +193,7 @@ export default function Home() {
           </motion.div>
         </section>
 
-      </div>
-    </Layout>
+      </div >
+    </Layout >
   );
 }
