@@ -2,8 +2,41 @@ import Layout from "@/components/layout";
 import { SEO } from "@/components/seo";
 import { Link } from "wouter";
 import { Link2, Download } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+const LOGO_URL = "/pickusawinner-logo.png";
+const LOGO_FILENAME = "pickusawinner-logo.png";
 
 export default function PressPage() {
+  const { toast } = useToast();
+
+  async function handleDownloadLogo(e: React.MouseEvent) {
+    e.preventDefault();
+    try {
+      const res = await fetch(LOGO_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!contentType.includes("image/")) {
+        throw new Error("Server returned non-image content");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = LOGO_FILENAME;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: "Logo downloaded", description: "pickusawinner-logo.png" });
+    } catch (err) {
+      toast({
+        title: "Download failed",
+        description: err instanceof Error ? err.message : "Could not download logo",
+        variant: "destructive",
+      });
+    }
+  }
   const breadcrumbData = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -64,14 +97,14 @@ export default function PressPage() {
               alt="Pick Us A Winner - #1 Winner Picker"
               className="max-w-sm h-auto"
             />
-            <a
-              href="/pickusawinner-logo.png"
-              download="pickusawinner-logo.png"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-bold border-2 border-black hover:bg-primary hover:border-primary transition-colors"
+            <button
+              type="button"
+              onClick={handleDownloadLogo}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-bold border-2 border-black hover:bg-primary hover:border-primary transition-colors cursor-pointer"
             >
               <Download className="w-5 h-5" />
               Download Logo (PNG)
-            </a>
+            </button>
           </div>
         </section>
 
