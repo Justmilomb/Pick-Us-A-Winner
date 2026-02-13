@@ -591,10 +591,6 @@ export default function GiveawayTool() {
                     <Search className="mr-2 w-5 h-5 sm:w-6 sm:h-6" />
                     Fetch Comments
                   </Button>
-
-                  <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
-                    <p>Demo & simulation mode has been disabled for fair play.</p>
-                  </div>
                 </form>
               </motion.div>
             )}
