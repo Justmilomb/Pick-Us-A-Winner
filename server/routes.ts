@@ -760,32 +760,30 @@ Sitemap: https://giveaway-engine.com/sitemap.xml
     const baseUrl = "https://giveaway-engine.com";
     const currentDate = new Date().toISOString().split("T")[0];
 
+    const urls = [
+      { loc: "/", changefreq: "weekly", priority: "1.0" },
+      { loc: "/tool", changefreq: "weekly", priority: "0.9" },
+      { loc: "/instagram-comment-scraper", changefreq: "weekly", priority: "0.85" },
+      { loc: "/youtube", changefreq: "weekly", priority: "0.8" },
+      { loc: "/tiktok", changefreq: "weekly", priority: "0.8" },
+      { loc: "/facebook-picker", changefreq: "weekly", priority: "0.8" },
+      { loc: "/twitter-picker", changefreq: "weekly", priority: "0.8" },
+      { loc: "/wheel", changefreq: "weekly", priority: "0.8" },
+      { loc: "/picker", changefreq: "weekly", priority: "0.8" },
+      { loc: "/coming-soon", changefreq: "monthly", priority: "0.4" },
+      { loc: "/press", changefreq: "monthly", priority: "0.5" },
+      { loc: "/privacy", changefreq: "monthly", priority: "0.5" },
+      { loc: "/terms", changefreq: "monthly", priority: "0.5" },
+    ];
+
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${baseUrl}/</loc>
+${urls.map((u) => `  <url>
+    <loc>${baseUrl}${u.loc}</loc>
     <lastmod>${currentDate}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/tool</loc>
-    <lastmod>${currentDate}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/privacy</loc>
-    <lastmod>${currentDate}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/terms</loc>
-    <lastmod>${currentDate}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
+    <changefreq>${u.changefreq}</changefreq>
+    <priority>${u.priority}</priority>
+  </url>`).join("\n")}
 </urlset>`;
 
     res.type("application/xml");

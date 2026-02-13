@@ -23,6 +23,7 @@ import { CheckoutForm } from "@/components/checkout-form";
 import { getStripe } from "@/lib/stripe";
 
 import { useLocation } from "wouter";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 const stripeAppearance = {
   theme: "flat" as const,
@@ -106,6 +107,7 @@ export default function GiveawayTool() {
   const [fetchTimer, setFetchTimer] = useState(0);
 
   const [userGiveaways, setUserGiveaways] = useState<any[]>([]);
+  const isLg = useMediaQuery("(min-width: 1024px)");
 
   const refreshGiveaways = () => {
     // Placeholder for future local storage or session based history
@@ -539,6 +541,17 @@ export default function GiveawayTool() {
         description="Pick random winners from Instagram comments. Filter by keywords, mentions, exclude duplicates, and schedule automated giveaways. 100% free and transparent."
         url="/tool"
         keywords="instagram giveaway picker, random winner selector, instagram comments picker, giveaway tool, instagram contest winner"
+        additionalStructuredData={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            name: "PickUsAWinner Instagram Picker",
+            applicationCategory: "UtilitiesApplication",
+            offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+            description: "Pick random winners from Instagram comments. Filter by keywords, mentions, exclude duplicates.",
+            url: "https://giveaway-engine.com/tool",
+          },
+        ]}
       />
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12 relative">
@@ -815,9 +828,11 @@ export default function GiveawayTool() {
                   </Button>
                 </div>
                 </div>
-                <div className="hidden lg:flex shrink-0 flex-col items-center pt-6 lg:pt-0 lg:max-w-xs">
-                  <AdBanner type="adsense" format="vertical" className="sticky top-28" />
-                </div>
+                {isLg && (
+                  <div className="shrink-0 flex flex-col items-center pt-6 lg:pt-0 lg:max-w-xs">
+                    <AdBanner type="adsense" format="vertical" className="sticky top-28" />
+                  </div>
+                )}
               </motion.div>
             )}
 

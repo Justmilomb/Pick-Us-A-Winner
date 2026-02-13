@@ -9,6 +9,8 @@ interface SEOProps {
   type?: string;
   noindex?: boolean;
   structuredData?: object;
+  /** Additional structured data (e.g. BreadcrumbList). Merged with structuredData if both provided. */
+  additionalStructuredData?: object[];
 }
 
 const defaultTitle = "PickUsAWinner - The Fairest Instagram Giveaway Tool";
@@ -25,6 +27,7 @@ export function SEO({
   type = "website",
   noindex = false,
   structuredData,
+  additionalStructuredData,
 }: SEOProps) {
   const fullTitle = title ? `${title} | PickUsAWinner` : defaultTitle;
   const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
@@ -63,6 +66,11 @@ export function SEO({
           {JSON.stringify(structuredData)}
         </script>
       )}
+      {additionalStructuredData?.map((data, i) => (
+        <script key={i} type="application/ld+json">
+          {JSON.stringify(data)}
+        </script>
+      ))}
     </Helmet>
   );
 }

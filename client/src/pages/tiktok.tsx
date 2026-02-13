@@ -1,9 +1,11 @@
 import Layout from "@/components/layout";
 import { SEO } from "@/components/seo";
 import { motion } from "framer-motion";
+import { Link } from "wouter";
 import { AdBanner } from "@/components/AdBanner";
 import { Sparkles } from "lucide-react";
 import { InstagramFunnel } from "@/components/tools/InstagramFunnel";
+import { RelatedTools } from "@/components/RelatedTools";
 
 export default function TikTokPage() {
     const faqStructuredData = {
@@ -78,10 +80,12 @@ export default function TikTokPage() {
                     <h2 className="text-3xl font-black uppercase border-b-4 border-black pb-2 inline-block">Boost your TikTok Engagement</h2>
                     <p className="text-lg leading-relaxed font-medium">
                         Giveaways are the secret weapon for TikTok growth. Asking users to "Tag a friend" or "Comment to win" drives massive engagement signals to the algorithm.
+                        Need a picker now? Try our <Link href="/tool" className="text-primary font-bold underline hover:no-underline">Instagram Picker</Link> for Instagram giveaways.
                     </p>
                     <p className="text-lg leading-relaxed font-medium">
                         Our <strong>TikTok Random Comment Picker</strong> will ensure your contests are fair and transparent, building trust with your audience.
                     </p>
+                    <RelatedTools excludePath="/tiktok" max={3} className="mt-12 pt-8 border-t-2 border-black" />
                 </div>
 
             </div>

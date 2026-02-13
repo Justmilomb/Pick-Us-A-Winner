@@ -161,6 +161,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="mt-12 pt-6 border-t-4 border-black flex flex-col md:flex-row justify-between items-center gap-6">
             <p className="font-black uppercase tracking-widest text-sm text-center md:text-left">© 2026 PickUsAWinner. All rights reserved.</p>
             <div className="flex gap-8 font-black uppercase tracking-widest text-[10px] md:text-xs">
+              <Link href="/press" className="hover:underline underline-offset-4">Press</Link>
               <Link href="/privacy" className="hover:underline underline-offset-4">Privacy Policy</Link>
               <Link href="/terms" className="hover:underline underline-offset-4">Terms of Service</Link>
               <span className="text-muted-foreground">Certified Random</span>

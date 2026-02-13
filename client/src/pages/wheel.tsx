@@ -1,10 +1,12 @@
 import Layout from "@/components/layout";
+import { Link } from "wouter";
 import { SEO } from "@/components/seo";
 import { WheelComponent } from "@/components/tools/WheelComponent";
 import { motion } from "framer-motion";
 import { AdBanner } from "@/components/AdBanner";
 import { Sparkles } from "lucide-react";
 import { InstagramFunnel } from "@/components/tools/InstagramFunnel";
+import { RelatedTools } from "@/components/RelatedTools";
 
 export default function WheelPage() {
     const faqStructuredData = {
@@ -76,6 +78,7 @@ export default function WheelPage() {
                         <p className="text-lg leading-relaxed">
                             Our <strong>Wheel of Names</strong> is a free online tool that lets you randomly select a name, number, or item from a list.
                             It's perfect for classroom activities, raffles, giveaways, or simply making a decision when you can't choose.
+                            For Instagram giveaways, try our <Link href="/tool" className="text-primary font-bold underline hover:no-underline">Instagram Picker</Link>.
                         </p>
                         <h3 className="text-xl font-bold uppercase mt-6">Popular Uses:</h3>
                         <ul className="list-disc pl-5 space-y-2 font-medium">
@@ -105,6 +108,7 @@ export default function WheelPage() {
                         <p className="mt-4 p-4 bg-secondary border-2 border-black font-bold">
                             Tip: You can shuffle the names before spinning for extra randomness!
                         </p>
+                        <RelatedTools excludePath="/wheel" max={3} className="mt-8 pt-6 border-t-2 border-black" />
                     </div>
                 </div>
 

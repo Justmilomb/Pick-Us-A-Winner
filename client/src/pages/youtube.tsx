@@ -1,9 +1,11 @@
 import Layout from "@/components/layout";
 import { SEO } from "@/components/seo";
 import { motion } from "framer-motion";
+import { Link } from "wouter";
 import { AdBanner } from "@/components/AdBanner";
 import { Youtube, Sparkles } from "lucide-react";
 import { InstagramFunnel } from "@/components/tools/InstagramFunnel";
+import { RelatedTools } from "@/components/RelatedTools";
 
 export default function YouTubePage() {
     const faqStructuredData = {
@@ -88,6 +90,7 @@ export default function YouTubePage() {
                     <p className="text-lg leading-relaxed font-medium">
                         Running a giveaway on YouTube is one of the best ways to grow your channel ("Subscribe to win!").
                         However, manually scrolling through thousands of comments to find a winner is impossible.
+                        In the meantime, use our <Link href="/tool" className="text-primary font-bold underline hover:no-underline">Instagram Giveaway Picker</Link> for Instagram contests.
                     </p>
 
                     <div className="space-y-4 pt-4">
@@ -98,6 +101,7 @@ export default function YouTubePage() {
                             <li>Pick a random winner instantly</li>
                         </ul>
                     </div>
+                    <RelatedTools excludePath="/youtube" max={3} className="mt-12 pt-8 border-t-2 border-black" />
                 </div>
 
             </div>

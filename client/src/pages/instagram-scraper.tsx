@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import { AdBanner } from "@/components/AdBanner";
 import { Instagram, Search, ShieldCheck, Zap } from "lucide-react";
 import { InstagramFunnel } from "@/components/tools/InstagramFunnel";
+import { RelatedTools } from "@/components/RelatedTools";
 
 export default function InstagramScraperPage() {
     const faqStructuredData = {
@@ -107,6 +108,7 @@ export default function InstagramScraperPage() {
                             <p>
                                 Our <strong>Instagram Comment Scraper</strong> solves this by using the official API and certified random algorithms.
                                 We extract every comment on your post and let you apply rules like "must mention 2 friends" or "must include #giveaway".
+                                Then use our <Link href="/tool" className="text-primary font-bold underline hover:no-underline">Instagram Picker</Link> to pick random winners fairly.
                             </p>
                             <h3 className="text-2xl font-black uppercase mt-8">SEO Benefits for Creators</h3>
                             <ul className="list-disc pl-5 space-y-2">
@@ -116,6 +118,7 @@ export default function InstagramScraperPage() {
                                 <li>Show proof of randomness to your audience.</li>
                             </ul>
                         </div>
+                        <RelatedTools excludePath="/instagram-comment-scraper" max={3} className="mt-12 pt-8 border-t-2 border-black" />
                     </div>
                 </div>
 

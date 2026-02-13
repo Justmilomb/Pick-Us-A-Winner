@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 interface Ad {
@@ -50,8 +50,8 @@ export function AdBanner({
     staleTime: 1000 * 60 * 5,
   });
 
-  // Only render <ins> when container has width (avoids "No slot size for availableWidth=0")
-  useLayoutEffect(() => {
+  // Only render <ins> when container is in viewport AND has width (avoids "No slot size for availableWidth=0")
+  useEffect(() => {
     if (type !== "adsense") return;
 
     const container = adRef.current;
@@ -65,31 +65,57 @@ export function AdBanner({
       return false;
     };
 
-    if (check()) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting && check()) {
+            io.disconnect();
+            break;
+          }
+        }
+      },
+      { threshold: 0.01, rootMargin: "50px" }
+    );
 
-    const observer = new ResizeObserver(() => check());
-    observer.observe(container);
-    const timeout = setTimeout(() => { check(); observer.disconnect(); }, 500);
+    const ro = new ResizeObserver(() => check());
+    io.observe(container);
+    ro.observe(container);
+
+    const timeout = setTimeout(() => {
+      check();
+      io.disconnect();
+      ro.disconnect();
+    }, 500);
 
     return () => {
-      observer.disconnect();
+      io.disconnect();
+      ro.disconnect();
       clearTimeout(timeout);
     };
   }, [type]);
 
-  // Push to AdSense only after <ins> is rendered and has dimensions
+  // Push to AdSense only after <ins> is rendered; defer until layout is complete
   useEffect(() => {
     if (type !== "adsense" || !canShowAd) return;
 
     const container = adRef.current;
     if (!container || container.offsetWidth <= 0) return;
 
-    try {
-      (window as any).adsbygoogle = (window as any).adsbygoogle || [];
-      (window as any).adsbygoogle.push({});
-    } catch (e) {
-      console.error("AdSense script error", e);
-    }
+    const push = () => {
+      try {
+        (window as any).adsbygoogle = (window as any).adsbygoogle || [];
+        (window as any).adsbygoogle.push({});
+      } catch (e) {
+        console.error("AdSense script error", e);
+      }
+    };
+
+    // Defer until after layout completes (avoids availableWidth=0)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (container.offsetWidth > 0) push();
+      });
+    });
   }, [type, canShowAd]);
 
   const handleClick = async () => {
@@ -104,11 +130,12 @@ export function AdBanner({
 
   if (type === "adsense") {
     const isVertical = format === "vertical";
+    const minW = isVertical ? 120 : 320;
     return (
       <div
         ref={adRef}
         className={`overflow-hidden flex justify-center ${isVertical ? "w-[160px] min-w-[120px]" : "min-w-[320px] w-full"} ${className}`}
-        style={{ minHeight: isVertical ? 600 : 90 }}
+        style={{ minHeight: isVertical ? 600 : 90, minWidth: minW }}
       >
         {canShowAd && (
           <ins

@@ -1,9 +1,11 @@
 import Layout from "@/components/layout";
 import { SEO } from "@/components/seo";
 import { motion } from "framer-motion";
+import { Link } from "wouter";
 import { AdBanner } from "@/components/AdBanner";
 import { Twitter, Sparkles } from "lucide-react";
 import { InstagramFunnel } from "@/components/tools/InstagramFunnel";
+import { RelatedTools } from "@/components/RelatedTools";
 
 export default function TwitterPage() {
     const faqStructuredData = {
@@ -78,10 +80,12 @@ export default function TwitterPage() {
                     <h2 className="text-3xl font-black uppercase border-b-4 border-black pb-2 inline-block">Boost your X Engagement</h2>
                     <p className="text-lg leading-relaxed font-medium">
                         Twitter (X) is the home of the "Retweet to Win" culture. It's the fastest way to get your brand in front of millions of people.
+                        For Instagram contests, try our <Link href="/tool" className="text-primary font-bold underline hover:no-underline">Instagram Giveaway Picker</Link>.
                     </p>
                     <p className="text-lg leading-relaxed font-medium">
                         Our <strong>X Random Picker</strong> will verify retweets and replies to ensure only real fans win your prizes.
                     </p>
+                    <RelatedTools excludePath="/twitter-picker" max={3} className="mt-12 pt-8 border-t-2 border-black" />
                 </div>
 
             </div>

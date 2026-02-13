@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { AdBanner } from "@/components/AdBanner";
 import { Zap } from "lucide-react";
 import { InstagramFunnel } from "@/components/tools/InstagramFunnel";
+import { RelatedTools } from "@/components/RelatedTools";
 
 export default function PickerPage() {
     const faqStructuredData = {
@@ -105,6 +106,7 @@ export default function PickerPage() {
                         <p className="mt-4 p-4 bg-primary text-white border-2 border-black font-bold">
                             Looking for an Instagram giveaway picker? <a href="/tool" className="underline hover:text-yellow-300">Click here</a>.
                         </p>
+                        <RelatedTools excludePath="/picker" max={3} className="mt-8 pt-6 border-t-2 border-black" />
                     </div>
                 </div>
 
