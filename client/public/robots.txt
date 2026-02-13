@@ -1,0 +1,30 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://giveaway-engine.com/sitemap.xml
+
+# Allow all crawlers to index all pages
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+# Block crawling of API endpoints and auth pages
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+Disallow: /analytics
+Disallow: /schedule/

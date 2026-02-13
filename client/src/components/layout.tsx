@@ -16,6 +16,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/tool", label: "Instagram Picker" },
+    { href: "/spin-the-wheel", label: "Spin the Wheel" },
+    { href: "/random-name-picker", label: "Name Picker" },
   ];
 
   return (
@@ -124,22 +126,34 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <footer className="border-t-4 border-black bg-white mt-auto overflow-hidden">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 py-20 md:py-32">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-16">
-            <div className="md:col-span-7 space-y-8">
+            <div className="md:col-span-4 space-y-8">
               <div className="flex items-center gap-3">
                 <div className="bg-black p-2 border-2 border-white">
                   <Gift className="w-8 h-8 text-white" />
                 </div>
                 <span className="font-display font-black text-3xl md:text-4xl uppercase italic tracking-tight"><span className="text-primary">Pick</span> <span>Us</span> <span className="text-primary">A</span> <span>Winner</span></span>
               </div>
-              <p className="text-xl font-bold leading-relaxed max-w-md">
-                The fastest and fairest way to pick winners for your social media giveaways. Built for creators who value transparency.
+              <p className="text-lg font-bold leading-relaxed max-w-md">
+                The simplest random selection toolkit on the web. Instagram giveaway picker, spin the wheel, random name picker & more. Trusted by creators worldwide.
               </p>
             </div>
 
-            <div className="md:col-span-5 space-y-6">
-              <h4 className="font-black text-xl uppercase tracking-widest border-b-4 border-primary pb-2 inline-block">Platform</h4>
-              <ul className="space-y-4 font-bold text-lg">
-                <li><Link href="/tool" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> Instagram Picker</Link></li>
+            <div className="md:col-span-4 space-y-6">
+              <h4 className="font-black text-xl uppercase tracking-widest border-b-4 border-primary pb-2 inline-block">Tools</h4>
+              <ul className="space-y-3 font-bold text-base">
+                <li><Link href="/tool" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> Instagram Comment Picker</Link></li>
+                <li><Link href="/spin-the-wheel" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> Spin the Wheel</Link></li>
+                <li><Link href="/random-name-picker" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> Random Name Picker</Link></li>
+                <li><Link href="/random-option-picker" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> Random Option Picker</Link></li>
+                <li><Link href="/giveaway-generator" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> Giveaway Generator</Link></li>
+              </ul>
+            </div>
+
+            <div className="md:col-span-4 space-y-6">
+              <h4 className="font-black text-xl uppercase tracking-widest border-b-4 border-primary pb-2 inline-block">Resources</h4>
+              <ul className="space-y-3 font-bold text-base">
+                <li><Link href="/how-it-works" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> How It Works</Link></li>
+                <li><Link href="/instagram-giveaway-guide" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> Instagram Giveaway Guide</Link></li>
                 <li><Link href="/coming-soon" className="hover:text-primary transition-colors flex items-center gap-2 group opacity-60"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> YouTube Picker (Soon)</Link></li>
                 <li><Link href="/coming-soon" className="hover:text-primary transition-colors flex items-center gap-2 group opacity-60"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> TikTok Picker (Soon)</Link></li>
               </ul>
