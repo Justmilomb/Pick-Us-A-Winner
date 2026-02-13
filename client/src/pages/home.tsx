@@ -169,6 +169,13 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Trustpilot Widget */}
+        <section className="flex justify-center px-2 sm:px-0">
+          <div className="trustpilot-widget" data-locale="en-US" data-template-id="56278e9abfbbba0bdcd568bc" data-businessunit-id="698f4179cd2640ab9bfcee91" data-style-height="52px" data-style-width="100%" data-token="c36af70c-349b-4644-b258-8f7e234df2de">
+            <a href="https://www.trustpilot.com/review/pickusawinner.com" target="_blank" rel="noopener">Trustpilot</a>
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section className="py-8 sm:py-12 px-2 sm:px-0">
           <motion.div

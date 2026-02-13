@@ -146,6 +146,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
+          {/* Trustpilot */}
+          <div className="mt-10 flex justify-center">
+            <div className="trustpilot-widget" data-locale="en-US" data-template-id="56278e9abfbbba0bdcd568bc" data-businessunit-id="698f4179cd2640ab9bfcee91" data-style-height="52px" data-style-width="100%" data-token="c36af70c-349b-4644-b258-8f7e234df2de">
+              <a href="https://www.trustpilot.com/review/pickusawinner.com" target="_blank" rel="noopener">Trustpilot</a>
+            </div>
+          </div>
+
           <div className="mt-12 pt-6 border-t-4 border-black flex flex-col md:flex-row justify-between items-center gap-6">
             <p className="font-black uppercase tracking-widest text-sm text-center md:text-left">© 2026 PickUsAWinner. All rights reserved.</p>
             <div className="flex gap-8 font-black uppercase tracking-widest text-[10px] md:text-xs">
