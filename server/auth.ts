@@ -3,7 +3,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { type Express } from "express";
-import session from "express-session";
+import cookieSession from "cookie-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
@@ -29,22 +29,20 @@ export function setupAuth(app: Express) {
         throw new Error("SESSION_SECRET must be set in production");
     }
 
-    const sessionSettings: session.SessionOptions = {
-        secret: process.env.SESSION_SECRET || "dev_secret_key_change_me",
-        resave: false,
-        saveUninitialized: false,
-        store: new session.MemoryStore(),
-        cookie: {
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
-            secure: process.env.NODE_ENV === "production",
-        },
-    };
-
     if (app.get("env") === "production") {
         app.set("trust proxy", 1);
     }
 
-    app.use(session(sessionSettings));
+    app.use(
+        cookieSession({
+            name: "session",
+            keys: [process.env.SESSION_SECRET || "dev_secret_key_change_me"],
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+            secure: process.env.NODE_ENV === "production",
+            httpOnly: true,
+            sameSite: "lax",
+        }),
+    );
     app.use(passport.initialize());
     app.use(passport.session());
 
