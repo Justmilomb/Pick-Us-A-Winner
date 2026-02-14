@@ -23,8 +23,10 @@ export function registerPublicRoutes(app: Express, deps: PublicRouteDeps): void 
   const sourcePublic = (...parts: string[]) =>
     path.resolve(process.cwd(), "client", "public", ...parts);
 
-  app.get("/media/logo.png", (req, res) => {
+  const sendLogo = (req: any, res: any) => {
     const filePath = resolveExistingAsset([
+      distPublic("filelogo.png"),
+      sourcePublic("filelogo.png"),
       distPublic("favicon.png"),
       sourcePublic("favicon.png"),
       distPublic("pickusawinner-logo.png"),
@@ -40,10 +42,12 @@ export function registerPublicRoutes(app: Express, deps: PublicRouteDeps): void 
       res.setHeader("Content-Disposition", 'attachment; filename="pickusawinner-logo.png"');
     }
     return res.sendFile(filePath);
-  });
+  };
 
-  app.get("/media/social-image.jpg", (req, res) => {
+  const sendSocialImage = (req: any, res: any) => {
     const filePath = resolveExistingAsset([
+      distPublic("filesocialimage.jpg"),
+      sourcePublic("filesocialimage.jpg"),
       distPublic("social-image.jpg"),
       sourcePublic("social-image.jpg"),
       path.resolve(process.cwd(), "Screenshot_14-2-2026_104233_pickusawinner.com.jpeg"),
@@ -60,7 +64,12 @@ export function registerPublicRoutes(app: Express, deps: PublicRouteDeps): void 
       res.setHeader("Content-Disposition", 'attachment; filename="pickusawinner-social-image.jpg"');
     }
     return res.sendFile(filePath);
-  });
+  };
+
+  app.get("/media/logo.png", sendLogo);
+  app.get("/filelogo.png", sendLogo);
+  app.get("/media/social-image.jpg", sendSocialImage);
+  app.get("/filesocialimage.jpg", sendSocialImage);
 
   app.get("/api/check-username", async (req, res) => {
     const { username } = req.query;
