@@ -17,7 +17,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { SEO } from "@/components/seo";
-import { AdBanner } from "@/components/AdBanner";
 import { Elements } from "@stripe/react-stripe-js";
 import { CheckoutForm } from "@/components/checkout-form";
 import { getStripe } from "@/lib/stripe";
@@ -615,7 +614,6 @@ export default function GiveawayTool() {
                 <div className="mt-4 text-lg font-bold text-black bg-yellow-200 px-6 py-2 border-2 border-black rounded">
                   ⏱️ Up to {Math.floor(fetchTimer / 60)}:{String(fetchTimer % 60).padStart(2, '0')} remaining
                 </div>
-                <AdBanner type="adsense" className="mt-8" />
               </motion.div>
             )}
 
@@ -1075,12 +1073,6 @@ export default function GiveawayTool() {
                   ))}
 
                 </div>
-
-                <div className="flex justify-center py-6">
-                  <AdBanner type="adsense" />
-                </div>
-
-
 
                 <div className="flex justify-center pt-8">
                   <Button onClick={resetTool} variant="outline" className="border-2 border-black text-lg py-6 px-8 hover:bg-black hover:text-white transition-colors">

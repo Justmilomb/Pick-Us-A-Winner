@@ -2,7 +2,6 @@ import Layout from "@/components/layout";
 import { SEO } from "@/components/seo";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { AdBanner } from "@/components/AdBanner";
 import { Twitter, Sparkles } from "lucide-react";
 import { InstagramFunnel } from "@/components/tools/InstagramFunnel";
 import { RelatedTools } from "@/components/RelatedTools";
@@ -70,10 +69,6 @@ export default function TwitterPage() {
                 </div>
 
                 <InstagramFunnel />
-
-                <section className="container mx-auto px-4">
-                    <AdBanner type="adsense" className="w-full" />
-                </section>
 
                 {/* SEO Text Content */}
                 <div className="text-left max-w-3xl mx-auto px-6 space-y-6">
