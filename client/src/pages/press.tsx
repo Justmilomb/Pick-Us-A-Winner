@@ -3,10 +3,10 @@ import { SEO } from "@/components/seo";
 import { Link } from "wouter";
 import { Link2, Download } from "lucide-react";
 
-const LOGO_URL = "/pickusawinner-logo.png";
-const LOGO_FILENAME = "pickusawinner-logo.png";
-const OPENGRAPH_URL = "/opengraph.jpg";
-const OPENGRAPH_FILENAME = "pickusawinner-opengraph.jpg";
+const LOGO_URL = "/favicon.png";
+const LOGO_FILENAME = "pickusawinner-favicon.png";
+const OPENGRAPH_URL = "/social-image.jpg";
+const OPENGRAPH_FILENAME = "pickusawinner-social-image.jpg";
 
 export default function PressPage() {
   const breadcrumbData = {
@@ -65,9 +65,9 @@ export default function PressPage() {
           </p>
           <div className="p-6 border-2 border-black bg-white space-y-6">
             <img
-              src="/pickusawinner-logo.png"
-              alt="Pick Us A Winner - #1 Winner Picker"
-              className="max-w-sm h-auto"
+              src="/favicon.png"
+              alt="PickUsAWinner favicon"
+              className="w-28 h-28 object-contain"
             />
             <a
               href={LOGO_URL}
