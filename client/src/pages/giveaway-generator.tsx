@@ -123,34 +123,40 @@ export default function GiveawayGenerator() {
         <section className="space-y-6">
           <h2 className="text-3xl sm:text-4xl font-black uppercase text-center">Supported Platforms</h2>
           <div className="grid md:grid-cols-2 gap-6">
-            {platforms.map((platform, i) => (
-              <motion.div
-                key={platform.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="border-4 border-black bg-white p-6 shadow-neo space-y-4"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`${platform.color} text-white p-3 border-2 border-black`}>
-                      {platform.icon}
+            {platforms.map((platform, i) => {
+              const isComingSoon = platform.status === "coming-soon";
+              return (
+                <motion.div
+                  key={platform.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className={`border-4 border-black p-6 shadow-neo space-y-4 ${isComingSoon ? "bg-slate-100" : "bg-white"}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`${platform.color} text-white p-3 border-2 border-black ${isComingSoon ? "grayscale opacity-70" : ""}`}>
+                        {platform.icon}
+                      </div>
+                      <h3 className={`text-2xl font-black uppercase ${isComingSoon ? "text-slate-500" : ""}`}>{platform.name}</h3>
                     </div>
-                    <h3 className="text-2xl font-black uppercase">{platform.name}</h3>
+                    {platform.status === "live" ? (
+                      <span className="bg-green-500 text-white px-3 py-1 text-xs font-black uppercase border-2 border-black shadow-neo-sm">Live</span>
+                    ) : (
+                      <span className="bg-slate-400 text-slate-600 px-3 py-1 text-xs font-black uppercase border-2 border-black">Coming Soon</span>
+                    )}
                   </div>
-                  {platform.status === "live" ? (
-                    <span className="bg-green-500 text-white px-3 py-1 text-xs font-black uppercase border-2 border-black">Live</span>
-                  ) : (
-                    <span className="bg-slate-300 text-slate-700 px-3 py-1 text-xs font-black uppercase border-2 border-black">Coming Soon</span>
-                  )}
-                </div>
-                <p className="font-medium text-slate-700">{platform.description}</p>
-                <Link href={platform.link} className="neo-btn-primary text-center block py-3 text-sm">
-                  {platform.status === "live" ? `Launch ${platform.name} Picker` : "Use Name Picker Instead"}
-                </Link>
-              </motion.div>
-            ))}
+                  <p className={`font-medium ${isComingSoon ? "text-slate-500" : "text-slate-700"}`}>{platform.description}</p>
+                  <Link
+                    href={platform.link}
+                    className={`text-center block py-3 text-sm font-black uppercase border-2 border-black ${isComingSoon ? "bg-slate-300 text-slate-600 hover:bg-slate-400" : "neo-btn-primary"}`}
+                  >
+                    {platform.status === "live" ? `Launch ${platform.name} Picker` : "Use Name Picker Instead"}
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
         </section>
 
@@ -174,17 +180,24 @@ export default function GiveawayGenerator() {
 
         {/* All Tools */}
         <section className="space-y-6">
-          <h2 className="text-3xl font-black uppercase text-center">Our Complete Toolkit</h2>
+          <h2 className="text-3xl font-black uppercase text-center">
+            <span className="text-primary">Our Complete Toolkit</span>
+          </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { name: "Instagram Comment Picker", desc: "Pick winners from Instagram post comments", link: "/tool" },
-              { name: "Spin the Wheel", desc: "Add entries and spin for a random result", link: "/spin-the-wheel" },
-              { name: "Random Name Picker", desc: "Enter names, pick winners at random", link: "/random-name-picker" },
-              { name: "Random Option Picker", desc: "Can't decide? Let randomness choose", link: "/random-option-picker" },
+              { name: "Instagram Comment Picker", desc: "Pick winners from Instagram post comments", link: "/tool", color: "bg-[#E1306C]", icon: <Instagram className="w-6 h-6" /> },
+              { name: "Spin the Wheel", desc: "Add entries and spin for a random result", link: "/spin-the-wheel", color: "bg-[#FFDA44]", icon: <Sparkles className="w-6 h-6" /> },
+              { name: "Random Name Picker", desc: "Enter names, pick winners at random", link: "/random-name-picker", color: "bg-[#FCAF45]", icon: <CheckCircle className="w-6 h-6" /> },
+              { name: "Random Option Picker", desc: "Can't decide? Let randomness choose", link: "/random-option-picker", color: "bg-[#405DE6]", icon: <Zap className="w-6 h-6" /> },
             ].map((tool, i) => (
-              <Link key={i} href={tool.link} className="border-4 border-black bg-white p-5 shadow-neo hover:translate-x-1 hover:translate-y-1 hover:shadow-neo-sm transition-all space-y-2 block">
-                <h3 className="text-lg font-black uppercase">{tool.name}</h3>
-                <p className="text-sm font-medium text-slate-600">{tool.desc}</p>
+              <Link key={i} href={tool.link} className="border-4 border-black bg-white shadow-neo hover:translate-x-1 hover:translate-y-1 hover:shadow-neo-sm transition-all block overflow-hidden">
+                <div className={`${tool.color} text-white p-3 border-b-4 border-black flex items-center gap-2`}>
+                  {tool.icon}
+                  <h3 className="text-base font-black uppercase">{tool.name}</h3>
+                </div>
+                <div className="p-4">
+                  <p className="text-sm font-medium text-slate-600">{tool.desc}</p>
+                </div>
               </Link>
             ))}
           </div>
