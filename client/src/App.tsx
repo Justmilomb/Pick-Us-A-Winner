@@ -23,11 +23,11 @@ import WheelPage from "@/pages/wheel";
 import PickerPage from "@/pages/picker";
 import YouTubePage from "@/pages/youtube";
 import TikTokPage from "@/pages/tiktok";
-import InstagramScraperPage from "@/pages/instagram-scraper";
 import FacebookPage from "@/pages/facebook-picker";
 import TwitterPage from "@/pages/twitter-picker";
 import PressPage from "@/pages/press";
 import ContactPage from "@/pages/contact";
+import FAQPage from "@/pages/faq";
 
 function Router() {
   return (
@@ -40,7 +40,6 @@ function Router() {
       <Route path="/giveaway-generator" component={GiveawayGenerator} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/instagram-giveaway-guide" component={InstagramGiveawayGuide} />
-      <Route path="/instagram-comment-scraper" component={InstagramScraperPage} />
       <Route path="/facebook-picker" component={FacebookPage} />
       <Route path="/twitter-picker" component={TwitterPage} />
       <Route path="/wheel" component={WheelPage} />
@@ -52,6 +51,7 @@ function Router() {
       <Route path="/coming-soon" component={ComingSoon} />
       <Route path="/press" component={PressPage} />
       <Route path="/contact" component={ContactPage} />
+      <Route path="/faq" component={FAQPage} />
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/terms" component={TermsOfService} />
       <Route component={NotFound} />

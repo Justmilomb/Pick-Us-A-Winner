@@ -104,7 +104,8 @@ export default function GiveawayTool() {
   const [customColor, setCustomColor] = useState("#E1306C");
   const [customizationOpen, setCustomizationOpen] = useState(false);
   const [, setLocation] = useLocation(); // for redirect if needed
-  const [fetchTimer, setFetchTimer] = useState(0);
+  const FETCH_MAX_SECONDS = 180;
+  const [fetchTimer, setFetchTimer] = useState(FETCH_MAX_SECONDS);
 
   const [userGiveaways, setUserGiveaways] = useState<any[]>([]);
   const isLg = useMediaQuery("(min-width: 1024px)");
@@ -132,11 +133,11 @@ export default function GiveawayTool() {
     }
 
     setStep("fetching");
-    setFetchTimer(0);
+    setFetchTimer(FETCH_MAX_SECONDS);
 
-    // Start timer
+    // Countdown timer
     const timerInterval = setInterval(() => {
-      setFetchTimer(prev => prev + 1);
+      setFetchTimer(prev => Math.max(0, prev - 1));
     }, 1000);
 
     try {
@@ -238,11 +239,11 @@ export default function GiveawayTool() {
       if (fetchedEntries.length === 0) {
         toast({ title: "Payment Successful", description: "Fetching comments..." });
         setStep("fetching");
-        setFetchTimer(0);
+        setFetchTimer(FETCH_MAX_SECONDS);
 
-        // Start timer
+        // Countdown timer
         const timerInterval = setInterval(() => {
-          setFetchTimer(prev => prev + 1);
+          setFetchTimer(prev => Math.max(0, prev - 1));
         }, 1000);
 
         try {
@@ -538,17 +539,17 @@ export default function GiveawayTool() {
     <Layout>
       <SEO
         title="Instagram Giveaway Generator | No Signup, No Login"
-        description="Instagram giveaway generator & comment picker. Pick random winners from Instagram comments. No signup, no login, one-time payment. Filter, schedule, done."
+        description="Instagram giveaways tool & comment picker. Pick random winners from Instagram comments. Free to configure. One-time payment (£5) for credits. No signup, no subscription. Filter, schedule, done."
         url="/tool"
-        keywords="instagram giveaway generator, instagram comments picker, no login, no signup, one-time payment, random winner selector, instagram contest"
+        keywords="instagram giveaways tool, instagram giveaway tool, instagram giveaway generator, instagram comments picker, instagram comment picker tool, no login, no signup, one-time payment, random winner selector, instagram contest"
         additionalStructuredData={[
           {
             "@context": "https://schema.org",
             "@type": "WebApplication",
             name: "PickUsAWinner Instagram Giveaway Generator",
             applicationCategory: "UtilitiesApplication",
-            offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-            description: "Instagram giveaway generator. Pick random winners from Instagram comments. No signup, no login, one-time payment.",
+            offers: { "@type": "Offer", price: "5", priceCurrency: "GBP" },
+            description: "Instagram giveaways tool. Pick random winners from Instagram comments. Free to configure. One-time payment (£5) for credits. No signup, no subscription.",
             url: "https://pickusawinner.com/tool",
           },
           {
@@ -568,7 +569,7 @@ export default function GiveawayTool() {
                 name: "Is the Instagram giveaway generator free?",
                 acceptedAnswer: {
                   "@type": "Answer",
-                  text: "Yes. Free to start with 2 free credits. One-time payment for extra credits when needed. No subscription, no login required.",
+                  text: "Free to configure. One-time payment (£5) required to fetch Instagram comments and pick winners. 2 free credits to start. No subscription, no login required.",
                 },
               },
               {
@@ -588,6 +589,9 @@ export default function GiveawayTool() {
           {/* User header removed */}
           <div className="inline-flex items-center gap-2 bg-[#E1306C] text-white px-4 py-1 font-bold uppercase tracking-wider mb-4 border-2 border-black shadow-[4px_4px_0px_0px_#000000] transform -rotate-2">
             <Instagram className="w-5 h-5" /> Instagram Giveaway Generator
+          </div>
+          <div className="bg-amber-100 border-2 border-amber-600 text-amber-900 px-4 py-2 mb-4 font-bold text-sm sm:text-base max-w-xl mx-auto">
+            Free to configure. One-time payment (£5) to fetch comments and pick winners.
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-black uppercase mb-4">Pick Winners</h1>
           <p className="text-base sm:text-lg font-medium text-muted-foreground px-4 sm:px-0">Instagram giveaway generator & comments picker. Fairly select winners from Instagram comments. No signup, no login.</p>
@@ -646,8 +650,9 @@ export default function GiveawayTool() {
                   />
                 </div>
                 <p className="text-sm sm:text-base text-muted-foreground font-medium mt-2">Connecting to Instagram...</p>
+                <p className="text-xs sm:text-sm text-amber-600 font-bold mt-2">Posts with many comments may take 1–3 minutes. Please wait.</p>
                 <div className="mt-4 text-lg font-bold text-black bg-yellow-200 px-6 py-2 border-2 border-black rounded">
-                  ⏱️ {Math.floor(fetchTimer / 60)}:{String(fetchTimer % 60).padStart(2, '0')}
+                  ⏱️ Up to {Math.floor(fetchTimer / 60)}:{String(fetchTimer % 60).padStart(2, '0')} remaining
                 </div>
                 <AdBanner type="adsense" className="mt-8" />
               </motion.div>

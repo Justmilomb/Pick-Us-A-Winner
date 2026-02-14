@@ -54,7 +54,8 @@ export default function SpinTheWheel() {
 
     const segmentAngle = 360 / entries.length;
     const targetIndex = Math.floor(randomFraction * entries.length);
-    const targetAngle = 360 - (targetIndex * segmentAngle + segmentAngle / 2);
+    // Pointer at top (12 o'clock). Segment center at -90 + (i+0.5)*segmentAngle. Align: rotation = 90 - (i+0.5)*segmentAngle
+    const targetAngle = (90 - (targetIndex + 0.5) * segmentAngle - (rotation + 1800) % 360 + 360) % 360;
     const totalRotation = rotation + 1800 + targetAngle + Math.random() * 20 - 10;
 
     setRotation(totalRotation);

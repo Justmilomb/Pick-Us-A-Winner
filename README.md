@@ -206,6 +206,13 @@ Build: `npm run build` → outputs to `dist/`
 
 Docker available; set `NODE_ENV=production` and ensure `.env` is configured.
 
+## SEO (Bing/Edge)
+
+For better visibility on Bing and Microsoft Edge search:
+1. Submit your sitemap at [Bing Webmaster Tools](https://www.bing.com/webmasters)
+2. Sitemap URL: `https://pickusawinner.com/sitemap.xml`
+3. Verify your domain and monitor indexing status
+
 ## Common Tasks
 
 ### Add a new API endpoint

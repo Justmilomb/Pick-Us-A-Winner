@@ -809,6 +809,11 @@ export async function registerRoutes(
   // SEO ENDPOINTS
   // ============================================
 
+  // Redirect deprecated Comment Getter to Instagram Picker
+  app.get("/instagram-comment-scraper", (_req, res) => {
+    res.redirect(301, "/tool");
+  });
+
   app.get("/robots.txt", (_req, res) => {
     res.type("text/plain");
     res.send(`User-agent: *
@@ -828,7 +833,6 @@ Sitemap: https://pickusawinner.com/sitemap.xml
     const urls = [
       { loc: "/", changefreq: "weekly", priority: "1.0" },
       { loc: "/tool", changefreq: "weekly", priority: "0.9" },
-      { loc: "/instagram-comment-scraper", changefreq: "weekly", priority: "0.85" },
       { loc: "/wheel", changefreq: "weekly", priority: "0.85" },
       { loc: "/picker", changefreq: "weekly", priority: "0.85" },
       { loc: "/youtube", changefreq: "weekly", priority: "0.8" },
@@ -838,6 +842,7 @@ Sitemap: https://pickusawinner.com/sitemap.xml
       { loc: "/coming-soon", changefreq: "monthly", priority: "0.4" },
       { loc: "/press", changefreq: "monthly", priority: "0.5" },
       { loc: "/contact", changefreq: "monthly", priority: "0.5" },
+      { loc: "/faq", changefreq: "monthly", priority: "0.6" },
       { loc: "/privacy", changefreq: "monthly", priority: "0.5" },
       { loc: "/terms", changefreq: "monthly", priority: "0.5" },
     ];

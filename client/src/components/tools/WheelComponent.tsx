@@ -48,10 +48,7 @@ export function WheelComponent({ initialSegments = ["Alice", "Bob", "Charlie", "
             rotate: totalRotation,
             transition: {
                 duration: 5,
-                type: "spring",
-                stiffness: 50,
-                damping: 20,
-                mass: 1,
+                type: "tween",
                 ease: "easeOut"
             }
         }).then(() => {

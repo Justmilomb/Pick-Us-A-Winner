@@ -1,7 +1,7 @@
 import Layout from "@/components/layout";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowRight, CheckCircle, Zap, ShieldCheck, Sparkles, RotateCcw, Users, Dice5, Instagram, Youtube, Facebook, Twitter } from "lucide-react";
+import { ArrowRight, CheckCircle, Zap, ShieldCheck, Sparkles, RotateCcw, Users, Dice5, Instagram } from "lucide-react";
 import heroImage from "@/assets/hero-giveaway.png";
 import { SEO } from "@/components/seo";
 import { AdBanner } from "@/components/AdBanner";
@@ -24,7 +24,7 @@ export default function Home() {
         "name": "Do I need to sign up or log in to use PickUsAWinner?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "No. PickUsAWinner requires no signup and no login. Use the tool instantly. One-time payment for extra credits when needed. Free to start."
+          "text": "No. PickUsAWinner requires no signup and no login. Free to configure. One-time payment (£5) required to fetch Instagram comments and pick winners. No subscription."
         }
       },
       {
@@ -67,8 +67,8 @@ export default function Home() {
     <Layout>
       <SEO
         title="Pick Us A Winner - Free Giveaway Picker, Spin the Wheel & Random Name Picker"
-        description="The simplest random selection toolkit on the web. Instagram comment picker, spin the wheel, random name picker & option picker. Trusted by creators. Cryptographically fair. 100% free."
-        keywords="pick us a winner, pick me a winner, instagram giveaway generator, comment picker generator, giveaway maker, instagram comment picker, spin the wheel, random wheel, random name picker, pick names at random, random option picker, giveaway generators for creators, trusted by creators, one time payment giveaway generator, giveaway generators, winner picker"
+        description="The simplest random selection toolkit on the web. Instagram giveaways tool, comment picker, spin the wheel, random name picker. Free to configure. One-time payment for credits. Trusted by creators. Cryptographically fair."
+        keywords="pick us a winner, pick me a winner, instagram giveaways tool, instagram giveaway tool, instagram giveaway generator, comment picker generator, giveaway maker, instagram comment picker, spin the wheel, random wheel, random name picker, pick names at random, random option picker, giveaway generators for creators, trusted by creators, one time payment giveaway generator, giveaway generators, winner picker"
         url="/"
         structuredData={faqStructuredData}
       />
@@ -95,9 +95,9 @@ export default function Home() {
                   className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black leading-[0.85] tracking-tighter italic"
                 >
                   PICK US <br className="hidden sm:block" />
-                  <span className="text-primary drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] sm:drop-shadow-[6px_6px_0px_rgba(0,0,0,1)] not-italic">A WINNER.</span>
+                  <span className="text-primary sm:drop-shadow-[6px_6px_0px_rgba(0,0,0,1)] not-italic">A WINNER.</span>
                   {" "}GIVEAWAY <br className="hidden sm:block" />
-                  <span className="text-primary drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] sm:drop-shadow-[6px_6px_0px_rgba(0,0,0,1)] not-italic">GENERATOR.</span>
+                  <span className="text-primary sm:drop-shadow-[6px_6px_0px_rgba(0,0,0,1)] not-italic">GENERATOR.</span>
                 </motion.h1>
 
                 <motion.p
@@ -106,7 +106,7 @@ export default function Home() {
                   transition={{ delay: 0.2 }}
                   className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-slate-800 max-w-xl mx-auto lg:mx-0 leading-tight px-2 sm:px-0"
                 >
-                  The simplest random selection toolkit on the web. Instagram giveaways, spin the wheel, name picker & more — all cryptographically fair. No signup, no login, one-time payment. Free to start.
+                  The simplest random selection toolkit on the web. Instagram giveaways, spin the wheel, name picker & more — all cryptographically fair. Free to configure. One-time payment for credits. No subscription.
                 </motion.p>
 
                 <motion.div
@@ -251,40 +251,22 @@ export default function Home() {
           <AdBanner type="adsense" className="w-full" />
         </section>
 
-        {/* Steps Section */}
-        <section id="how-it-works" className="py-8 sm:py-12 px-2 sm:px-4 md:px-0">
-          <div className="text-center mb-8 sm:mb-12 md:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black bg-white inline-block px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 border-4 sm:border-[6px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] sm:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] uppercase">
-              3 Simple Steps
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-0 border-4 sm:border-[6px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] sm:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
-            {[
-              { title: "Paste Link", desc: "Copy your post URL from Instagram.", icon: <Zap className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" />, bgColor: "bg-[#FFDA44]" },
-              { title: "Set Rules", desc: "Require hashtags, mentions, or keywords.", icon: <ShieldCheck className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" />, bgColor: "bg-[#A733F4]" },
-              { title: "Pick Winner", desc: "Let our randomizer choose fairly.", icon: <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" />, bgColor: "bg-[#FF338D]" }
-            ].map((step, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className={`p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col items-center text-center gap-3 sm:gap-4 md:gap-6 border-b-4 sm:border-b-[6px] md:border-b-0 md:border-r-[6px] last:border-0 border-black ${step.bgColor} text-black`}
-              >
-                <div className="bg-white border-2 sm:border-4 border-black p-3 sm:p-4 md:p-6 text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center">
-                  {step.icon}
-                </div>
-                <div className="space-y-2 sm:space-y-3 md:space-y-4">
-                  <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-black uppercase tracking-tight">{step.title}</h3>
-                  <p className="font-bold text-sm sm:text-base md:text-lg lg:text-xl opacity-90 leading-snug px-2 sm:px-4 text-white drop-shadow-[1px_1px_0px_rgba(0,0,0,1)] sm:drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                    {step.desc}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+        {/* Steps - compact, link to full page */}
+        <section className="py-6 sm:py-8 px-2 sm:px-4 md:px-0">
+          <Link href="/how-it-works" className="block border-4 border-black bg-white p-6 sm:p-8 shadow-neo hover:translate-x-1 hover:translate-y-1 hover:shadow-neo-sm transition-all">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
+              <div className="flex gap-2 sm:gap-4">
+                {[<Zap key="1" className="w-10 h-10 text-[#FFDA44]" />, <ShieldCheck key="2" className="w-10 h-10 text-[#A733F4]" />, <CheckCircle key="3" className="w-10 h-10 text-[#FF338D]" />].map((icon, i) => (
+                  <div key={i} className="p-2 border-2 border-black bg-white">{icon}</div>
+                ))}
+              </div>
+              <div className="text-center sm:text-left flex-1">
+                <h3 className="text-xl sm:text-2xl font-black uppercase">3 Simple Steps: Paste Link → Set Rules → Pick Winner</h3>
+                <p className="text-sm font-medium text-muted-foreground mt-1">Learn how our algorithm ensures fair selection</p>
+              </div>
+              <ArrowRight className="w-6 h-6 flex-shrink-0" />
+            </div>
+          </Link>
         </section>
 
         {/* Why PickUsAWinner */}
@@ -322,94 +304,12 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Platform Support */}
-        <section className="py-8 sm:py-12 px-2 sm:px-4 md:px-0">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase">Giveaway Generator for Every Platform</h2>
-            <p className="text-lg font-bold text-slate-600 mt-2 max-w-2xl mx-auto">
-              Run giveaways on Instagram today. YouTube, TikTok, and Facebook support coming soon.
-              Use our name picker or spin wheel for any platform right now.
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { name: "Instagram", status: "Live", link: "/tool" },
-              { name: "YouTube", status: "Coming Soon", link: "/random-name-picker" },
-              { name: "TikTok", status: "Coming Soon", link: "/random-name-picker" },
-              { name: "Facebook", status: "Coming Soon", link: "/random-name-picker" },
-            ].map((platform) => (
-              <Link key={platform.name} href={platform.link} className="border-4 border-black bg-white p-5 shadow-neo-sm hover:shadow-neo hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all text-center space-y-2">
-                <h3 className="text-xl font-black uppercase">{platform.name}</h3>
-                <span className={`inline-block px-3 py-1 text-xs font-black uppercase border-2 border-black ${
-                  platform.status === "Live" ? "bg-green-500 text-white" : "bg-slate-200 text-slate-600"
-                }`}>
-                  {platform.status}
-                </span>
-              </Link>
-            ))}
-          </div>
-          <div className="text-center mt-6">
-            <Link href="/giveaway-generator" className="text-primary font-black uppercase text-sm hover:underline underline-offset-4 inline-flex items-center gap-1">
-              View all platform details <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </section>
-
-        {/* Tools Hierarchy: 1. Instagram (main) 2. Working mini tools 3. Coming soon → Instagram */}
-        <section className="container mx-auto px-4 py-8 sm:py-10">
-          <h2 className="text-2xl sm:text-3xl font-black uppercase mb-5 text-center">All Our Tools</h2>
-          <div className="space-y-5 max-w-4xl mx-auto">
-            {/* Tier 1: Main - Instagram */}
-            <div className="border-4 border-black bg-primary/10 p-4 sm:p-6">
-              <p className="text-xs font-black uppercase tracking-widest text-primary mb-1">Main Tool</p>
-              <Link href="/tool" className="flex items-center gap-4 group">
-                <div className="bg-instagram p-3 border-2 border-black text-white">
-                  <Instagram className="w-8 h-8" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl sm:text-2xl font-black uppercase group-hover:text-primary transition-colors">Instagram Giveaway Generator</h3>
-                  <p className="text-sm font-medium text-muted-foreground">Pick random winners from comments. No signup, no login. Filter, schedule, done.</p>
-                </div>
-                <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
-              </Link>
-            </div>
-
-            {/* Tier 2: Working mini tools */}
-            <div>
-              <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">Working Tools</p>
-              <div className="grid sm:grid-cols-3 gap-3">
-                {[
-                  { href: "/instagram-comment-scraper", label: "Comment Getter", desc: "Get Instagram comments from any post" },
-                  { href: "/wheel", label: "Wheel of Names", desc: "Spin the wheel - random name generator" },
-                  { href: "/picker", label: "Random Picker", desc: "Random name generator - pick from any list" },
-                ].map((t) => (
-                  <Link key={t.href} href={t.href} className="block p-3 sm:p-4 border-2 border-black bg-white hover:bg-secondary transition-colors group">
-                    <h4 className="font-black uppercase group-hover:text-primary text-sm sm:text-base">{t.label}</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">{t.desc}</p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Tier 3: Coming soon → Instagram */}
-            <div>
-              <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">Coming Soon</p>
-              <p className="text-sm font-medium text-muted-foreground mb-2">These will launch later. Use Instagram Picker for now.</p>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { href: "/youtube", label: "YouTube", icon: <Youtube className="w-4 h-4" /> },
-                  { href: "/tiktok", label: "TikTok", icon: null },
-                  { href: "/facebook-picker", label: "Facebook", icon: <Facebook className="w-4 h-4" /> },
-                  { href: "/twitter-picker", label: "Twitter", icon: <Twitter className="w-4 h-4" /> },
-                ].map((t) => (
-                  <Link key={t.href} href={t.href} className="inline-flex items-center gap-2 px-3 py-1.5 border-2 border-dashed border-slate-300 text-slate-600 hover:border-black hover:text-black transition-colors text-sm font-bold">
-                    {t.icon}
-                    {t.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
+        {/* Platform Support - compact */}
+        <section className="py-6 sm:py-8 px-2 sm:px-4 md:px-0">
+          <Link href="/coming-soon" className="block border-4 border-black bg-slate-50 p-4 sm:p-6 text-center hover:bg-slate-100 transition-colors">
+            <p className="font-bold text-slate-700">Instagram live now. YouTube, TikTok, Facebook coming soon.</p>
+            <p className="text-sm text-primary font-black uppercase mt-1">View platform status →</p>
+          </Link>
         </section>
 
         {/* Press / Media Kit - encourages backlinks */}

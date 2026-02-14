@@ -155,6 +155,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <h4 className="font-black text-xl uppercase tracking-widest border-b-4 border-primary pb-2 inline-block">Resources</h4>
               <ul className="space-y-3 font-bold text-base">
                 <li><Link href="/how-it-works" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> How It Works</Link></li>
+                <li><Link href="/faq" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> FAQ</Link></li>
                 <li><Link href="/instagram-giveaway-guide" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> Instagram Giveaway Guide</Link></li>
                 <li><Link href="/coming-soon" className="hover:text-primary transition-colors flex items-center gap-2 group opacity-60"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> YouTube Picker (Soon)</Link></li>
                 <li><Link href="/coming-soon" className="hover:text-primary transition-colors flex items-center gap-2 group opacity-60"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> TikTok Picker (Soon)</Link></li>
@@ -170,7 +171,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </ul>
                 <p className="text-xs font-black uppercase text-muted-foreground pt-2">Working</p>
                 <ul className="space-y-2 font-bold text-base">
-                  <li><Link href="/instagram-comment-scraper" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> Comment Getter</Link></li>
                   <li><Link href="/wheel" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> Wheel of Names</Link></li>
                   <li><Link href="/picker" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> Random Picker</Link></li>
                 </ul>

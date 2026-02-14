@@ -47,10 +47,11 @@ export function CheckoutForm({ onSuccess, onCancel }: CheckoutFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full min-w-0">
-      <div className="w-full min-w-0 overflow-hidden">
+      {/* Accordion layout shows all payment options (card, Apple Pay, Google Pay) on mobile. Apple Pay requires HTTPS + Stripe domain verification. */}
+      <div className="w-full min-w-0 overflow-visible min-w-[280px]">
         <PaymentElement
           options={{
-            layout: "tabs",
+            layout: "accordion",
             paymentMethodOrder: ["card", "apple_pay", "google_pay", "link"],
           }}
         />
