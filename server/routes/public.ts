@@ -66,8 +66,13 @@ export function registerPublicRoutes(app: Express, deps: PublicRouteDeps): void 
     return res.sendFile(filePath);
   };
 
+  // Canonical and legacy logo URLs (old bundles still request /filelogo.png).
+  app.get("/favicon.png", sendLogo);
   app.get("/media/logo.png", sendLogo);
   app.get("/filelogo.png", sendLogo);
+
+  // Canonical and legacy social image URLs.
+  app.get("/social-image.jpg", sendSocialImage);
   app.get("/media/social-image.jpg", sendSocialImage);
   app.get("/filesocialimage.jpg", sendSocialImage);
 

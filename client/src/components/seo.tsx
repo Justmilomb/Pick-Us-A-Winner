@@ -15,7 +15,7 @@ interface SEOProps {
 const defaultTitle = "PickUsAWinner - Instagram Giveaway Generator | No Signup, No Login";
 const defaultDescription =
   "Instagram giveaway generator & comment picker tool. Pick random winners from Instagram comments. Free to configure. One-time payment (£2.50) for credits. No signup, no subscription.";
-const defaultImage = "https://pickusawinner.com/filesocialimage.jpg?v=3";
+const defaultImage = "https://pickusawinner.com/social-image.jpg?v=4";
 const baseUrl = "https://pickusawinner.com";
 
 export function SEO({
