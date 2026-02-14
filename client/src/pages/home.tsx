@@ -16,7 +16,7 @@ export default function Home() {
         "name": "How does PickUsAWinner pick giveaway winners?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "PickUsAWinner uses a certified random selection algorithm to pick winners from Instagram comments. You can filter by keywords, mentions, and exclude duplicates to ensure fair selection."
+          "text": "PickUsAWinner uses the Web Crypto API (crypto.getRandomValues) combined with the Fisher-Yates shuffle algorithm for cryptographically secure random selection. Every participant has a mathematically equal chance of winning. For Instagram giveaways, we also filter by keywords, mentions, and exclude duplicate or fraudulent entries."
         }
       },
       {
@@ -24,7 +24,7 @@ export default function Home() {
         "name": "Do I need to sign up or log in to use PickUsAWinner?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "No. PickUsAWinner requires no signup and no login. Use the tool instantly. One-time payment for extra credits when needed. Free to start."
+          "text": "No. PickUsAWinner requires no signup and no login. Use the tool instantly. Our wheel spinner, random name picker, and option picker are 100% free. Instagram comment fetching includes free credits, with extra credits available as a one-time purchase — no monthly subscriptions."
         }
       },
       {
@@ -34,6 +34,22 @@ export default function Home() {
           "@type": "Answer",
           "text": "Yes, PickUsAWinner allows you to schedule giveaways to run automatically at a specific date and time. You'll receive an email with results when the giveaway completes."
         }
+      },
+      {
+        "@type": "Question",
+        "name": "What tools does PickUsAWinner offer?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "PickUsAWinner offers multiple free tools: Instagram Comment Picker for giveaways, Wheel of Names / Spin the Wheel for random selection, Random Name Picker for drawing names from a list, and platform pickers for YouTube, TikTok, Facebook, and Twitter (coming soon). All tools use cryptographically fair randomness."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is the random selection truly fair?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. We use crypto.getRandomValues() — the same cryptographic randomness source used in encryption — instead of Math.random(). This is combined with the Fisher-Yates shuffle for mathematically proven uniform distribution."
+        }
       }
     ]
   };
@@ -41,8 +57,9 @@ export default function Home() {
   return (
     <Layout>
       <SEO
-        title="Instagram Giveaway Generator | No Signup, No Login"
-        description="Instagram giveaway generator & comment picker. Pick random winners from Instagram comments. No signup, no login, one-time payment. Free to start."
+        title="Random Name Picker & Instagram Giveaway Generator | No Signup"
+        description="Pick random winners from Instagram comments instantly. No signup, no login, one-time payment. Spin the wheel, random name picker, comment picker & giveaway generator. Trusted by creators. Cryptographically fair."
+        keywords="pick us a winner, pick me a winner, instagram giveaway generator, instagram comment picker, random name picker, spin the wheel, giveaway generator, random winner selector, no signup giveaway tool, wheel of names, comment picker, giveaway maker"
         url="/"
         structuredData={faqStructuredData}
       />

@@ -13,15 +13,15 @@ interface SEOProps {
   additionalStructuredData?: object[];
 }
 
-const defaultTitle = "PickUsAWinner - Instagram Giveaway Generator | No Signup, No Login";
-const defaultDescription = "Instagram giveaway generator & comment picker. Pick random winners from Instagram comments. No signup, no login, one-time payment. Free to start.";
+const defaultTitle = "Pick Us a Winner – Random Name Picker & Instagram Giveaway Generator";
+const defaultDescription = "Pick random winners from Instagram comments instantly. No signup, no login, one-time payment. Spin the wheel, random name picker, comment picker & giveaway generator. Trusted by creators.";
 const defaultImage = "https://pickusawinner.com/opengraph.jpg";
 const baseUrl = "https://pickusawinner.com";
 
 export function SEO({
   title,
   description = defaultDescription,
-  keywords = "instagram giveaway generator, instagram comments picker, no login giveaway tool, no signup, one-time payment, random winner selector, instagram contest",
+  keywords = "pick us a winner, pick me a winner, instagram giveaway generator, instagram comment picker, random name picker, spin the wheel, giveaway generator, random winner selector, no signup giveaway tool, one-time payment, wheel of names, comment picker, giveaway maker",
   image = defaultImage,
   url,
   type = "website",

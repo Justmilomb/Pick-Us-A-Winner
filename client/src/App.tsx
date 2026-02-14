@@ -22,6 +22,7 @@ import FacebookPage from "@/pages/facebook-picker";
 import TwitterPage from "@/pages/twitter-picker";
 import PressPage from "@/pages/press";
 import ContactPage from "@/pages/contact";
+import { CookieConsent } from "@/components/CookieConsent";
 
 function Router() {
   return (
@@ -54,6 +55,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <CookieConsent />
         </TooltipProvider>
       </QueryClientProvider>
     </HelmetProvider>
