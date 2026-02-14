@@ -3,9 +3,9 @@ import { SEO } from "@/components/seo";
 import { Link } from "wouter";
 import { Link2, Download } from "lucide-react";
 
-const LOGO_URL = "/favicon.png";
+const LOGO_URL = "/media/logo.png?download=1&v=1";
 const LOGO_FILENAME = "pickusawinner-favicon.png";
-const OPENGRAPH_URL = "/social-image.jpg";
+const OPENGRAPH_URL = "/media/social-image.jpg?download=1&v=3";
 const OPENGRAPH_FILENAME = "pickusawinner-social-image.jpg";
 
 export default function PressPage() {
@@ -65,7 +65,7 @@ export default function PressPage() {
           </p>
           <div className="p-6 border-2 border-black bg-white space-y-6">
             <img
-              src="/favicon.png"
+              src="/media/logo.png?v=1"
               alt="PickUsAWinner favicon"
               className="w-28 h-28 object-contain"
             />
