@@ -16,6 +16,7 @@ export default function Home() {
         "name": "How does PickUsAWinner pick giveaway winners?",
         "acceptedAnswer": {
           "@type": "Answer",
+          "text": "PickUsAWinner uses the Web Crypto API (crypto.getRandomValues) combined with the Fisher-Yates shuffle algorithm for cryptographically secure random selection. Every participant has a mathematically equal chance of winning. For Instagram giveaways, we also filter by keywords, mentions, and exclude duplicate or fraudulent entries."
           "text": "PickUsAWinner uses the Web Crypto API for cryptographically secure random selection combined with the Fisher-Yates shuffle algorithm. This guarantees every participant has an equal chance of winning. For Instagram giveaways, we also filter by keywords, mentions, and exclude duplicate/fraudulent entries."
         }
       },
@@ -24,6 +25,7 @@ export default function Home() {
         "name": "Do I need to sign up or log in to use PickUsAWinner?",
         "acceptedAnswer": {
           "@type": "Answer",
+          "text": "No. PickUsAWinner requires no signup and no login. Use the tool instantly. Our wheel spinner, random name picker, and option picker are 100% free. Instagram comment fetching includes free credits, with extra credits available as a one-time purchase — no monthly subscriptions."
           "text": "No. PickUsAWinner requires no signup and no login. Free to configure. One-time payment (£2.50) required to fetch Instagram comments and pick winners. No subscription."
         }
       },
@@ -40,6 +42,7 @@ export default function Home() {
         "name": "What tools does PickUsAWinner offer?",
         "acceptedAnswer": {
           "@type": "Answer",
+          "text": "PickUsAWinner offers multiple free tools: Instagram Comment Picker for giveaways, Wheel of Names / Spin the Wheel for random selection, Random Name Picker for drawing names from a list, and platform pickers for YouTube, TikTok, Facebook, and Twitter (coming soon). All tools use cryptographically fair randomness."
           "text": "PickUsAWinner offers four free tools: (1) Instagram Comment Picker for giveaways, (2) Spin the Wheel for random selection with animation, (3) Random Name Picker for drawing names from a list, and (4) Random Option Picker for making random decisions. All tools use cryptographically fair randomness."
         }
       },
@@ -48,6 +51,7 @@ export default function Home() {
         "name": "Is the random selection truly fair?",
         "acceptedAnswer": {
           "@type": "Answer",
+          "text": "Yes. We use crypto.getRandomValues() — the same cryptographic randomness source used in encryption — instead of Math.random(). This is combined with the Fisher-Yates shuffle for mathematically proven uniform distribution."
           "text": "Yes. We use crypto.getRandomValues() — the same cryptographic randomness source used in encryption — instead of Math.random(). This is combined with the Fisher-Yates shuffle for mathematically proven uniform distribution. We also explain our algorithm transparently on our How It Works page."
         }
       }
@@ -66,6 +70,9 @@ export default function Home() {
   return (
     <Layout>
       <SEO
+        title="Random Name Picker & Instagram Giveaway Generator | No Signup"
+        description="Pick random winners from Instagram comments instantly. No signup, no login, one-time payment. Spin the wheel, random name picker, comment picker & giveaway generator. Trusted by creators. Cryptographically fair."
+        keywords="pick us a winner, pick me a winner, instagram giveaway generator, instagram comment picker, random name picker, spin the wheel, giveaway generator, random winner selector, no signup giveaway tool, wheel of names, comment picker, giveaway maker"
         title="Pick Us A Winner - Free Giveaway Picker, Spin the Wheel & Random Name Picker"
         description="The simplest random selection toolkit on the web. Instagram giveaways tool, comment picker, spin the wheel, random name picker. Free to configure. One-time payment (£2.50) for credits. Trusted by creators. Cryptographically fair."
         keywords="pick us a winner, pick me a winner, instagram giveaways tool, instagram giveaway tool, instagram giveaway generator, comment picker generator, giveaway maker, instagram comment picker, spin the wheel, random wheel, random name picker, pick names at random, random option picker, giveaway generators for creators, trusted by creators, one time payment giveaway generator, giveaway generators, winner picker"
