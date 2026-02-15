@@ -8,8 +8,24 @@ export interface EmailOptions {
     replyTo?: string;
 }
 
+export interface EmailHealthStatus {
+    configured: boolean;
+    verified: boolean;
+    smtp: {
+        host: string | null;
+        port: string | null;
+        secure: boolean;
+        userMasked: string | null;
+        from: string | null;
+        fromMatchesUser: boolean;
+    };
+    error?: string;
+}
+
 // Create reusable transporter
 let transporter: nodemailer.Transporter | null = null;
+let isTransportVerified = false;
+let verifyPromise: Promise<void> | null = null;
 
 function getTransporter(): nodemailer.Transporter | null {
     if (transporter) {
@@ -29,14 +45,23 @@ function getTransporter(): nodemailer.Transporter | null {
     }
 
     try {
+        const parsedPort = Number.parseInt(smtpPort, 10);
+        if (!Number.isFinite(parsedPort)) {
+            console.error(`[EMAIL] Invalid SMTP_PORT value: ${smtpPort}`);
+            return null;
+        }
+
         transporter = nodemailer.createTransport({
             host: smtpHost,
-            port: parseInt(smtpPort, 10),
+            port: parsedPort,
             secure: process.env.SMTP_SECURE === "true" || smtpPort === "465",
             auth: {
                 user: smtpUser,
                 pass: smtpPass,
             },
+            connectionTimeout: 15000,
+            greetingTimeout: 10000,
+            socketTimeout: 20000,
         });
 
         console.log(`[EMAIL] SMTP transporter configured for ${smtpHost}:${smtpPort}`);
@@ -45,6 +70,116 @@ function getTransporter(): nodemailer.Transporter | null {
         console.error("[EMAIL] Failed to create transporter:", error);
         return null;
     }
+}
+
+/** Check if SMTP is configured (without creating transporter) */
+export function isEmailConfigured(): boolean {
+  return !!(process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.SMTP_USER && process.env.SMTP_PASS);
+}
+
+async function ensureTransportVerified(emailTransporter: nodemailer.Transporter): Promise<boolean> {
+    if (isTransportVerified) {
+        return true;
+    }
+
+    if (!verifyPromise) {
+        verifyPromise = emailTransporter.verify().then(() => {
+            isTransportVerified = true;
+            console.log("[EMAIL] SMTP connection verified successfully");
+        }).catch((error) => {
+            const err = error instanceof Error ? error : new Error(String(error));
+            console.error("[EMAIL] SMTP verification failed:", err.message);
+            throw err;
+        }).finally(() => {
+            verifyPromise = null;
+        });
+    }
+
+    try {
+        await verifyPromise;
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+function shouldRetryWithAuthSender(errorMessage: string): boolean {
+    const msg = errorMessage.toLowerCase();
+    return (
+        msg.includes("sender address rejected") ||
+        msg.includes("mail from command failed") ||
+        msg.includes("from address") ||
+        msg.includes("sender rejected")
+    );
+}
+
+function quoteDisplayName(name: string): string {
+    const sanitized = name.replace(/"/g, "").trim();
+    return `"${sanitized}"`;
+}
+
+function maskEmail(email: string | undefined): string | null {
+    if (!email) return null;
+    const trimmed = email.trim();
+    const atIndex = trimmed.indexOf("@");
+    if (atIndex <= 1) return "***";
+    return `${trimmed[0]}***${trimmed.slice(atIndex - 1)}`;
+}
+
+export async function checkEmailHealth(): Promise<EmailHealthStatus> {
+    const smtpHost = process.env.SMTP_HOST?.trim() || null;
+    const smtpPort = process.env.SMTP_PORT?.trim() || null;
+    const smtpUser = process.env.SMTP_USER?.trim() || "";
+    const smtpFrom = process.env.SMTP_FROM?.trim() || null;
+    const secure = process.env.SMTP_SECURE === "true" || smtpPort === "465";
+
+    if (!isEmailConfigured()) {
+        return {
+            configured: false,
+            verified: false,
+            smtp: {
+                host: smtpHost,
+                port: smtpPort,
+                secure,
+                userMasked: maskEmail(smtpUser || undefined),
+                from: smtpFrom,
+                fromMatchesUser: !!(smtpFrom && smtpUser && smtpFrom === smtpUser),
+            },
+            error: "Missing required SMTP env vars (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS).",
+        };
+    }
+
+    const emailTransporter = getTransporter();
+    if (!emailTransporter) {
+        return {
+            configured: true,
+            verified: false,
+            smtp: {
+                host: smtpHost,
+                port: smtpPort,
+                secure,
+                userMasked: maskEmail(smtpUser || undefined),
+                from: smtpFrom,
+                fromMatchesUser: !!(smtpFrom && smtpUser && smtpFrom === smtpUser),
+            },
+            error: "Transporter could not be created.",
+        };
+    }
+
+    const verified = await ensureTransportVerified(emailTransporter);
+    return {
+        configured: true,
+        verified,
+        smtp: {
+            host: smtpHost,
+            port: smtpPort,
+            secure,
+            userMasked: maskEmail(smtpUser || undefined),
+            from: smtpFrom,
+            fromMatchesUser: !!(smtpFrom && smtpUser && smtpFrom === smtpUser),
+        },
+        ...(verified ? {} : { error: "SMTP connection/auth verification failed. Check host, port, user, password, and sender." }),
+    };
 }
 
 export async function sendEmail({ to, subject, text, html, replyTo }: EmailOptions): Promise<boolean> {
@@ -57,22 +192,50 @@ export async function sendEmail({ to, subject, text, html, replyTo }: EmailOptio
     }
 
     try {
-        const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER || "noreply@pickusawinner.com";
+        const smtpUser = process.env.SMTP_USER || "";
+        const configuredFrom = process.env.SMTP_FROM?.trim();
+        const fromName = process.env.SMTP_FROM_NAME?.trim();
+        const defaultReplyTo = process.env.SMTP_REPLY_TO?.trim();
+        const fromEmail = configuredFrom || smtpUser || "noreply@pickusawinner.com";
+        const formattedFrom = fromName ? `${quoteDisplayName(fromName)} <${fromEmail}>` : fromEmail;
+        const effectiveReplyTo = replyTo || defaultReplyTo;
 
-        const mailOptions = {
-            from: fromEmail,
+        const verified = await ensureTransportVerified(emailTransporter);
+        if (!verified) {
+            console.error("[EMAIL] SMTP verification failed. Email was not sent.");
+            return false;
+        }
+
+        const buildMailOptions = (from: string) => ({
+            from: from === fromEmail ? formattedFrom : (fromName ? `${quoteDisplayName(fromName)} <${from}>` : from),
             to,
             subject,
             text,
             html: html || text.replace(/\n/g, "<br>"), // Simple HTML conversion if no HTML provided
-            ...(replyTo && { replyTo }),
-        };
+            ...(effectiveReplyTo && { replyTo: effectiveReplyTo }),
+        });
 
-        const info = await emailTransporter.sendMail(mailOptions);
+        let info;
+        try {
+            info = await emailTransporter.sendMail(buildMailOptions(fromEmail));
+        } catch (firstError) {
+            const firstErr = firstError instanceof Error ? firstError : new Error(String(firstError));
+            if (configuredFrom && smtpUser && configuredFrom !== smtpUser && shouldRetryWithAuthSender(firstErr.message)) {
+                console.warn(`[EMAIL] SMTP_FROM '${configuredFrom}' was rejected. Retrying with SMTP_USER '${smtpUser}'.`);
+                info = await emailTransporter.sendMail(buildMailOptions(smtpUser));
+            } else {
+                throw firstErr;
+            }
+        }
+
         console.log(`[EMAIL] Email sent successfully to ${to}. Message ID: ${info.messageId}`);
         return true;
     } catch (error) {
-        console.error(`[EMAIL] Failed to send email to ${to}:`, error);
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error(`[EMAIL] Failed to send email to ${to}:`, err.message);
+        if (err.message?.includes("Invalid login") || err.message?.includes("authentication")) {
+            console.error("[EMAIL] Hint: For iCloud, use an App-Specific Password from appleid.apple.com");
+        }
         return false;
     }
 }

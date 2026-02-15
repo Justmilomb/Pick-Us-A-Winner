@@ -17,13 +17,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { SEO } from "@/components/seo";
-import { AdBanner } from "@/components/AdBanner";
 import { Elements } from "@stripe/react-stripe-js";
 import { CheckoutForm } from "@/components/checkout-form";
 import { getStripe } from "@/lib/stripe";
 
 import { useLocation } from "wouter";
-import { useMediaQuery } from "@/hooks/use-media-query";
 
 const stripeAppearance = {
   theme: "flat" as const,
@@ -59,6 +57,7 @@ interface Entry {
   id: string;
   username: string;
   comment: string;
+  mentionCount?: number;
   platform: "instagram";
   timestamp?: string;
   fraudScore?: number;
@@ -104,10 +103,10 @@ export default function GiveawayTool() {
   const [customColor, setCustomColor] = useState("#E1306C");
   const [customizationOpen, setCustomizationOpen] = useState(false);
   const [, setLocation] = useLocation(); // for redirect if needed
-  const [fetchTimer, setFetchTimer] = useState(0);
+  const FETCH_MAX_SECONDS = 180;
+  const [fetchTimer, setFetchTimer] = useState(FETCH_MAX_SECONDS);
 
   const [userGiveaways, setUserGiveaways] = useState<any[]>([]);
-  const isLg = useMediaQuery("(min-width: 1024px)");
 
   const refreshGiveaways = () => {
     // Placeholder for future local storage or session based history
@@ -120,7 +119,7 @@ export default function GiveawayTool() {
     }
   }, [winnerCount, filterKeyword, minMentions, requireMention, excludeDuplicates, blockList, enableBonusChances, excludeFraud]);
 
-  // Handle initial form submission - fetches comments using free credits (no payment yet)
+  // Handle initial form submission - fetch comments first, then let user set rules and pay.
   const handleFetch = async (e: React.FormEvent) => {
     e.preventDefault();
     setFetchError(null);
@@ -132,11 +131,10 @@ export default function GiveawayTool() {
     }
 
     setStep("fetching");
-    setFetchTimer(0);
+    setFetchTimer(FETCH_MAX_SECONDS);
 
-    // Start timer
     const timerInterval = setInterval(() => {
-      setFetchTimer(prev => prev + 1);
+      setFetchTimer(prev => Math.max(0, prev - 1));
     }, 1000);
 
     try {
@@ -147,17 +145,6 @@ export default function GiveawayTool() {
       });
 
       const data = await response.json();
-
-      if (response.status === 402) {
-        setStep("payment");
-        toast({
-          title: "Payment Required",
-          description: data.error || "No credits remaining. Complete payment to fetch comments.",
-          variant: "destructive",
-        });
-        return;
-      }
-
       if (!response.ok) throw new Error(data.error || "Failed to fetch comments");
 
       const entries = (data.entries || []).map((entry: any) => ({
@@ -219,7 +206,46 @@ export default function GiveawayTool() {
     }
   };
 
-  // After Stripe confirms: fetch comments (if no data), pick winners (instant), or create scheduled giveaway
+  const selectWinners = (entries: Entry[]): Entry[] => {
+    let selectedWinners: Entry[] = [];
+
+    const shuffle = <T,>(array: T[]) => {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    };
+
+    if (enableBonusChances) {
+      const weightedPool: Entry[] = [];
+      entries.forEach(entry => {
+        const mentionCount =
+          typeof entry.mentionCount === "number"
+            ? entry.mentionCount
+            : (entry.comment?.match(/@([a-zA-Z0-9_.]+)/g) || []).length;
+        const poolEntries = 1 + Math.max(0, mentionCount - minMentions);
+        for (let i = 0; i < poolEntries; i++) {
+          weightedPool.push(entry);
+        }
+      });
+
+      const shuffled = shuffle(weightedPool);
+      const seen = new Set<string>();
+      for (const entry of shuffled) {
+        if (!seen.has(entry.username) && selectedWinners.length < winnerCount) {
+          seen.add(entry.username);
+          selectedWinners.push(entry);
+        }
+      }
+      return selectedWinners;
+    }
+
+    return shuffle(entries).slice(0, winnerCount);
+  };
+
+  // After Stripe confirms: schedule giveaway OR fetch comments and pick winners.
   const handlePaymentSuccess = async (paymentIntentId: string) => {
     setIsProcessingPayment(true);
     try {
@@ -234,68 +260,44 @@ export default function GiveawayTool() {
       const token = confirmData.paymentToken;
       setPaymentToken(token);
 
-      // Case 1: No data yet - fetch comments with token, then go to options
-      if (fetchedEntries.length === 0) {
-        toast({ title: "Payment Successful", description: "Fetching comments..." });
-        setStep("fetching");
-        setFetchTimer(0);
-
-        // Start timer
-        const timerInterval = setInterval(() => {
-          setFetchTimer(prev => prev + 1);
-        }, 1000);
-
-        try {
-          const response = await fetch("/api/instagram/comments", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url, paymentToken: token }),
-        });
-
-          const data = await response.json();
-          if (!response.ok) throw new Error(data.error || "Failed to fetch comments");
-
-          const entries = (data.entries || []).map((entry: any) => ({
-            ...entry,
-            fraudScore: entry.fraudScore || 0,
-          }));
-
-          setFetchedEntries(entries);
-          setStep("options");
-
-          const initialValid = filterEntries(entries, {
-            keyword: "",
-            mentions: 1,
-            requireMention: false,
-            duplicates: true,
-            blockList: blockList,
-            excludeFraud: excludeFraud,
-          });
-          setValidEntries(initialValid);
-
-          toast({
-            title: "Success!",
-            description: `Loaded ${entries.length > 200 ? "200+" : entries.length} comments from Instagram`,
-          });
-        } finally {
-          clearInterval(timerInterval);
-        }
-        return;
-      }
-
-      // Case 2: Have data + scheduled - create giveaway with token
+      // Scheduled flow does not require fetching comments in this step.
       if (scheduleDate) {
         await handleConfirmScheduleWithToken(token);
         return;
       }
 
-      // Case 3: Have data + instant - pick winners (client-side)
+      const currentValid = validEntries.length > 0
+        ? validEntries
+        : filterEntries(fetchedEntries, {
+            keyword: filterKeyword,
+            mentions: minMentions,
+            requireMention,
+            duplicates: excludeDuplicates,
+            blockList,
+            excludeFraud,
+          });
+
+      if (currentValid.length < winnerCount) {
+        setStep("options");
+        toast({
+          title: "Not enough valid entries",
+          description: `Only ${currentValid.length} entries matched your rules. Adjust filters and try again.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setValidEntries(currentValid);
       toast({ title: "Payment Successful", description: "Picking winners..." });
-      handlePickWinners();
+      setStep("picking");
+      setTimeout(() => {
+        setWinners(selectWinners(currentValid));
+        setStep("results");
+      }, 3000);
     } catch (error) {
       console.error("Payment error:", error);
       setFetchError(error instanceof Error ? error.message : "Unknown error occurred");
-      setStep(fetchedEntries.length > 0 ? "options" : "input");
+      setStep("options");
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Payment failed",
@@ -340,10 +342,10 @@ export default function GiveawayTool() {
 
       // 3. Mentions Filter - count actual @username patterns, not just @ symbols
       if (rules.requireMention) {
-        // Match @username patterns (Instagram usernames: letters, numbers, underscores, periods)
-        const mentionRegex = /@([a-zA-Z0-9_.]+)/g;
-        const mentions = entry.comment?.match(mentionRegex) || [];
-        const mentionCount = mentions.length;
+        const mentionCount =
+          typeof entry.mentionCount === "number"
+            ? entry.mentionCount
+            : (entry.comment?.match(/@([a-zA-Z0-9_.]+)/g) || []).length;
         if (mentionCount < rules.mentions) {
           continue;
         }
@@ -383,49 +385,7 @@ export default function GiveawayTool() {
     setStep("picking");
     // Simulate picking delay
     setTimeout(async () => {
-      let selectedWinners: Entry[] = [];
-
-      // Helper for Fisher-Yates shuffle
-      const shuffle = <T,>(array: T[]) => {
-        const newArray = [...array];
-        for (let i = newArray.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-        }
-        return newArray;
-      };
-
-      if (enableBonusChances) {
-        // Weighted selection based on mention count
-        const weightedPool: Entry[] = [];
-        validEntries.forEach(entry => {
-          // Count actual @username mentions, not just @ symbols
-          const mentionRegex = /@([a-zA-Z0-9_.]+)/g;
-          const mentions = entry.comment?.match(mentionRegex) || [];
-          const mentionCount = mentions.length;
-          // Base entry + 1 extra entry per mention beyond the minimum
-          const entries = 1 + Math.max(0, mentionCount - minMentions);
-          for (let i = 0; i < entries; i++) {
-            weightedPool.push(entry);
-          }
-        });
-
-        // Fisher-Yates shuffle
-        const shuffled = shuffle(weightedPool);
-        const seen = new Set<string>();
-        for (const entry of shuffled) {
-          if (!seen.has(entry.username) && selectedWinners.length < winnerCount) {
-            seen.add(entry.username);
-            selectedWinners.push(entry);
-          }
-        }
-      } else {
-        // Regular Fisher-Yates shuffle
-        const shuffled = shuffle(validEntries);
-        selectedWinners = shuffled.slice(0, winnerCount);
-      }
-
-      setWinners(selectedWinners);
+      setWinners(selectWinners(validEntries));
       setStep("results");
       // Follower check removed
     }, 3000);
@@ -504,7 +464,8 @@ export default function GiveawayTool() {
       mode: "comments",
       winnerCount: winnerCount,
       keyword: filterKeyword,
-      minMentions: minMentions,
+      requireMention: requireMention,
+      minMentions: requireMention ? minMentions : 0,
       duplicateCheck: excludeDuplicates,
       blockList: blockList,
       bonusChances: enableBonusChances,
@@ -538,17 +499,17 @@ export default function GiveawayTool() {
     <Layout>
       <SEO
         title="Instagram Giveaway Generator | No Signup, No Login"
-        description="Instagram giveaway generator & comment picker. Pick random winners from Instagram comments. No signup, no login, one-time payment. Filter, schedule, done."
+        description="Instagram giveaways tool & comment picker. Pick random winners from Instagram comments. Free to configure. One-time payment (£2.50) for credits. No signup, no subscription. Filter, schedule, done."
         url="/tool"
-        keywords="instagram giveaway generator, instagram comments picker, no login, no signup, one-time payment, random winner selector, instagram contest"
+        keywords="instagram giveaways tool, instagram giveaway tool, instagram giveaway generator, instagram comments picker, instagram comment picker tool, no login, no signup, one-time payment, random winner selector, instagram contest"
         additionalStructuredData={[
           {
             "@context": "https://schema.org",
             "@type": "WebApplication",
             name: "PickUsAWinner Instagram Giveaway Generator",
             applicationCategory: "UtilitiesApplication",
-            offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-            description: "Instagram giveaway generator. Pick random winners from Instagram comments. No signup, no login, one-time payment.",
+            offers: { "@type": "Offer", price: "2.50", priceCurrency: "GBP" },
+            description: "Instagram giveaways tool. Pick random winners from Instagram comments. Free to configure. One-time payment (£2.50) for credits. No signup, no subscription.",
             url: "https://pickusawinner.com/tool",
           },
           {
@@ -568,7 +529,7 @@ export default function GiveawayTool() {
                 name: "Is the Instagram giveaway generator free?",
                 acceptedAnswer: {
                   "@type": "Answer",
-                  text: "Yes. Free to start with 2 free credits. One-time payment for extra credits when needed. No subscription, no login required.",
+                  text: "Free to configure. One-time payment (£2.50) required to fetch Instagram comments and pick winners. 2 free credits to start. No subscription, no login required.",
                 },
               },
               {
@@ -588,6 +549,9 @@ export default function GiveawayTool() {
           {/* User header removed */}
           <div className="inline-flex items-center gap-2 bg-[#E1306C] text-white px-4 py-1 font-bold uppercase tracking-wider mb-4 border-2 border-black shadow-[4px_4px_0px_0px_#000000] transform -rotate-2">
             <Instagram className="w-5 h-5" /> Instagram Giveaway Generator
+          </div>
+          <div className="bg-amber-100 border-2 border-amber-600 text-amber-900 px-4 py-2 mb-4 font-bold text-sm sm:text-base max-w-xl mx-auto">
+            Free to configure. One-time payment (£2.50) to fetch comments and pick winners.
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-black uppercase mb-4">Pick Winners</h1>
           <p className="text-base sm:text-lg font-medium text-muted-foreground px-4 sm:px-0">Instagram giveaway generator & comments picker. Fairly select winners from Instagram comments. No signup, no login.</p>
@@ -646,10 +610,10 @@ export default function GiveawayTool() {
                   />
                 </div>
                 <p className="text-sm sm:text-base text-muted-foreground font-medium mt-2">Connecting to Instagram...</p>
+                <p className="text-xs sm:text-sm text-amber-600 font-bold mt-2">Posts with many comments may take 1–3 minutes. Please wait.</p>
                 <div className="mt-4 text-lg font-bold text-black bg-yellow-200 px-6 py-2 border-2 border-black rounded">
-                  ⏱️ {Math.floor(fetchTimer / 60)}:{String(fetchTimer % 60).padStart(2, '0')}
+                  ⏱️ Up to {Math.floor(fetchTimer / 60)}:{String(fetchTimer % 60).padStart(2, '0')} remaining
                 </div>
-                <AdBanner type="adsense" className="mt-8" />
               </motion.div>
             )}
 
@@ -659,9 +623,9 @@ export default function GiveawayTool() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="neo-box p-4 sm:p-6 md:p-8 bg-white flex flex-col lg:flex-row lg:gap-6"
+                className="neo-box p-4 sm:p-6 md:p-8 bg-white"
               >
-                <div className="flex-1 min-w-0 space-y-4 sm:space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                 <div className="flex items-center justify-between border-b-2 border-black pb-4">
                   <h2 className="text-xl sm:text-2xl font-bold uppercase">Filter Entries</h2>
                   <div className="flex flex-col items-end">
@@ -838,7 +802,7 @@ export default function GiveawayTool() {
                     className="w-full neo-btn-primary text-xl py-6 disabled:opacity-50 disabled:cursor-not-allowed bg-green-500 text-white hover:bg-green-600 border-green-700 mb-4"
                   >
                     <PartyPopper className="mr-2 w-6 h-6" />
-                    {scheduleDate ? "Pay £5.00 & Schedule" : "Pay £5.00 & Pick Winners"}
+                    {scheduleDate ? "Pay £2.50 & Schedule" : "Pay £2.50 & Pick Winners"}
                   </Button>
 
                   <Button
@@ -854,11 +818,6 @@ export default function GiveawayTool() {
                   </Button>
                 </div>
                 </div>
-                {isLg && (
-                  <div className="shrink-0 flex flex-col items-center pt-6 lg:pt-0 lg:max-w-xs">
-                    <AdBanner type="adsense" format="vertical" className="sticky top-28" />
-                  </div>
-                )}
               </motion.div>
             )}
 
@@ -942,7 +901,7 @@ export default function GiveawayTool() {
                                   Loading...
                                 </>
                               ) : (
-                                "Pay £5.00 & Schedule"
+                                "Pay £2.50 & Schedule"
                               )}
                             </Button>
                             <Button
@@ -968,14 +927,14 @@ export default function GiveawayTool() {
                       </div>
                       <h2 className="text-2xl sm:text-3xl font-black uppercase mb-2">Pay to Continue</h2>
                       <p className="text-sm sm:text-base text-muted-foreground">
-                        {fetchedEntries.length > 0 ? "One-time payment to pick winners" : "One-time payment to access Instagram comments"}
+                        {fetchedEntries.length > 0 ? "One-time payment (£2.50) to pick winners" : "One-time payment (£2.50) to access Instagram comments"}
                       </p>
                     </div>
 
                     <div className="space-y-4 sm:space-y-6 mb-6 sm:mb-8">
                       <div className="flex justify-between items-center p-3 sm:p-4 border-2 border-black bg-slate-50">
                         <span className="font-bold uppercase text-sm sm:text-base">Giveaway Round</span>
-                        <span className="font-black text-lg sm:text-xl">£5.00</span>
+                        <span className="font-black text-lg sm:text-xl">£2.50</span>
                       </div>
 
                       <div className="bg-blue-50 border-2 border-blue-200 p-3 sm:p-4 rounded">
@@ -995,7 +954,7 @@ export default function GiveawayTool() {
                         >
                           <CheckoutForm
                             onSuccess={handlePaymentSuccess}
-                            onCancel={() => { setClientSecret(null); setStep(fetchedEntries.length > 0 ? "options" : "input"); }}
+                            onCancel={() => { setClientSecret(null); setStep("options"); }}
                           />
                         </Elements>
                       </div>
@@ -1012,16 +971,16 @@ export default function GiveawayTool() {
                               Loading...
                             </>
                           ) : (
-                            fetchedEntries.length > 0 ? "Pay £5.00 & Pick Winners" : "Pay £5.00 & Fetch Comments"
+                            fetchedEntries.length > 0 ? "Pay £2.50 & Pick Winners" : "Pay £2.50 & Fetch Comments"
                           )}
                         </Button>
 
                         <Button
                           variant="ghost"
-                          onClick={() => setStep(fetchedEntries.length > 0 ? "options" : "input")}
+                          onClick={() => setStep("options")}
                           className="w-full mt-2 text-base sm:text-lg font-bold uppercase"
                         >
-                          {fetchedEntries.length > 0 ? "Back to Options" : "Back to URL Input"}
+                          Back to Options
                         </Button>
                       </>
                     )}
@@ -1114,12 +1073,6 @@ export default function GiveawayTool() {
                   ))}
 
                 </div>
-
-                <div className="flex justify-center py-6">
-                  <AdBanner type="adsense" />
-                </div>
-
-
 
                 <div className="flex justify-center pt-8">
                   <Button onClick={resetTool} variant="outline" className="border-2 border-black text-lg py-6 px-8 hover:bg-black hover:text-white transition-colors">
@@ -1522,3 +1475,4 @@ export default function GiveawayTool() {
     </Layout>
   );
 }
+

@@ -46,38 +46,46 @@ export function setupAuth(app: Express) {
     app.use(passport.initialize());
     app.use(passport.session());
 
-    passport.use(
-        new GoogleStrategy({
-            clientID: process.env.GOOGLE_CLIENT_ID || "575777924531-e580pqkqv6jbfqhkj2r8g3lhn98ocgee.apps.googleusercontent.com",
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "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",
-            callbackURL: "/api/auth/google/callback"
-        }, async (_accessToken: string, _refreshToken: string, profile: any, done: any) => {
-            try {
-                const email = profile.emails?.[0].value;
-                if (!email) {
-                    return done(new Error("No email found in Google profile"));
-                }
+    const googleClientId = process.env.GOOGLE_CLIENT_ID;
+    const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const isGoogleOAuthConfigured = !!(googleClientId && googleClientSecret);
 
-                let user = await storage.getUserByGoogleId(profile.id);
-                if (!user) {
-                    // Check if a user with this email already exists
-                    user = await storage.getUserByEmail(email);
-                    if (!user) {
-                        user = await storage.createUser({
-                            firstName: profile.name?.givenName || profile.displayName,
-                            email: email,
-                            googleId: profile.id,
-                            username: null,
-                            password: null
-                        });
+    if (isGoogleOAuthConfigured) {
+        passport.use(
+            new GoogleStrategy({
+                clientID: googleClientId,
+                clientSecret: googleClientSecret,
+                callbackURL: "/api/auth/google/callback"
+            }, async (_accessToken: string, _refreshToken: string, profile: any, done: any) => {
+                try {
+                    const email = profile.emails?.[0].value;
+                    if (!email) {
+                        return done(new Error("No email found in Google profile"));
                     }
+
+                    let user = await storage.getUserByGoogleId(profile.id);
+                    if (!user) {
+                        // Check if a user with this email already exists
+                        user = await storage.getUserByEmail(email);
+                        if (!user) {
+                            user = await storage.createUser({
+                                firstName: profile.name?.givenName || profile.displayName,
+                                email: email,
+                                googleId: profile.id,
+                                username: null,
+                                password: null
+                            });
+                        }
+                    }
+                    return done(null, user);
+                } catch (error) {
+                    return done(error);
                 }
-                return done(null, user);
-            } catch (error) {
-                return done(error);
-            }
-        })
-    );
+            })
+        );
+    } else {
+        console.warn("[AUTH] Google OAuth disabled: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing.");
+    }
 
     passport.use(
         new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
@@ -178,13 +186,23 @@ export function setupAuth(app: Express) {
         });
     });
 
-    app.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+    app.get("/api/auth/google", (req, res, next) => {
+        if (!isGoogleOAuthConfigured) {
+            return res.status(503).json({ message: "Google OAuth is not configured." });
+        }
+        return passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
+    });
 
     app.get("/api/auth/google/callback",
-        passport.authenticate("google", { failureRedirect: "/auth?error=google_failed" }),
-        (req, res) => {
+        (req, res, next) => {
+            if (!isGoogleOAuthConfigured) {
+                return res.status(503).json({ message: "Google OAuth is not configured." });
+            }
+            return passport.authenticate("google", { failureRedirect: "/auth?error=google_failed" })(req, res, next);
+        },
+        (_req, res) => {
             res.redirect("/");
-        }
+        },
     );
 
     app.get("/api/user", (req, res) => {

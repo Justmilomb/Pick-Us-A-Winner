@@ -164,6 +164,31 @@ Return JSON responses with `message` or `error` fields. Use HTTP status codes co
 - Sent via Nodemailer SMTP
 - Templates in `email-templates.ts` (HTML + plain text)
 - Used for scheduled giveaway results
+- SMTP health endpoint: `GET /api/admin/email/health` (requires `x-admin-key`)
+
+### Email Setup (iCloud/Gmail)
+
+1. Create an app password with your provider:
+- iCloud: appleid.apple.com -> Sign-In and Security -> App-Specific Passwords
+- Gmail: myaccount.google.com -> Security -> 2-Step Verification -> App passwords
+2. Set these env vars in `.env`:
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_SECURE`
+- `SMTP_USER`
+- `SMTP_PASS` (app password)
+- `SMTP_FROM` (set this equal to `SMTP_USER` unless you know your SMTP alias is allowed)
+- `SMTP_FROM_NAME` (display name, e.g. `PickUsAWinner Support`)
+- `SMTP_REPLY_TO` (default reply destination, e.g. `support@pickusawinner.com`)
+3. Test SMTP connectivity (no email is sent):
+
+```powershell
+Invoke-RestMethod -Method GET `
+  -Uri "http://localhost:5000/api/admin/email/health" `
+  -Headers @{ "x-admin-key" = "<your ADMIN_API_KEY>" }
+```
+
+Expected success is `configured: true` and `verified: true`.
 
 ## Environment Variables
 
@@ -175,9 +200,12 @@ INSTAGRAM_USERNAME=...                 # For Puppeteer scraper
 INSTAGRAM_PASSWORD=...                 # For Puppeteer scraper
 SMTP_HOST=...                          # Email SMTP
 SMTP_PORT=...
+SMTP_SECURE=false
 SMTP_USER=...
 SMTP_PASS=...
 SMTP_FROM=...
+SMTP_FROM_NAME=...
+SMTP_REPLY_TO=...
 ADMIN_API_KEY=...                      # Admin endpoints
 STRIPE_SECRET_KEY=...                  # Payments
 STRIPE_PUBLISHABLE_KEY=...
@@ -206,11 +234,18 @@ Build: `npm run build` → outputs to `dist/`
 
 Docker available; set `NODE_ENV=production` and ensure `.env` is configured.
 
+## SEO (Bing/Edge)
+
+For better visibility on Bing and Microsoft Edge search:
+1. Submit your sitemap at [Bing Webmaster Tools](https://www.bing.com/webmasters)
+2. Sitemap URL: `https://pickusawinner.com/sitemap.xml`
+3. Verify your domain and monitor indexing status
+
 ## Common Tasks
 
 ### Add a new API endpoint
 
-1. Define route in `server/routes.ts`
+1. Define route in `server/routes/<feature>.ts`
 2. Add validation schema (Zod) in `shared/schema.ts` if needed
 3. Implement handler logic
 4. Return JSON with `message` or `error`

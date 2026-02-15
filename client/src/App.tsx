@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
@@ -13,23 +13,37 @@ import PrivacyPolicy from "@/pages/privacy";
 import TermsOfService from "@/pages/terms";
 import AnalyticsPage from "@/pages/analytics";
 import SchedulePage from "@/pages/schedule";
+import SpinTheWheel from "@/pages/spin-the-wheel";
+import RandomNamePicker from "@/pages/random-name-picker";
+import RandomOptionPicker from "@/pages/random-option-picker";
+import GiveawayGenerator from "@/pages/giveaway-generator";
+import HowItWorks from "@/pages/how-it-works";
+import InstagramGiveawayGuide from "@/pages/instagram-giveaway-guide";
 import WheelPage from "@/pages/wheel";
 import PickerPage from "@/pages/picker";
 import YouTubePage from "@/pages/youtube";
 import TikTokPage from "@/pages/tiktok";
-import InstagramScraperPage from "@/pages/instagram-scraper";
 import FacebookPage from "@/pages/facebook-picker";
 import TwitterPage from "@/pages/twitter-picker";
 import PressPage from "@/pages/press";
 import ContactPage from "@/pages/contact";
 import { CookieConsent } from "@/components/CookieConsent";
+import FAQPage from "@/pages/faq";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/">
+        <Redirect to="/giveaway-generator" />
+      </Route>
+      <Route path="/home" component={Home} />
+      <Route path="/giveaway-generator" component={GiveawayGenerator} />
       <Route path="/tool" component={GiveawayTool} />
-      <Route path="/instagram-comment-scraper" component={InstagramScraperPage} />
+      <Route path="/spin-the-wheel" component={SpinTheWheel} />
+      <Route path="/random-name-picker" component={RandomNamePicker} />
+      <Route path="/random-option-picker" component={RandomOptionPicker} />
+      <Route path="/how-it-works" component={HowItWorks} />
+      <Route path="/instagram-giveaway-guide" component={InstagramGiveawayGuide} />
       <Route path="/facebook-picker" component={FacebookPage} />
       <Route path="/twitter-picker" component={TwitterPage} />
       <Route path="/wheel" component={WheelPage} />
@@ -41,6 +55,7 @@ function Router() {
       <Route path="/coming-soon" component={ComingSoon} />
       <Route path="/press" component={PressPage} />
       <Route path="/contact" component={ContactPage} />
+      <Route path="/faq" component={FAQPage} />
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/terms" component={TermsOfService} />
       <Route component={NotFound} />

@@ -10,6 +10,7 @@ export interface InstagramComment {
     likes: number;
     avatar?: string;
     userId?: string;
+    mentionCount?: number;
 }
 
 export interface FetchCommentsResult {
@@ -21,6 +22,16 @@ export interface FetchCommentsResult {
         likeCount?: number;
         commentCount?: number;
     };
+}
+
+/**
+ * Count valid @username mentions in comment text.
+ * Instagram usernames allow letters, numbers, underscore, and period.
+ */
+export function countMentions(text: string | undefined | null): number {
+    if (!text) return 0;
+    const mentionRegex = /@([a-zA-Z0-9_.]+)/g;
+    return (text.match(mentionRegex) || []).length;
 }
 
 /**

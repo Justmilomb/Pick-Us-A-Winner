@@ -1,7 +1,7 @@
 import Layout from "@/components/layout";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowRight, CheckCircle, Zap, ShieldCheck, Sparkles, Instagram, Youtube, Facebook, Twitter } from "lucide-react";
+import { ArrowRight, CheckCircle, Zap, ShieldCheck, Sparkles, RotateCcw, Users, Dice5, Instagram } from "lucide-react";
 import heroImage from "@/assets/hero-giveaway.png";
 import { SEO } from "@/components/seo";
 import { AdBanner } from "@/components/AdBanner";
@@ -17,6 +17,7 @@ export default function Home() {
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "PickUsAWinner uses the Web Crypto API (crypto.getRandomValues) combined with the Fisher-Yates shuffle algorithm for cryptographically secure random selection. Every participant has a mathematically equal chance of winning. For Instagram giveaways, we also filter by keywords, mentions, and exclude duplicate or fraudulent entries."
+          "text": "PickUsAWinner uses the Web Crypto API for cryptographically secure random selection combined with the Fisher-Yates shuffle algorithm. This guarantees every participant has an equal chance of winning. For Instagram giveaways, we also filter by keywords, mentions, and exclude duplicate/fraudulent entries."
         }
       },
       {
@@ -25,6 +26,7 @@ export default function Home() {
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "No. PickUsAWinner requires no signup and no login. Use the tool instantly. Our wheel spinner, random name picker, and option picker are 100% free. Instagram comment fetching includes free credits, with extra credits available as a one-time purchase — no monthly subscriptions."
+          "text": "No. PickUsAWinner requires no signup and no login. Free to configure. One-time payment (£2.50) required to fetch Instagram comments and pick winners. No subscription."
         }
       },
       {
@@ -41,6 +43,7 @@ export default function Home() {
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "PickUsAWinner offers multiple free tools: Instagram Comment Picker for giveaways, Wheel of Names / Spin the Wheel for random selection, Random Name Picker for drawing names from a list, and platform pickers for YouTube, TikTok, Facebook, and Twitter (coming soon). All tools use cryptographically fair randomness."
+          "text": "PickUsAWinner offers four free tools: (1) Instagram Comment Picker for giveaways, (2) Spin the Wheel for random selection with animation, (3) Random Name Picker for drawing names from a list, and (4) Random Option Picker for making random decisions. All tools use cryptographically fair randomness."
         }
       },
       {
@@ -49,9 +52,19 @@ export default function Home() {
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "Yes. We use crypto.getRandomValues() — the same cryptographic randomness source used in encryption — instead of Math.random(). This is combined with the Fisher-Yates shuffle for mathematically proven uniform distribution."
+          "text": "Yes. We use crypto.getRandomValues() — the same cryptographic randomness source used in encryption — instead of Math.random(). This is combined with the Fisher-Yates shuffle for mathematically proven uniform distribution. We also explain our algorithm transparently on our How It Works page."
         }
       }
     ]
+  };
+
+  const orgStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "PickUsAWinner",
+    "url": "https://giveaway-engine.com",
+    "description": "The simplest random selection toolkit on the web. Instagram giveaway comment picker, spin the wheel, random name picker, and random option picker. Trusted by creators worldwide.",
+    "sameAs": []
   };
 
   return (
@@ -60,10 +73,13 @@ export default function Home() {
         title="Random Name Picker & Instagram Giveaway Generator | No Signup"
         description="Pick random winners from Instagram comments instantly. No signup, no login, one-time payment. Spin the wheel, random name picker, comment picker & giveaway generator. Trusted by creators. Cryptographically fair."
         keywords="pick us a winner, pick me a winner, instagram giveaway generator, instagram comment picker, random name picker, spin the wheel, giveaway generator, random winner selector, no signup giveaway tool, wheel of names, comment picker, giveaway maker"
+        title="Pick Us A Winner - Free Giveaway Picker, Spin the Wheel & Random Name Picker"
+        description="The simplest random selection toolkit on the web. Instagram giveaways tool, comment picker, spin the wheel, random name picker. Free to configure. One-time payment (£2.50) for credits. Trusted by creators. Cryptographically fair."
+        keywords="pick us a winner, pick me a winner, instagram giveaways tool, instagram giveaway tool, instagram giveaway generator, comment picker generator, giveaway maker, instagram comment picker, spin the wheel, random wheel, random name picker, pick names at random, random option picker, giveaway generators for creators, trusted by creators, one time payment giveaway generator, giveaway generators, winner picker"
         url="/"
         structuredData={faqStructuredData}
       />
-      <div className="space-y-10 sm:space-y-14 md:space-y-20 pb-10 sm:pb-16">
+      <div className="space-y-8 sm:space-y-10 md:space-y-12 pb-8 sm:pb-12">
 
         {/* Hero Section */}
         <section className="relative pt-4 sm:pt-8 md:pt-12 overflow-hidden">
@@ -75,6 +91,7 @@ export default function Home() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="inline-block bg-accent text-white font-black px-3 sm:px-6 py-1.5 sm:py-2 border-2 sm:border-4 border-black shadow-[3px_3px_0px_0px_#000] sm:shadow-neo uppercase tracking-wider sm:tracking-widest transform -rotate-2 text-sm sm:text-base"
                 >
+                  Trusted by Creators Worldwide
                   No Signup • No Login • One-Time Pay
                 </motion.div>
 
@@ -82,21 +99,21 @@ export default function Home() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black leading-[0.85] tracking-tighter italic"
+                  className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[0.9] tracking-tighter italic"
                 >
-                  GIVEAWAY <br className="hidden sm:block" />
-                  <span className="text-primary drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] sm:drop-shadow-[6px_6px_0px_rgba(0,0,0,1)] not-italic">
-                    GENERATOR.
-                  </span>
+                  PICK US <br className="hidden sm:block" />
+                  <span className="text-primary sm:drop-shadow-[6px_6px_0px_rgba(0,0,0,1)] not-italic">A WINNER.</span>
+                  {" "}GIVEAWAY <br className="hidden sm:block" />
+                  <span className="text-primary sm:drop-shadow-[6px_6px_0px_rgba(0,0,0,1)] not-italic">GENERATOR.</span>
                 </motion.h1>
 
                 <motion.p
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-slate-800 max-w-xl mx-auto lg:mx-0 leading-tight px-2 sm:px-0"
+                  className="text-base sm:text-lg md:text-xl font-bold text-slate-800 max-w-xl mx-auto lg:mx-0 leading-tight px-2 sm:px-0"
                 >
-                  Instagram giveaway generator & comment picker. No signup, no login, one-time payment. Free to start.
+                  The simplest random selection toolkit on the web. Instagram giveaways, spin the wheel, name picker & more — all cryptographically fair. Free to configure. One-time payment (£2.50) for credits. No subscription.
                 </motion.p>
 
                 <motion.div
@@ -105,12 +122,12 @@ export default function Home() {
                   transition={{ delay: 0.3 }}
                   className="flex flex-col sm:flex-row gap-3 sm:gap-6 justify-center lg:justify-start px-4 sm:px-0"
                 >
-                  <Link href="/tool" className="neo-btn-primary text-lg sm:text-xl md:text-2xl py-4 sm:py-6 md:py-8 px-6 sm:px-8 md:px-10 flex items-center justify-center gap-2 sm:gap-3 group">
-                    Instagram Picker <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 group-hover:translate-x-2 transition-transform" />
+                  <Link href="/tool" className="neo-btn-primary text-base sm:text-lg md:text-xl py-3 sm:py-4 md:py-5 px-5 sm:px-6 md:px-8 flex items-center justify-center gap-2 sm:gap-3 group">
+                    Instagram Picker <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-2 transition-transform" />
                   </Link>
-                  <a href="#how-it-works" className="neo-btn-secondary text-lg sm:text-xl md:text-2xl py-4 sm:py-6 md:py-8 px-6 sm:px-8 md:px-10 flex items-center justify-center">
-                    How it Works
-                  </a>
+                  <Link href="/random-name-picker" className="neo-btn-secondary text-base sm:text-lg md:text-xl py-3 sm:py-4 md:py-5 px-5 sm:px-6 md:px-8 flex items-center justify-center">
+                    Name Picker
+                  </Link>
                 </motion.div>
               </div>
 
@@ -120,6 +137,18 @@ export default function Home() {
                 transition={{ delay: 0.4 }}
                 className="relative mt-8 lg:mt-0 order-1 lg:order-2 flex justify-center lg:justify-end"
               >
+                <div className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6 md:-top-10 md:-right-10 w-full h-full bg-secondary border-2 sm:border-4 border-black z-0 shadow-[4px_4px_0px_0px_#000] sm:shadow-neo-lg"></div>
+                <img
+                  src={heroImage}
+                  alt="Pick Us A Winner - Instagram Giveaway Comment Picker, Spin the Wheel & Random Name Picker"
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                  width="600"
+                  height="400"
+                  className="relative z-10 w-full border-2 sm:border-4 border-black bg-white p-2 sm:p-4 shadow-[4px_4px_0px_0px_#000] sm:shadow-neo-lg"
+                  style={{ aspectRatio: '3/2' }}
+                />
                 <div className="relative w-full max-w-md lg:max-w-lg">
                   <div className="absolute top-2 right-2 sm:top-3 sm:right-3 w-full h-full bg-secondary border-2 sm:border-4 border-black z-0 shadow-[4px_4px_0px_0px_#000] sm:shadow-neo-lg"></div>
                   <img
@@ -139,11 +168,80 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Marquee with better branding */}
-        <section className="full-bleed bg-primary text-white py-4 sm:py-6 md:py-8 border-y-4 sm:border-y-[6px] border-black overflow-hidden whitespace-nowrap rotate-1">
-          <div className="flex gap-8 sm:gap-16 text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] animate-marquee">
-            <span>No Signup • No Login • One-Time Pay • Instagram Giveaway Generator • Instagram Comments Picker</span>
-            <span>No Signup • No Login • One-Time Pay • Instagram Giveaway Generator • Instagram Comments Picker</span>
+        {/* Single Marquee - infinite scroll, compact */}
+        <section className="bg-primary text-white py-3 sm:py-4 -mx-4 sm:-mx-6 md:-mx-8 border-y-2 sm:border-y-4 border-black overflow-hidden whitespace-nowrap rotate-1">
+          <div className="flex gap-0 min-w-max animate-marquee [&>span]:pr-8 sm:[&>span]:pr-16">
+            <span className="flex-shrink-0 text-sm sm:text-base md:text-lg font-black uppercase tracking-wider">Pick Us A Winner • Spin the Wheel • Random Name Picker • No Signup • No Login • One-Time Pay • Instagram Giveaway Generator</span>
+            <span className="flex-shrink-0 text-sm sm:text-base md:text-lg font-black uppercase tracking-wider">Pick Us A Winner • Spin the Wheel • Random Name Picker • No Signup • No Login • One-Time Pay • Instagram Giveaway Generator</span>
+          </div>
+        </section>
+
+        {/* Tools Showcase — This is critical for SEO and cross-linking */}
+        <section className="py-8 sm:py-12 px-2 sm:px-4 md:px-0">
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black bg-white inline-block px-3 sm:px-5 py-2 border-2 sm:border-4 border-black shadow-neo uppercase">
+              Our Free Tools
+            </h2>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                title: "Instagram Comment Picker",
+                desc: "Fetch comments from any Instagram post. Filter by keywords, mentions, hashtags. Auto-remove duplicates and detect fraud. Pick cryptographically random winners.",
+                icon: <Instagram className="w-8 h-8" />,
+                link: "/tool",
+                color: "bg-[#E1306C]",
+                tags: ["Giveaway Generator", "Comment Picker"],
+              },
+              {
+                title: "Spin the Wheel",
+                desc: "Add names, prizes, or options and spin for a random result. Smooth animation with cryptographically fair selection. Perfect for live giveaways and classroom picks.",
+                icon: <RotateCcw className="w-8 h-8" />,
+                link: "/spin-the-wheel",
+                color: "bg-[#833AB4]",
+                tags: ["Random Wheel", "Prize Wheel"],
+              },
+              {
+                title: "Random Name Picker",
+                desc: "Enter a list of names and pick winners at random. Uses Fisher-Yates shuffle with crypto randomness. Pick multiple winners at once. Data stays in your browser.",
+                icon: <Users className="w-8 h-8" />,
+                link: "/random-name-picker",
+                color: "bg-[#FCAF45]",
+                tags: ["Pick Names at Random", "Name Drawing"],
+              },
+              {
+                title: "Random Option Picker",
+                desc: "Can't decide? Enter your options and let cryptographic randomness choose for you. From restaurants to movies to team assignments — let fate decide.",
+                icon: <Dice5 className="w-8 h-8" />,
+                link: "/random-option-picker",
+                color: "bg-[#405DE6]",
+                tags: ["Decision Maker", "Random Choice"],
+              },
+            ].map((tool, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <Link href={tool.link} className="block border-4 border-black bg-white shadow-neo hover:translate-x-1 hover:translate-y-1 hover:shadow-neo-sm transition-all h-full">
+                  <div className={`${tool.color} text-white p-4 border-b-4 border-black flex items-center gap-3`}>
+                    {tool.icon}
+                    <h3 className="text-lg font-black uppercase leading-tight">{tool.title}</h3>
+                  </div>
+                  <div className="p-4 space-y-3">
+                    <p className="font-medium text-slate-700 text-sm leading-relaxed">{tool.desc}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {tool.tags.map((tag) => (
+                        <span key={tag} className="text-[10px] font-black uppercase tracking-wider bg-slate-100 border border-black px-2 py-0.5">{tag}</span>
+                      ))}
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
           </div>
         </section>
 
@@ -152,97 +250,65 @@ export default function Home() {
           <AdBanner type="adsense" className="w-full" />
         </section>
 
-        {/* Steps Section */}
-        <section id="how-it-works" className="py-8 sm:py-12 px-2 sm:px-4 md:px-0">
-          <div className="text-center mb-8 sm:mb-12 md:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black bg-white inline-block px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 border-4 sm:border-[6px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] sm:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] uppercase">
-              3 SIMPLE STEPS
-            </h2>
-          </div>
+        {/* Steps - compact, link to full page */}
+        <section className="py-4 sm:py-6 px-2 sm:px-4 md:px-0">
+          <Link href="/how-it-works" className="block border-4 border-black bg-white p-4 sm:p-6 shadow-neo hover:translate-x-1 hover:translate-y-1 hover:shadow-neo-sm transition-all">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
+              <div className="flex gap-2 sm:gap-4">
+                {[<Zap key="1" className="w-10 h-10 text-[#FFDA44]" />, <ShieldCheck key="2" className="w-10 h-10 text-[#A733F4]" />, <CheckCircle key="3" className="w-10 h-10 text-[#FF338D]" />].map((icon, i) => (
+                  <div key={i} className="p-2 border-2 border-black bg-white">{icon}</div>
+                ))}
+              </div>
+              <div className="text-center sm:text-left flex-1">
+                <h3 className="text-base sm:text-lg font-black uppercase">3 Simple Steps: Paste Link → Set Rules → Pick Winner</h3>
+                <p className="text-sm font-medium text-muted-foreground mt-1">Learn how our algorithm ensures fair selection</p>
+              </div>
+              <ArrowRight className="w-6 h-6 flex-shrink-0" />
+            </div>
+          </Link>
+        </section>
 
-          <div className="grid md:grid-cols-3 gap-0 border-4 sm:border-[6px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] sm:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+        {/* Why PickUsAWinner */}
+        <section className="py-6 sm:py-8 px-2 sm:px-4 md:px-0">
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black uppercase">Why Creators Trust Pick Us A Winner</h2>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { title: "Paste Link", desc: "Copy your post URL from Instagram.", icon: <Zap className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" />, bgColor: "bg-[#FFDA44]" },
-              { title: "Set Rules", desc: "Require hashtags, mentions, or keywords.", icon: <ShieldCheck className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" />, bgColor: "bg-[#A733F4]" },
-              { title: "Pick Winner", desc: "Let our randomizer choose fairly.", icon: <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" />, bgColor: "bg-[#FF338D]" }
-            ].map((step, i) => (
+              { title: "Cryptographic Fairness", desc: "We use the Web Crypto API — the same randomness source used in encryption — not Math.random(). Every participant has a mathematically equal chance.", icon: <ShieldCheck className="w-8 h-8" /> },
+              { title: "No Subscriptions", desc: "Free tools forever. Instagram comment fetching uses a one-time credit system. No monthly fees, no recurring charges, no surprise bills.", icon: <Sparkles className="w-8 h-8" /> },
+              { title: "Privacy First", desc: "Spin the wheel, name picker, and option picker run entirely in your browser. No data is sent to our servers. Instagram data is processed and discarded.", icon: <CheckCircle className="w-8 h-8" /> },
+              { title: "Anti-Fraud Detection", desc: "Our Instagram picker automatically detects bots, duplicate entries, and suspicious patterns. Only legitimate participants are eligible to win.", icon: <ShieldCheck className="w-8 h-8" /> },
+              { title: "Mobile-First Design", desc: "Every tool works beautifully on phones, tablets, and desktops. Pick winners on the go — no app download required.", icon: <Zap className="w-8 h-8" /> },
+              { title: "Transparent Algorithm", desc: "We explain exactly how our randomness works. Fisher-Yates shuffle, crypto random, selection without replacement. Read our How It Works page.", icon: <Sparkles className="w-8 h-8" /> },
+            ].map((item, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className={`p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col items-center text-center gap-3 sm:gap-4 md:gap-6 border-b-4 sm:border-b-[6px] md:border-b-0 md:border-r-[6px] last:border-0 border-black ${step.bgColor} text-black`}
+                transition={{ delay: i * 0.05 }}
+                className="border-4 border-black bg-white p-6 shadow-neo-sm space-y-3"
               >
-                <div className="bg-white border-2 sm:border-4 border-black p-3 sm:p-4 md:p-6 text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center">
-                  {step.icon}
-                </div>
-                <div className="space-y-2 sm:space-y-3 md:space-y-4">
-                  <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-black uppercase tracking-tight">{step.title}</h3>
-                  <p className="font-bold text-sm sm:text-base md:text-lg lg:text-xl opacity-90 leading-snug px-2 sm:px-4 text-white drop-shadow-[1px_1px_0px_rgba(0,0,0,1)] sm:drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
-                    {step.desc}
-                  </p>
-                </div>
+                <div className="bg-primary text-white p-3 border-2 border-black inline-block">{item.icon}</div>
+                <h3 className="text-lg font-black uppercase">{item.title}</h3>
+                <p className="font-medium text-slate-700 text-sm leading-relaxed">{item.desc}</p>
               </motion.div>
             ))}
           </div>
+          <div className="text-center mt-8">
+            <Link href="/how-it-works" className="border-4 border-black bg-white py-3 px-8 font-black uppercase shadow-neo hover:translate-x-1 hover:translate-y-1 hover:shadow-neo-sm transition-all inline-flex items-center gap-2">
+              Learn How It Works <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
         </section>
 
-        {/* Tools Hierarchy: 1. Instagram (main) 2. Working mini tools 3. Coming soon → Instagram */}
-        <section className="container mx-auto px-4 py-8 sm:py-10">
-          <h2 className="text-2xl sm:text-3xl font-black uppercase mb-5 text-center">All Our Tools</h2>
-          <div className="space-y-5 max-w-4xl mx-auto">
-            {/* Tier 1: Main - Instagram */}
-            <div className="border-4 border-black bg-primary/10 p-4 sm:p-6">
-              <p className="text-xs font-black uppercase tracking-widest text-primary mb-1">Main Tool</p>
-              <Link href="/tool" className="flex items-center gap-4 group">
-                <div className="bg-instagram p-3 border-2 border-black text-white">
-                  <Instagram className="w-8 h-8" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl sm:text-2xl font-black uppercase group-hover:text-primary transition-colors">Instagram Giveaway Generator</h3>
-                  <p className="text-sm font-medium text-muted-foreground">Pick random winners from comments. No signup, no login. Filter, schedule, done.</p>
-                </div>
-                <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
-              </Link>
-            </div>
-
-            {/* Tier 2: Working mini tools */}
-            <div>
-              <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">Working Tools</p>
-              <div className="grid sm:grid-cols-3 gap-3">
-                {[
-                  { href: "/instagram-comment-scraper", label: "Comment Getter", desc: "Get Instagram comments from any post" },
-                  { href: "/wheel", label: "Wheel of Names", desc: "Spin the wheel - random name generator" },
-                  { href: "/picker", label: "Random Picker", desc: "Random name generator - pick from any list" },
-                ].map((t) => (
-                  <Link key={t.href} href={t.href} className="block p-3 sm:p-4 border-2 border-black bg-white hover:bg-secondary transition-colors group">
-                    <h4 className="font-black uppercase group-hover:text-primary text-sm sm:text-base">{t.label}</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">{t.desc}</p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Tier 3: Coming soon → Instagram */}
-            <div>
-              <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">Coming Soon</p>
-              <p className="text-sm font-medium text-muted-foreground mb-2">These will launch later. Use Instagram Picker for now.</p>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { href: "/youtube", label: "YouTube", icon: <Youtube className="w-4 h-4" /> },
-                  { href: "/tiktok", label: "TikTok", icon: null },
-                  { href: "/facebook-picker", label: "Facebook", icon: <Facebook className="w-4 h-4" /> },
-                  { href: "/twitter-picker", label: "Twitter", icon: <Twitter className="w-4 h-4" /> },
-                ].map((t) => (
-                  <Link key={t.href} href={t.href} className="inline-flex items-center gap-2 px-3 py-1.5 border-2 border-dashed border-slate-300 text-slate-600 hover:border-black hover:text-black transition-colors text-sm font-bold">
-                    {t.icon}
-                    {t.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
+        {/* Platform Support - compact */}
+        <section className="py-4 sm:py-6 px-2 sm:px-4 md:px-0">
+          <Link href="/coming-soon" className="block border-4 border-black bg-slate-50 p-4 sm:p-6 text-center hover:bg-slate-100 transition-colors">
+            <p className="font-bold text-slate-700">Instagram live now. YouTube, TikTok, Facebook coming soon.</p>
+            <p className="text-sm text-primary font-black uppercase mt-1">View platform status →</p>
+          </Link>
         </section>
 
         {/* Press / Media Kit - encourages backlinks */}
@@ -264,23 +330,64 @@ export default function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-8 sm:py-12 px-2 sm:px-0">
+        <section className="py-6 sm:py-8 px-2 sm:px-0">
           <motion.div
             whileInView={{ scale: [0.95, 1], rotate: [-1, 0] }}
             viewport={{ once: true }}
-            className="bg-primary text-white p-6 sm:p-8 md:p-10 lg:p-14 border-2 sm:border-4 border-black shadow-[4px_4px_0px_0px_#000] sm:shadow-neo-lg text-center space-y-4 sm:space-y-6 md:space-y-8"
+            className="bg-primary text-white p-5 sm:p-6 md:p-8 border-2 sm:border-4 border-black shadow-[4px_4px_0px_0px_#000] sm:shadow-neo-lg text-center space-y-3 sm:space-y-4 md:space-y-6"
           >
-            <h2 className="text-2xl sm:text-3xl md:text-5xl lg:text-7xl font-black uppercase leading-none">Ready to give <br className="hidden sm:block" /> back?</h2>
-            <p className="text-base sm:text-lg md:text-2xl lg:text-3xl font-bold max-w-2xl mx-auto opacity-90 px-2"> Join thousands of creators using Pick Us A Winner to grow their community through fair giveaways. </p>
-            <div className="pt-2 sm:pt-4">
-              <Link href="/tool" className="bg-white text-black border-2 sm:border-4 border-black p-4 sm:p-6 md:px-12 md:py-8 text-lg sm:text-xl md:text-2xl lg:text-4xl font-black uppercase shadow-[3px_3px_0px_0px_#000] sm:shadow-neo hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_#000] sm:hover:shadow-neo-sm transition-all inline-block italic tracking-tighter">
-                Pick a Winner Now!
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black uppercase leading-none">Ready to Pick <br className="hidden sm:block" /> a Winner?</h2>
+            <p className="text-sm sm:text-base md:text-lg font-bold max-w-2xl mx-auto opacity-90 px-2">
+              Join thousands of creators using PickUsAWinner to run fair giveaways and grow their community.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2 sm:pt-4">
+              <Link href="/tool" className="bg-white text-black border-2 sm:border-4 border-black p-3 sm:p-4 md:px-8 md:py-4 text-base sm:text-lg md:text-xl font-black uppercase shadow-[3px_3px_0px_0px_#000] sm:shadow-neo hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_#000] sm:hover:shadow-neo-sm transition-all inline-block italic tracking-tighter">
+                Instagram Picker
+              </Link>
+              <Link href="/spin-the-wheel" className="bg-secondary text-black border-2 sm:border-4 border-black p-3 sm:p-4 md:px-8 md:py-4 text-base sm:text-lg md:text-xl font-black uppercase shadow-[3px_3px_0px_0px_#000] sm:shadow-neo hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_#000] sm:hover:shadow-neo-sm transition-all inline-block italic tracking-tighter">
+                Spin the Wheel
               </Link>
             </div>
           </motion.div>
         </section>
 
-      </div >
-    </Layout >
+        {/* SEO Content — hidden but important for search engines */}
+        <section className="px-2 sm:px-4 md:px-0 space-y-6">
+          <h2 className="text-2xl sm:text-3xl font-black uppercase">The Best Free Random Selection Toolkit</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="border-4 border-black bg-white p-6 shadow-neo-sm space-y-3">
+              <h3 className="text-lg font-black uppercase">For Giveaway Creators</h3>
+              <p className="font-medium text-slate-700 text-sm leading-relaxed">
+                PickUsAWinner is the <strong>best free giveaway generator</strong> for creators on Instagram, YouTube, TikTok, and Facebook.
+                Our <strong>Instagram comment picker</strong> fetches comments directly, filters by your rules, removes duplicates,
+                detects fraud, and picks <strong>cryptographically random winners</strong>. No monthly subscription — just a
+                one-time payment (£2.50) option for premium features. Trusted by thousands of creators worldwide.
+              </p>
+              <Link href="/instagram-giveaway-guide" className="text-primary font-black text-sm inline-flex items-center gap-1 hover:underline">
+                Read our Instagram Giveaway Guide <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+            <div className="border-4 border-black bg-white p-6 shadow-neo-sm space-y-3">
+              <h3 className="text-lg font-black uppercase">For Everyone</h3>
+              <p className="font-medium text-slate-700 text-sm leading-relaxed">
+                Beyond giveaways, our tools help with any situation that needs fair random selection.
+                <strong> Spin the wheel</strong> for prizes, decisions, or fun. Use the <strong>random name picker</strong> for
+                classrooms, raffles, Secret Santa, or team building. The <strong>random option picker</strong> helps you make
+                decisions when you can't choose. All tools are free, private (no data stored), and use
+                <strong> cryptographic randomness</strong> for true fairness.
+              </p>
+              <Link href="/how-it-works" className="text-primary font-black text-sm inline-flex items-center gap-1 hover:underline">
+                Learn how our algorithm works <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      {/* Organization structured data */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgStructuredData) }} />
+    </Layout>
   );
 }
+

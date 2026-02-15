@@ -108,7 +108,7 @@ server/
 **Rules:**
 - **Root level files:** Only files directly related to server initialization or middleware.
 - **scraper/ folder:** ONLY Instagram scraping logic. Don't add other features here.
-- **No subdirectories for routes:** Keep API handlers in single `routes.ts` file.
+- **Use route modules:** Add endpoints in `server/routes/<feature>.ts` and compose via `server/routes.ts`.
 - **Feature grouping:** Group related logic in single files (e.g., `auth.ts` for all auth).
 
 ### Shared Structure (`shared/`)
@@ -159,12 +159,12 @@ script/
 - NO → Continue below
 
 **Is it backend Express code?**
-- API endpoint → `server/routes.ts`
+- API endpoint → `server/routes/<feature>.ts`
 - Authentication → `server/auth.ts`
 - Security/rate limiting → `server/security.ts`
 - Instagram scraping → `server/scraper/`
 - Email logic → `server/email.ts` or `server/email-templates.ts`
-- Database query → `server/routes.ts` (keep with endpoint)
+- Database query → `server/routes/<feature>.ts` (keep with endpoint)
 - Background job → `server/scheduler.ts`
 - Utility → `server/` (new file if large)
 - NO → Continue below

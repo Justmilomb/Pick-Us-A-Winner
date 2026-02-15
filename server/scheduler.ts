@@ -1,6 +1,6 @@
 
 import { storage } from "./storage";
-import { fetchInstagramComments, extractPostId } from "./instagram";
+import { fetchInstagramComments, extractPostId, countMentions } from "./instagram";
 import { sendEmail } from "./email";
 import { getResultsEmailHTML, getResultsEmailText } from "./email-templates";
 
@@ -48,9 +48,9 @@ async function processGiveaway(giveaway: any) {
                 }
             }
 
-            // Mentions Filter
-            if (config.minMentions > 0) {
-                const mentionCount = (entry.text?.match(/@/g) || []).length;
+            // Mentions Filter (only when explicitly enabled)
+            if (config.requireMention && config.minMentions > 0) {
+                const mentionCount = countMentions(entry.text);
                 if (mentionCount < config.minMentions) {
                     continue;
                 }
@@ -75,9 +75,10 @@ async function processGiveaway(giveaway: any) {
             // Weighted selection based on mention count
             const weightedPool: any[] = [];
             validCandidates.forEach((entry: any) => {
-                const mentionCount = (entry.text?.match(/@/g) || []).length;
+                const mentionCount = countMentions(entry.text);
+                const minMentions = config.requireMention ? (config.minMentions || 0) : 0;
                 // Base entry + 1 extra entry per mention beyond the minimum
-                const entries = 1 + Math.max(0, mentionCount - (config.minMentions || 0));
+                const entries = 1 + Math.max(0, mentionCount - minMentions);
                 for (let i = 0; i < entries; i++) {
                     weightedPool.push(entry);
                 }
@@ -106,13 +107,13 @@ async function processGiveaway(giveaway: any) {
         const targetEmail = user?.email || giveaway.config?.contactEmail;
 
         if (targetEmail) {
-            await sendEmail({
+            const resultsSent = await sendEmail({
                 to: targetEmail,
                 subject: "🏆 Your Giveaway Results Are Ready!",
                 text: getResultsEmailText({
                     winners: winners.map((w: any) => ({
                         username: w.username,
-                        comment: w.comment,
+                        comment: w.text,
                     })),
                     totalEntries: validCandidates.length,
                     postUrl: config.url,
@@ -120,12 +121,15 @@ async function processGiveaway(giveaway: any) {
                 html: getResultsEmailHTML({
                     winners: winners.map((w: any) => ({
                         username: w.username,
-                        comment: w.comment,
+                        comment: w.text,
                     })),
                     totalEntries: validCandidates.length,
                     postUrl: config.url,
                 }),
             });
+            if (!resultsSent) {
+                console.error(`[Scheduler] Failed to send results email for giveaway ${giveaway.id} to ${targetEmail}`);
+            }
         }
 
         console.log(`[Scheduler] Giveaway ${giveaway.id} completed. Winners: ${winners.length}`);

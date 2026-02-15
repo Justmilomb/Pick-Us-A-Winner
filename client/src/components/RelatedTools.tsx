@@ -9,7 +9,6 @@ interface ToolLink {
 
 const ALL_TOOLS: ToolLink[] = [
   { href: "/tool", label: "Instagram Picker", icon: <Instagram className="w-5 h-5" /> },
-  { href: "/instagram-comment-scraper", label: "Comment Getter", icon: <Shuffle className="w-5 h-5" /> },
   { href: "/youtube", label: "YouTube Picker", icon: <Youtube className="w-5 h-5" /> },
   { href: "/tiktok", label: "TikTok Picker", icon: <Hash className="w-5 h-5" /> },
   { href: "/facebook-picker", label: "Facebook Picker", icon: <Facebook className="w-5 h-5" /> },

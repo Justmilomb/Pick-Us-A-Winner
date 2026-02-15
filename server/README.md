@@ -7,7 +7,14 @@ The backend is built with Express.js, handles all business logic, and coordinate
 ```
 server/
 ├── index.ts                    # Server entry point (sets up Express, HTTP, scheduler)
-├── routes.ts                   # All API endpoints (~22KB, ~400 lines)
+├── routes.ts                   # Route composition layer
+├── routes/                     # Feature route modules
+│   ├── payment.ts              # Stripe payment endpoints
+│   ├── instagram.ts            # Instagram endpoints
+│   ├── giveaways.ts            # Giveaway lifecycle endpoints
+│   ├── admin.ts                # Admin + analytics endpoints
+│   ├── ads.ts                  # Ads endpoints
+│   └── public.ts               # Health/SEO/contact/public endpoints
 ├── auth.ts                     # Passport.js local strategy, registration, sessions
 ├── security.ts                 # Rate limiters, IP blocking, credit system
 ├── instagram.ts                # Instagram scraping orchestration (relay + custom scraper)
@@ -34,7 +41,7 @@ server/
 
 ### API Endpoints
 
-All routes follow this structure in `routes.ts`:
+All routes follow this structure in `routes/<feature>.ts`:
 
 ```ts
 app.post("/api/my-endpoint", async (req, res) => {
@@ -219,8 +226,8 @@ PORT=5000
 
 ## Key Files
 
-### routes.ts (22KB)
-All API endpoints. Grouped by feature:
+### routes.ts
+Thin composition file that registers all route modules.
 - Auth: `/register`, `/login`, `/logout`, `/user`
 - Giveaways: `/giveaways`, `/giveaways/:id`
 - Instagram: `/instagram/comments`, `/instagram/validate`
@@ -258,7 +265,7 @@ Rate limiting and IP blocking:
 
 ### Add a new API endpoint
 
-1. Define route in `routes.ts`:
+1. Define route in `routes/<feature>.ts`:
    ```ts
    app.post("/api/my-feature", async (req, res) => {
      // ...
