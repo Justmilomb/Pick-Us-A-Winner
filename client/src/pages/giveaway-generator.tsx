@@ -9,11 +9,11 @@ export default function GiveawayGenerator() {
     "@context": "https://schema.org",
     "@type": "WebApplication",
     "name": "PickUsAWinner - Free Giveaway Generator for Creators",
-    "description": "The best free giveaway generator for Instagram, YouTube, TikTok, and Facebook. Trusted by creators. one-time payment (£2.50), no subscriptions. Pick random winners with verified fairness.",
+    "description": "The best free giveaway generator for Instagram, YouTube, TikTok, and Facebook. Trusted by creators. one-time payment (Â£2.50), no subscriptions. Pick random winners with verified fairness.",
     "url": "https://giveaway-engine.com/giveaway-generator",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Web Browser",
-    "offers": { "@type": "Offer", "price": "2.50", "priceCurrency": "GBP", "description": "one-time payment (£2.50) for Instagram comment fetching. Free to configure. Spin wheel, name picker, option picker are free." },
+    "offers": { "@type": "Offer", "price": "2.50", "priceCurrency": "GBP", "description": "one-time payment (Â£2.50) for Instagram comment fetching. Free to configure. Spin wheel, name picker, option picker are free." },
     "author": { "@type": "Organization", "name": "PickUsAWinner" }
   };
 
@@ -24,7 +24,7 @@ export default function GiveawayGenerator() {
       {
         "@type": "Question",
         "name": "What is the best free giveaway generator?",
-        "acceptedAnswer": { "@type": "Answer", "text": "PickUsAWinner is a free giveaway generator trusted by creators. It offers Instagram comment picking with anti-fraud detection, spin the wheel, random name picker, and scheduled giveaways. No monthly subscription â€” just a one-time payment (£2.50) option for premium features." }
+        "acceptedAnswer": { "@type": "Answer", "text": "PickUsAWinner is a free giveaway generator trusted by creators. It offers Instagram comment picking with anti-fraud detection, spin the wheel, random name picker, and scheduled giveaways. No monthly subscription â€” just a one-time payment (Â£2.50) option for premium features." }
       },
       {
         "@type": "Question",
@@ -83,7 +83,7 @@ export default function GiveawayGenerator() {
     <Layout>
       <SEO
         title="Free Giveaway Generator for Creators - Instagram, YouTube, TikTok, Facebook"
-        description="The best free giveaway generator trusted by creators. Pick random winners for Instagram, YouTube, TikTok & Facebook giveaways. one-time payment (£2.50), no subscriptions. Verified fair random selection with anti-fraud detection."
+        description="The best free giveaway generator trusted by creators. Pick random winners for Instagram, YouTube, TikTok & Facebook giveaways. one-time payment (Â£2.50), no subscriptions. Verified fair random selection with anti-fraud detection."
         keywords="instagram giveaways tool, instagram giveaway tool, instagram giveaway generator, giveaway generator, giveaway maker, youtube giveaway, tiktok giveaway generator, facebook giveaway generator, instagram comments tool, instagram comment picker tool, comment picker generator, giveaway generators for creators, trusted by creators, one time payment giveaway generator, giveaway generators, free giveaway tool, social media giveaway, contest picker, raffle generator"
         url="/giveaway-generator"
         structuredData={structuredData}
@@ -106,7 +106,7 @@ export default function GiveawayGenerator() {
 
           <p className="text-lg sm:text-xl md:text-2xl font-bold text-slate-700 max-w-3xl mx-auto">
             Run fair giveaways on Instagram, YouTube, TikTok, and Facebook. Cryptographically random winner selection.
-            No monthly fees â€” one-time payment (£2.50) for premium, free tools forever.
+            No monthly fees â€” one-time payment (Â£2.50) for premium, free tools forever.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

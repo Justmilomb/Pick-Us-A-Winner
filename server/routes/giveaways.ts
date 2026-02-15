@@ -121,7 +121,7 @@ export function registerGiveawayRoutes(app: Express, deps: GiveawayRouteDeps): v
 
           const confirmationSent = await sendEmail({
             to: contactEmail,
-            subject: "Your Giveaway Has Been Scheduled! ðŸŽ‰",
+            subject: "Your Giveaway Has Been Scheduled! 🎉",
             text: getScheduleEmailText({
               scheduledDate: scheduledDateFormatted,
               accessLink,
