@@ -20,7 +20,7 @@ export default function PrivacyPolicy() {
                         <h2 className="text-3xl font-black uppercase">1. What We Collect</h2>
                         <p>PickUsAWinner collects as little data as possible. Here is exactly what we collect and why:</p>
                         <ul className="list-disc pl-6 space-y-2">
-                            <li><strong>IP address</strong> — used to track your free credit balance (2 free Instagram comment fetches per IP). We do not link your IP to any personal identity.</li>
+                            <li><strong>IP address</strong> — used for abuse prevention, rate limiting, and operational security. We do not link your IP to any personal identity.</li>
                             <li><strong>Instagram comments</strong> — when you fetch comments from an Instagram post, we temporarily process usernames, comment text, and timestamps in memory to filter and pick winners. This data is <strong>not stored</strong> on our servers after your session ends.</li>
                             <li><strong>Payment information</strong> — processed entirely by Stripe. We never see or store your card number, CVV, or billing details. We only receive a confirmation that your payment succeeded and a transaction ID to prevent double-redemption.</li>
                             <li><strong>Cookies</strong> — we use essential cookies for session management and a cookie consent preference. See Section 5 below.</li>
@@ -44,13 +44,13 @@ export default function PrivacyPolicy() {
                     </section>
 
                     <section>
-                        <h2 className="text-3xl font-black uppercase">4. Payments & Credits</h2>
-                        <p>PickUsAWinner uses a credit-based system:</p>
+                        <h2 className="text-3xl font-black uppercase">4. Payments</h2>
+                        <p>PickUsAWinner uses one-time payments for paid giveaway actions:</p>
                         <ul className="list-disc pl-6 space-y-2">
-                            <li>Every IP address receives <strong>2 free credits</strong> for Instagram comment fetching.</li>
-                            <li>Additional credits can be purchased via a <strong>one-time payment</strong> through Stripe. There are no subscriptions or recurring charges.</li>
+                            <li>A <strong>one-time payment</strong> is required each time you run winner selection or schedule a giveaway.</li>
+                            <li>There are no subscriptions or recurring charges.</li>
                             <li>Payment processing is handled entirely by <strong>Stripe</strong>. Your card details go directly to Stripe's servers — we never see them. See <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Stripe's Privacy Policy</a>.</li>
-                            <li>We store a payment token (not card details) to credit your account after a successful purchase.</li>
+                            <li>We store payment verification tokens (not card details) to validate paid actions and prevent abuse.</li>
                         </ul>
                     </section>
 
@@ -81,7 +81,7 @@ export default function PrivacyPolicy() {
                         <h2 className="text-3xl font-black uppercase">7. Data Retention</h2>
                         <ul className="list-disc pl-6 space-y-2">
                             <li>Instagram comment data: <strong>not retained</strong> — processed in memory only.</li>
-                            <li>Credit balance (IP-based): retained as long as the service is running.</li>
+                            <li>Rate-limit and abuse-prevention records (IP-based): retained as long as the service is running.</li>
                             <li>Payment tokens: retained to prevent double-redemption.</li>
                             <li>Cookie consent preference: stored in your browser's local storage indefinitely (you can clear it anytime).</li>
                         </ul>
@@ -119,3 +119,4 @@ export default function PrivacyPolicy() {
         </Layout>
     );
 }
+

@@ -34,13 +34,13 @@ export default function TermsOfService() {
                     </section>
 
                     <section>
-                        <h2 className="text-3xl font-black uppercase">3. Credits & Payment</h2>
+                        <h2 className="text-3xl font-black uppercase">3. Payment</h2>
                         <ul className="list-disc pl-6 space-y-2">
-                            <li>Each user (identified by IP address) receives <strong>2 free credits</strong> for fetching Instagram comments.</li>
-                            <li>Additional credits can be purchased via a <strong>one-time payment</strong> through Stripe. There are no subscriptions, no recurring charges, and no hidden fees.</li>
-                            <li>Credits are non-refundable once redeemed.</li>
-                            <li>Each credit allows you to fetch comments from one Instagram post. The number of comments fetched depends on the post and Instagram's availability.</li>
-                            <li>We reserve the right to adjust pricing and credit amounts at any time. Existing purchased credits will not be affected.</li>
+                            <li>You must complete a <strong>one-time payment</strong> through Stripe each time you run a giveaway winner selection or schedule a giveaway.</li>
+                            <li>Payment happens after you configure your giveaway settings.</li>
+                            <li>There are no subscriptions, no recurring charges, and no hidden fees.</li>
+                            <li>Payments are non-refundable once the paid action has started or completed.</li>
+                            <li>We reserve the right to adjust pricing at any time.</li>
                         </ul>
                     </section>
 
@@ -136,3 +136,4 @@ export default function TermsOfService() {
         </Layout>
     );
 }
+

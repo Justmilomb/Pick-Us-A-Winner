@@ -24,7 +24,7 @@ export default function Home() {
         "name": "Do I need to sign up or log in to use PickUsAWinner?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "No. PickUsAWinner requires no signup and no login. Use the tool instantly. Our wheel spinner, random name picker, and option picker are 100% free. Instagram comment fetching includes free credits, with extra credits available as a one-time purchase — no monthly subscriptions."
+          "text": "No. PickUsAWinner requires no signup and no login. Use the tool instantly. Our wheel spinner, random name picker, and option picker are 100% free. Instagram comment fetching uses a one-time payment after you choose your settings, with no monthly subscriptions."
         }
       },
       {
@@ -106,7 +106,7 @@ export default function Home() {
                   transition={{ delay: 0.2 }}
                   className="text-base sm:text-lg md:text-xl font-bold text-slate-800 max-w-xl mx-auto lg:mx-0 leading-tight px-2 sm:px-0"
                 >
-                  The simplest random selection toolkit on the web. Instagram giveaways, spin the wheel, name picker & more — all cryptographically fair. Free to configure. One-time payment (£2.50) for credits. No subscription.
+                  The simplest random selection toolkit on the web. Instagram giveaways, spin the wheel, name picker & more — all cryptographically fair. Free to configure. one-time payment (�2.50) for credits. No subscription.
                 </motion.p>
 
                 <motion.div
@@ -354,7 +354,7 @@ export default function Home() {
                 PickUsAWinner is the <strong>best free giveaway generator</strong> for creators on Instagram, YouTube, TikTok, and Facebook.
                 Our <strong>Instagram comment picker</strong> fetches comments directly, filters by your rules, removes duplicates,
                 detects fraud, and picks <strong>cryptographically random winners</strong>. No monthly subscription — just a
-                one-time payment (£2.50) option for premium features. Trusted by thousands of creators worldwide.
+                one-time payment (�2.50) option for premium features. Trusted by thousands of creators worldwide.
               </p>
               <Link href="/instagram-giveaway-guide" className="text-primary font-black text-sm inline-flex items-center gap-1 hover:underline">
                 Read our Instagram Giveaway Guide <ArrowRight className="w-3 h-3" />
@@ -383,4 +383,5 @@ export default function Home() {
     </Layout>
   );
 }
+
 
