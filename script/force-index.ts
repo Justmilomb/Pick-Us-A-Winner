@@ -27,10 +27,17 @@ const ALL_URLS = [
   "/faq",
   "/privacy",
   "/terms",
-  // Add article URLs
+  // Article URLs
   "/article/best-instagram-comment-picker-tools-2026",
   "/article/how-to-pick-instagram-winner",
   "/article/what-is-random-name-picker",
+  "/article/instagram-giveaway-rules-2026",
+  "/article/free-giveaway-generator-tools-comparison",
+  "/article/giveaway-fraud-detection-explained",
+  "/article/fair-random-winner-selection",
+  "/article/spin-wheel-vs-random-picker",
+  // New pages
+  "/sitemap",
 ];
 
 async function submitToIndexNow() {

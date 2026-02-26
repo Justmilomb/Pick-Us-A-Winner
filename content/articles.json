@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-02-25T21:47:35.013Z",
-  "count": 3,
+  "generatedAt": "2026-02-26T19:40:22.341Z",
+  "count": 8,
   "articles": [
     {
       "title": "Best Instagram Comment Picker Tools in 2026",
@@ -18,6 +18,51 @@
       "readingTime": "6 min read"
     },
     {
+      "title": "Fair Random Winner Selection: The Technical Guide",
+      "slug": "fair-random-winner-selection",
+      "description": "Deep technical guide to fair random winner selection. Learn why Math.random() is biased, how Fisher-Yates shuffle works, and what cryptographic randomness actually means for giveaway fairness.",
+      "keywords": "fair random selection, cryptographic randomness, fisher-yates shuffle, random winner algorithm, unbiased random selection, true random number generator",
+      "publishDate": "2026-02-25",
+      "lastModified": "2026-02-25",
+      "category": "Guides",
+      "schemaType": "Article",
+      "relatedArticles": [
+        "what-is-random-name-picker",
+        "how-to-pick-instagram-winner"
+      ],
+      "readingTime": "9 min read"
+    },
+    {
+      "title": "Best Free Giveaway Generator Tools in 2026",
+      "slug": "free-giveaway-generator-tools-comparison",
+      "description": "Compare the top free giveaway generator tools for Instagram, TikTok, YouTube, and Facebook. Find the best free random winner picker that's actually fair and doesn't sell your data.",
+      "keywords": "free giveaway generator, free giveaway picker, free contest picker, free random winner picker, giveaway tool free, pick winner free",
+      "publishDate": "2026-02-25",
+      "lastModified": "2026-02-25",
+      "category": "Comparisons",
+      "schemaType": "Review",
+      "relatedArticles": [
+        "best-instagram-comment-picker-tools-2026",
+        "how-to-pick-instagram-winner"
+      ],
+      "readingTime": "8 min read"
+    },
+    {
+      "title": "Giveaway Fraud Detection Explained: How to Spot Fake Entries",
+      "slug": "giveaway-fraud-detection-explained",
+      "description": "Learn how giveaway fraud detection works, what signals identify fake accounts and bot entries, and how PickUsAWinner automatically scores and filters suspicious Instagram comments.",
+      "keywords": "giveaway fraud detection, fake instagram accounts, bot entries giveaway, detect fake giveaway entries, giveaway cheating, instagram fraud, fake followers",
+      "publishDate": "2026-02-25",
+      "lastModified": "2026-02-25",
+      "category": "Guides",
+      "schemaType": "Article",
+      "relatedArticles": [
+        "how-to-pick-instagram-winner",
+        "best-instagram-comment-picker-tools-2026"
+      ],
+      "readingTime": "8 min read"
+    },
+    {
       "title": "How to Pick a Random Instagram Winner in 2026",
       "slug": "how-to-pick-instagram-winner",
       "description": "Step-by-step guide to picking fair winners from Instagram comments. Learn how to configure filters, verify entries, and ensure cryptographically random winner selection.",
@@ -29,6 +74,36 @@
       "relatedArticles": [
         "best-instagram-comment-picker-tools-2026",
         "what-is-random-name-picker"
+      ],
+      "readingTime": "7 min read"
+    },
+    {
+      "title": "Instagram Giveaway Rules & Guidelines 2026",
+      "slug": "instagram-giveaway-rules-2026",
+      "description": "Complete guide to Instagram's official giveaway rules in 2026. Learn what's allowed, what's not, how to write legally compliant giveaway captions, and avoid getting your account flagged.",
+      "keywords": "instagram giveaway rules, instagram contest rules, instagram giveaway guidelines, instagram promotion rules, how to run legal instagram giveaway",
+      "publishDate": "2026-02-25",
+      "lastModified": "2026-02-25",
+      "category": "Guides",
+      "schemaType": "Article",
+      "relatedArticles": [
+        "how-to-pick-instagram-winner",
+        "best-instagram-comment-picker-tools-2026"
+      ],
+      "readingTime": "7 min read"
+    },
+    {
+      "title": "Spin the Wheel vs Random Name Picker: Which Should You Use?",
+      "slug": "spin-wheel-vs-random-picker",
+      "description": "Should you use a spinning wheel or a random name picker for your giveaway? This guide compares both tools across use cases, fairness, and audience experience.",
+      "keywords": "spin the wheel vs random picker, wheel picker comparison, spin wheel giveaway, random name picker vs wheel, which picker to use",
+      "publishDate": "2026-02-25",
+      "lastModified": "2026-02-25",
+      "category": "Comparisons",
+      "schemaType": "Article",
+      "relatedArticles": [
+        "what-is-random-name-picker",
+        "free-giveaway-generator-tools-comparison"
       ],
       "readingTime": "7 min read"
     },

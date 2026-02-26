@@ -1,15 +1,15 @@
 import { readFileSync, readdirSync, writeFileSync, existsSync } from "fs";
 import { join, resolve } from "path";
-import { fileURLToPath } from "url";
 import matter from "gray-matter";
 import { remark } from "remark";
 import remarkHtml from "remark-html";
 import remarkGfm from "remark-gfm";
 import readingTime from "reading-time";
 
-const __dirname = fileURLToPath(new URL(".", import.meta.url));
-const CONTENT_DIR = resolve(__dirname, "../content/articles");
-const INDEX_FILE = resolve(__dirname, "../content/articles.json");
+// process.cwd() works in both ESM and CJS — never use import.meta.url
+// in files bundled by esbuild to CommonJS format
+const CONTENT_DIR = resolve(process.cwd(), "content/articles");
+const INDEX_FILE = resolve(process.cwd(), "content/articles.json");
 
 /**
  * Frontmatter schema for articles
