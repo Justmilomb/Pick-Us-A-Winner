@@ -6,7 +6,8 @@
       "Bash(npm run check:*)",
       "Bash(node -e \"import\\(''./server/markdown.js''\\).then\\(m => m.generateArticleIndex\\(\\)\\)\")",
       "Bash(npx tsx:*)",
-      "Bash(cd D:\\\\Coding\\\\giveaway-engine:*)"
+      "Bash(cd D:\\\\Coding\\\\giveaway-engine:*)",
+      "Bash(git stash:*)"
     ]
   }
 }

@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 export interface EmailOptions {
     to: string;
@@ -79,9 +80,43 @@ function getTransporter(): nodemailer.Transporter | null {
     }
 }
 
-/** Check if SMTP is configured (without creating transporter) */
+/** Check if email is configured (Resend or SMTP) */
 export function isEmailConfigured(): boolean {
+  if (process.env.RESEND_API_KEY) return true;
   return !!(process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.SMTP_USER && process.env.SMTP_PASS);
+}
+
+/** Send email via Resend API */
+async function sendViaResend({ to, subject, text, html, replyTo }: EmailOptions): Promise<boolean> {
+    const apiKey = process.env.RESEND_API_KEY!;
+    const resend = new Resend(apiKey);
+
+    const fromName = process.env.SMTP_FROM_NAME?.trim() || "PickUsAWinner";
+    const fromEmail = process.env.RESEND_FROM?.trim() || process.env.SMTP_FROM?.trim() || "noreply@pickusawinner.com";
+    const from = `${fromName} <${fromEmail}>`;
+
+    try {
+        const { error } = await resend.emails.send({
+            from,
+            to,
+            subject,
+            html: html || text.replace(/\n/g, "<br>"),
+            text,
+            ...(replyTo ? { replyTo } : {}),
+        });
+
+        if (error) {
+            console.error(`[RESEND] Failed to send email to ${to}:`, error.message);
+            return false;
+        }
+
+        console.log(`[RESEND] Email sent successfully to ${to}`);
+        return true;
+    } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error(`[RESEND] Error sending email to ${to}:`, err.message);
+        return false;
+    }
 }
 
 async function ensureTransportVerified(emailTransporter: nodemailer.Transporter): Promise<boolean> {
@@ -201,7 +236,15 @@ export async function checkEmailHealth(): Promise<EmailHealthStatus> {
     };
 }
 
-export async function sendEmail({ to, subject, text, html, replyTo }: EmailOptions): Promise<boolean> {
+export async function sendEmail(options: EmailOptions): Promise<boolean> {
+    // Prefer Resend if API key is configured
+    if (process.env.RESEND_API_KEY) {
+        return sendViaResend(options);
+    }
+    return sendViaSMTP(options);
+}
+
+async function sendViaSMTP({ to, subject, text, html, replyTo }: EmailOptions): Promise<boolean> {
     const emailTransporter = getTransporter();
 
     if (!emailTransporter) {

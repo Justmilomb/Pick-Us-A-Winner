@@ -6,7 +6,7 @@ import { getResultsEmailHTML, getResultsEmailText } from "./email-templates";
 const MAX_RETRY_ATTEMPTS = 20;
 const BASE_RETRY_MS = 60 * 1000; // 1 minute
 const MAX_RETRY_MS = 30 * 60 * 1000; // 30 minutes
-const PREPARE_LEAD_MS = 3 * 60 * 1000; // 3 minutes before scheduled time
+const PREPARE_LEAD_MS = 5 * 60 * 1000; // 5 minutes before scheduled time
 
 type SchedulerMeta = {
   attempts?: number;
@@ -14,8 +14,6 @@ type SchedulerMeta = {
   lastAttemptAt?: string;
   nextAttemptAt?: string;
   queuedAt?: string;
-  dispatchedAt?: string;
-  warmupCommentCount?: number;
   preparedAt?: string;
   preparedWinners?: any[];
   preparedEntryCount?: number;
@@ -168,27 +166,6 @@ async function scheduleRetry(giveaway: any, error: unknown): Promise<void> {
   );
 }
 
-async function runImmediateDispatch(giveaway: any, prepareAt: Date): Promise<void> {
-  const config = giveaway.config;
-  const currentMeta = getSchedulerMeta(config);
-  const pool = await fetchPoolForGiveaway(config);
-  const updatedMeta: SchedulerMeta = clearRetryMeta({
-    ...currentMeta,
-    queuedAt: currentMeta.queuedAt || giveaway.createdAt?.toISOString?.() || new Date().toISOString(),
-    dispatchedAt: new Date().toISOString(),
-    warmupCommentCount: pool.length,
-    lastAttemptAt: new Date().toISOString(),
-    nextAttemptAt: toIsoOrNow(prepareAt),
-  });
-
-  await storage.updateGiveaway(giveaway.id, {
-    config: buildConfigWithMeta(config, updatedMeta),
-    status: "pending" as any,
-  });
-
-  console.log(`[Scheduler] Giveaway ${giveaway.id} dispatched to scraper queue. Warmup comments: ${pool.length}`);
-}
-
 async function runPreparation(giveaway: any, scheduledFor: Date): Promise<void> {
   const config = giveaway.config;
   const currentMeta = getSchedulerMeta(config);
@@ -210,7 +187,7 @@ async function runPreparation(giveaway: any, scheduledFor: Date): Promise<void> 
   });
 
   console.log(
-    `[Scheduler] Giveaway ${giveaway.id} prepared at T-3. Winners ready: ${winners.length}, candidates: ${validCandidates.length}`,
+    `[Scheduler] Giveaway ${giveaway.id} prepared at T-5. Winners ready: ${winners.length}, candidates: ${validCandidates.length}`,
   );
 }
 
@@ -286,11 +263,7 @@ async function processGiveaway(giveaway: any) {
     const now = new Date();
     const meta = getSchedulerMeta(config);
 
-    if (!meta.dispatchedAt) {
-      await runImmediateDispatch(giveaway, prepareAt);
-      return;
-    }
-
+    // T-5: Start preparation only when within 5 minutes of scheduled time
     if (!meta.preparedAt && now.getTime() >= prepareAt.getTime()) {
       await runPreparation(giveaway, scheduledFor);
       if (now.getTime() < scheduledFor.getTime()) {
@@ -304,6 +277,7 @@ async function processGiveaway(giveaway: any) {
       await finalizeGiveaway(giveaway);
       return;
     }
+    // Before T-5: nothing to do, wait for next tick
   } catch (error) {
     if (isRetryableSchedulerError(error)) {
       await scheduleRetry(giveaway, error);

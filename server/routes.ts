@@ -27,6 +27,7 @@ import { registerAdRoutes } from "./routes/ads";
 import { registerPublicRoutes } from "./routes/public";
 import { registerArticleRoutes } from "./routes/articles";
 import { getAllArticles } from "./markdown";
+import { scraperRelay } from "./scraper-relay";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -125,13 +126,10 @@ export async function registerRoutes(
     { loc: "/random-option-picker", changefreq: "weekly", priority: "0.9" },
     { loc: "/how-it-works", changefreq: "weekly", priority: "0.85" },
     { loc: "/instagram-giveaway-guide", changefreq: "weekly", priority: "0.85" },
-    { loc: "/wheel", changefreq: "weekly", priority: "0.85" },
-    { loc: "/picker", changefreq: "weekly", priority: "0.85" },
     { loc: "/youtube", changefreq: "weekly", priority: "0.8" },
     { loc: "/tiktok", changefreq: "weekly", priority: "0.8" },
     { loc: "/facebook-picker", changefreq: "weekly", priority: "0.8" },
     { loc: "/twitter-picker", changefreq: "weekly", priority: "0.8" },
-    { loc: "/coming-soon", changefreq: "monthly", priority: "0.5" },
     { loc: "/press", changefreq: "monthly", priority: "0.6" },
     { loc: "/contact", changefreq: "monthly", priority: "0.6" },
     { loc: "/faq", changefreq: "monthly", priority: "0.6" },
@@ -144,14 +142,9 @@ export async function registerRoutes(
     res.send(`User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /schedule/
 Disallow: /analytics
 
-# Sitemaps
 Sitemap: ${BASE_URL}/sitemap.xml
-
-# Crawl delay (optional - helps with crawl budget)
-Crawl-delay: 1
 `);
   });
 

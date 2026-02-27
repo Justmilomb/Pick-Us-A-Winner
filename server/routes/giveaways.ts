@@ -4,7 +4,12 @@ import { log } from "../log";
 import { storage } from "../storage";
 import { scraperRelay } from "../scraper-relay";
 import { sendEmail } from "../email";
-import { getResultsEmailHTML, getResultsEmailText } from "../email-templates";
+import {
+  getResultsEmailHTML,
+  getResultsEmailText,
+  getScraperOfflineScheduledEmailHTML,
+  getScraperOfflineScheduledEmailText,
+} from "../email-templates";
 
 interface GiveawayRouteDeps {
   giveawayRateLimiter: any;
@@ -87,12 +92,6 @@ export function registerGiveawayRoutes(app: Express, deps: GiveawayRouteDeps): v
           return res.status(400).json({ error: "A valid Instagram URL is required in config.url" });
         }
 
-        if (!scraperRelay.isWorkerConnected()) {
-          return res.status(503).json({
-            error: "Scheduler worker is offline. Please start/reconnect the worker and try again.",
-          });
-        }
-
         if (!paymentToken || typeof paymentToken !== "string") {
           return res.status(402).json({
             error: "Payment required. Please complete payment before scheduling.",
@@ -141,13 +140,20 @@ export function registerGiveawayRoutes(app: Express, deps: GiveawayRouteDeps): v
           status: status || "pending",
         });
 
+        let scraperOnline = true;
         try {
           await queueWorkerJob(giveaway, "upsert");
         } catch (queueError) {
-          await storage.deleteGiveaway((giveaway as any).id);
-          return res.status(503).json({
-            error: "Scheduler worker unavailable. Giveaway was not queued. Please retry in a moment.",
-          });
+          scraperOnline = false;
+          log(`[Giveaway] Worker unavailable at scheduling time, marking pendingQueue for ${(giveaway as any).id}`, "warn");
+          const pendingConfig = {
+            ...(giveaway as any).config,
+            _scheduler: {
+              ...(giveaway as any).config._scheduler,
+              pendingQueue: true,
+            },
+          };
+          await storage.updateGiveaway((giveaway as any).id, { config: pendingConfig });
         }
 
         const contactEmail = (config as any).contactEmail;
@@ -158,27 +164,27 @@ export function registerGiveawayRoutes(app: Express, deps: GiveawayRouteDeps): v
           const accessLink = `${baseUrl}/schedule/${(giveaway as any).accessToken}`;
           const scheduledDateFormatted = format(scheduledDate, "MMMM do, yyyy 'at' h:mm a");
 
-          const confirmationSent = await sendEmail({
-            to: contactEmail,
-            subject: "Your Giveaway Has Been Scheduled! 🎉",
-            text: getScheduleEmailText({
-              scheduledDate: scheduledDateFormatted,
-              accessLink,
-              postUrl: (config as any).url,
-            }),
-            html: getScheduleEmailHTML({
-              scheduledDate: scheduledDateFormatted,
-              accessLink,
-              postUrl: (config as any).url,
-            }),
-          });
+          let subject: string;
+          let html: string;
+          let text: string;
 
+          if (scraperOnline) {
+            subject = "Your Giveaway Has Been Scheduled! 🎉";
+            html = getScheduleEmailHTML({ scheduledDate: scheduledDateFormatted, accessLink, postUrl: (config as any).url });
+            text = getScheduleEmailText({ scheduledDate: scheduledDateFormatted, accessLink, postUrl: (config as any).url });
+          } else {
+            subject = "Your Giveaway Is Queued — We're On It";
+            html = getScraperOfflineScheduledEmailHTML({ scheduledDate: scheduledDateFormatted, accessLink, postUrl: (config as any).url });
+            text = getScraperOfflineScheduledEmailText({ scheduledDate: scheduledDateFormatted, accessLink, postUrl: (config as any).url });
+          }
+
+          const confirmationSent = await sendEmail({ to: contactEmail, subject, html, text });
           if (!confirmationSent) {
             log(`[EMAIL] Failed to send schedule confirmation to ${contactEmail} for giveaway ${(giveaway as any).id}`, "error");
           }
         }
 
-        return res.status(201).json(giveaway);
+        return res.status(201).json({ ...(giveaway as any), scraperOnline });
       } catch (error) {
         log(`Schedule Giveaway Error: ${error}`, "error");
         return res.status(500).json({ error: "Failed to schedule giveaway" });
