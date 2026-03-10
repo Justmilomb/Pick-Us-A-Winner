@@ -16,7 +16,7 @@ export default function Home() {
         "name": "How does PickUsAWinner pick giveaway winners?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "PickUsAWinner uses the Web Crypto API (crypto.getRandomValues) combined with the Fisher-Yates shuffle algorithm for cryptographically secure random selection. Every participant has a mathematically equal chance of winning. For Instagram giveaways, we also filter by keywords, mentions, and exclude duplicate or fraudulent entries."
+          "text": "PickUsAWinner uses secure random number generation to pick winners fairly. Every participant has an equal chance of winning. For Instagram giveaways, we also filter by keywords, emojis, mentions, and remove duplicate or fake entries."
         }
       },
       {
@@ -24,7 +24,7 @@ export default function Home() {
         "name": "Do I need to sign up or log in to use PickUsAWinner?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "No. PickUsAWinner requires no signup and no login. Use the tool instantly. Our wheel spinner, random name picker, and option picker are 100% free. Instagram comment fetching uses a one-time payment after you choose your settings, with no monthly subscriptions."
+          "text": "No. You don't need to sign up or log in. Just open the tool and use it. The wheel, name picker, and option picker are totally free. Instagram comment picking has a small one-time cost — no subscriptions."
         }
       },
       {
@@ -40,7 +40,7 @@ export default function Home() {
         "name": "What tools does PickUsAWinner offer?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "PickUsAWinner offers multiple free tools: Instagram Comment Picker for giveaways, Wheel of Names / Spin the Wheel for random selection, Random Name Picker for drawing names from a list, and platform pickers for YouTube, TikTok, Facebook, and Twitter (coming soon). All tools use cryptographically fair randomness."
+          "text": "PickUsAWinner has several free tools: Instagram Comment Picker for giveaways, Spin the Wheel for random picks, Random Name Picker for drawing names, and more platform pickers coming soon (YouTube, TikTok, Facebook). All picks are truly random and fair."
         }
       },
       {
@@ -48,7 +48,7 @@ export default function Home() {
         "name": "Is the random selection truly fair?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes. We use crypto.getRandomValues() — the same cryptographic randomness source used in encryption — instead of Math.random(). This is combined with the Fisher-Yates shuffle for mathematically proven uniform distribution."
+          "text": "Yes. We use the same type of secure randomness that banks and encryption software use. It's not basic Math.random() — it's the real deal, so every pick is truly fair."
         }
       }
     ]
@@ -59,7 +59,7 @@ export default function Home() {
     "@type": "Organization",
     "name": "PickUsAWinner",
     "url": "https://pickusawinner.com",
-    "description": "The simplest random selection toolkit on the web. Instagram giveaway comment picker, spin the wheel, random name picker, and random option picker. Trusted by creators worldwide.",
+    "description": "The easiest way to pick random winners online. Instagram comment picker, spin the wheel, name picker, and more. Used by thousands of creators.",
     "sameAs": []
   };
 
@@ -106,7 +106,7 @@ export default function Home() {
                   transition={{ delay: 0.2 }}
                   className="text-base sm:text-lg md:text-xl font-bold text-slate-800 max-w-xl mx-auto lg:mx-0 leading-tight px-2 sm:px-0"
                 >
-                  The simplest random selection toolkit on the web. Instagram giveaways, spin the wheel, name picker & more — all cryptographically fair. Free to configure. one-time payment (£2.50) for credits. No subscription.
+                  Pick random winners from Instagram comments, spin a wheel, or draw names from a list. It's fast, fair, and easy. Free to set up — just pay once (£2.50) when you're ready. No subscriptions ever.
                 </motion.p>
 
                 <motion.div
@@ -181,7 +181,7 @@ export default function Home() {
             {[
               {
                 title: "Instagram Comment Picker",
-                desc: "Fetch comments from any Instagram post. Filter by keywords, mentions, hashtags. Auto-remove duplicates and detect fraud. Pick cryptographically random winners.",
+                desc: "Grab all the comments from any Instagram post. Filter by hashtags, emojis, mentions, or words. Remove duplicates and catch bots. Pick random winners fairly.",
                 icon: <Instagram className="w-8 h-8" />,
                 link: "/tool",
                 color: "bg-[#E1306C]",
@@ -189,7 +189,7 @@ export default function Home() {
               },
               {
                 title: "Spin the Wheel",
-                desc: "Add names, prizes, or options and spin for a random result. Smooth animation with cryptographically fair selection. Perfect for live giveaways and classroom picks.",
+                desc: "Add names, prizes, or choices and spin the wheel. Fun animation with truly random results. Great for live streams, classrooms, or just picking where to eat.",
                 icon: <RotateCcw className="w-8 h-8" />,
                 link: "/spin-the-wheel",
                 color: "bg-[#833AB4]",
@@ -197,7 +197,7 @@ export default function Home() {
               },
               {
                 title: "Random Name Picker",
-                desc: "Enter a list of names and pick winners at random. Uses Fisher-Yates shuffle with crypto randomness. Pick multiple winners at once. Data stays in your browser.",
+                desc: "Paste in a list of names and pick winners at random. Pick one or multiple winners at once. Everything stays in your browser — nothing is saved or sent anywhere.",
                 icon: <Users className="w-8 h-8" />,
                 link: "/random-name-picker",
                 color: "bg-[#FCAF45]",
@@ -205,7 +205,7 @@ export default function Home() {
               },
               {
                 title: "Random Option Picker",
-                desc: "Can't decide? Enter your options and let cryptographic randomness choose for you. From restaurants to movies to team assignments — let fate decide.",
+                desc: "Can't decide? Type in your options and let the tool pick for you. Restaurants, movies, team assignments — whatever you need, we'll choose randomly.",
                 icon: <Dice5 className="w-8 h-8" />,
                 link: "/random-option-picker",
                 color: "bg-[#405DE6]",
@@ -254,7 +254,7 @@ export default function Home() {
               </div>
               <div className="text-center sm:text-left flex-1">
                 <h3 className="text-base sm:text-lg font-black uppercase">3 Simple Steps: Paste Link → Set Rules → Pick Winner</h3>
-                <p className="text-sm font-medium text-muted-foreground mt-1">Learn how our algorithm ensures fair selection</p>
+                <p className="text-sm font-medium text-muted-foreground mt-1">See how it works and why every pick is fair</p>
               </div>
               <ArrowRight className="w-6 h-6 flex-shrink-0" />
             </div>
@@ -264,16 +264,16 @@ export default function Home() {
         {/* Why PickUsAWinner */}
         <section className="py-6 sm:py-8 px-2 sm:px-4 md:px-0">
           <div className="text-center mb-6 sm:mb-8">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-black uppercase">Why Creators Trust Pick Us A Winner</h2>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black uppercase">Why People Use Pick Us A Winner</h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { title: "Cryptographic Fairness", desc: "We use the Web Crypto API — the same randomness source used in encryption — not Math.random(). Every participant has a mathematically equal chance.", icon: <ShieldCheck className="w-8 h-8" /> },
-              { title: "No Subscriptions", desc: "Free tools forever. Instagram comment fetching uses a one-time credit system. No monthly fees, no recurring charges, no surprise bills.", icon: <Sparkles className="w-8 h-8" /> },
-              { title: "Privacy First", desc: "Spin the wheel, name picker, and option picker run entirely in your browser. No data is sent to our servers. Instagram data is processed and discarded.", icon: <CheckCircle className="w-8 h-8" /> },
-              { title: "Anti-Fraud Detection", desc: "Our Instagram picker automatically detects bots, duplicate entries, and suspicious patterns. Only legitimate participants are eligible to win.", icon: <ShieldCheck className="w-8 h-8" /> },
-              { title: "Mobile-First Design", desc: "Every tool works beautifully on phones, tablets, and desktops. Pick winners on the go — no app download required.", icon: <Zap className="w-8 h-8" /> },
-              { title: "Transparent Algorithm", desc: "We explain exactly how our randomness works. Fisher-Yates shuffle, crypto random, selection without replacement. Read our How It Works page.", icon: <Sparkles className="w-8 h-8" /> },
+              { title: "Actually Fair", desc: "We use the same type of randomness that banks use for security. Everyone has an equal chance — no tricks, no bias.", icon: <ShieldCheck className="w-8 h-8" /> },
+              { title: "No Subscriptions", desc: "Free tools forever. Instagram comments cost a one-time fee. No monthly charges, no hidden fees, no surprises.", icon: <Sparkles className="w-8 h-8" /> },
+              { title: "Your Data Stays Private", desc: "The wheel, name picker, and option picker run right in your browser. We don't save or send your data anywhere.", icon: <CheckCircle className="w-8 h-8" /> },
+              { title: "Catches Bots & Fakes", desc: "Our Instagram picker spots bots, duplicate comments, and sketchy accounts automatically. Only real entries count.", icon: <ShieldCheck className="w-8 h-8" /> },
+              { title: "Works on Any Device", desc: "Use it on your phone, tablet, or computer. No app to download — just open the site and go.", icon: <Zap className="w-8 h-8" /> },
+              { title: "Nothing Hidden", desc: "We show you exactly how the picking works. No black box — you can see how winners are chosen.", icon: <Sparkles className="w-8 h-8" /> },
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -299,7 +299,7 @@ export default function Home() {
         {/* Platform Support - compact */}
         <section className="py-4 sm:py-6 px-2 sm:px-4 md:px-0">
           <Link href="/coming-soon" className="block border-4 border-black bg-slate-50 p-4 sm:p-6 text-center hover:bg-slate-100 transition-colors">
-            <p className="font-bold text-slate-700">Instagram live now. YouTube, TikTok, Facebook coming soon.</p>
+            <p className="font-bold text-slate-700">Instagram is ready to use now. YouTube, TikTok, and Facebook are on the way.</p>
             <p className="text-sm text-primary font-black uppercase mt-1">View platform status →</p>
           </Link>
         </section>
@@ -308,7 +308,7 @@ export default function Home() {
         <section className="container mx-auto px-4 py-6 text-center">
           <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-2">Press & Media</p>
           <p className="text-base font-medium mb-4">
-            Featured on creator blogs and giveaway guides. Link to us or download our logo.
+            Seen on creator blogs and giveaway guides. Feel free to link to us or grab our logo.
           </p>
           <Link href="/press" className="inline-flex items-center gap-2 px-6 py-3 border-2 border-black font-bold hover:bg-black hover:text-white transition-colors">
             Get Media Kit & Download Logo
@@ -331,7 +331,7 @@ export default function Home() {
           >
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black uppercase leading-none">Ready to Pick <br className="hidden sm:block" /> a Winner?</h2>
             <p className="text-sm sm:text-base md:text-lg font-bold max-w-2xl mx-auto opacity-90 px-2">
-              Join thousands of creators using PickUsAWinner to run fair giveaways and grow their community.
+              Thousands of creators already use PickUsAWinner. Try it out — it takes less than a minute.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2 sm:pt-4">
               <Link href="/tool" className="bg-white text-black border-2 sm:border-4 border-black p-3 sm:p-4 md:px-8 md:py-4 text-base sm:text-lg md:text-xl font-black uppercase shadow-[3px_3px_0px_0px_#000] sm:shadow-neo hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_#000] sm:hover:shadow-neo-sm transition-all inline-block italic tracking-tighter">
@@ -346,15 +346,14 @@ export default function Home() {
 
         {/* SEO Content — hidden but important for search engines */}
         <section className="px-2 sm:px-4 md:px-0 space-y-6">
-          <h2 className="text-2xl sm:text-3xl font-black uppercase">The Best Free Random Selection Toolkit</h2>
+          <h2 className="text-2xl sm:text-3xl font-black uppercase">The Easiest Way to Pick Random Winners</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="border-4 border-black bg-white p-6 shadow-neo-sm space-y-3">
               <h3 className="text-lg font-black uppercase">For Giveaway Creators</h3>
               <p className="font-medium text-slate-700 text-sm leading-relaxed">
-                PickUsAWinner is the <strong>best free giveaway generator</strong> for creators on Instagram, YouTube, TikTok, and Facebook.
-                Our <strong>Instagram comment picker</strong> fetches comments directly, filters by your rules, removes duplicates,
-                detects fraud, and picks <strong>cryptographically random winners</strong>. No monthly subscription — just a
-                one-time payment (£2.50) option for premium features. Trusted by thousands of creators worldwide.
+                Running a giveaway? PickUsAWinner pulls all the comments from your Instagram post, lets you
+                set your own rules (hashtags, emojis, mentions), removes duplicates, catches fake accounts,
+                and picks <strong>truly random winners</strong>. No monthly fees — just a one-time £2.50 payment when you need credits.
               </p>
               <Link href="/instagram-giveaway-guide" className="text-primary font-black text-sm inline-flex items-center gap-1 hover:underline">
                 Read our Instagram Giveaway Guide <ArrowRight className="w-3 h-3" />
@@ -363,11 +362,10 @@ export default function Home() {
             <div className="border-4 border-black bg-white p-6 shadow-neo-sm space-y-3">
               <h3 className="text-lg font-black uppercase">For Everyone</h3>
               <p className="font-medium text-slate-700 text-sm leading-relaxed">
-                Beyond giveaways, our tools help with any situation that needs fair random selection.
-                <strong> Spin the wheel</strong> for prizes, decisions, or fun. Use the <strong>random name picker</strong> for
-                classrooms, raffles, Secret Santa, or team building. The <strong>random option picker</strong> helps you make
-                decisions when you can't choose. All tools are free, private (no data stored), and use
-                <strong> cryptographic randomness</strong> for true fairness.
+                Not running a giveaway? No worries. <strong>Spin the wheel</strong> for prizes or just for fun.
+                Use the <strong>name picker</strong> for classrooms, raffles, Secret Santa, or team stuff.
+                The <strong>option picker</strong> helps when you just can't decide. All free, all private — nothing
+                gets saved or tracked.
               </p>
               <Link href="/how-it-works" className="text-primary font-black text-sm inline-flex items-center gap-1 hover:underline">
                 Learn how our algorithm works <ArrowRight className="w-3 h-3" />

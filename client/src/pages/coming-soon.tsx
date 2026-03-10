@@ -21,8 +21,8 @@ export default function ComingSoon() {
 
                 <div className="max-w-2xl space-y-6">
                     <p className="text-2xl md:text-3xl font-bold text-slate-700">
-                        We're currently building the best YouTube & TikTok pickers on the planet.
-                        Stay tuned!
+                        We're working on YouTube & TikTok pickers right now.
+                        They'll be here soon!
                     </p>
 
                     <Link href="/tool">

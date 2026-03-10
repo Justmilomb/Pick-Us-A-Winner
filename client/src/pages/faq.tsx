@@ -11,24 +11,24 @@ import { ArrowRight } from "lucide-react";
 
 const FAQ_ITEMS = [
   {
-    q: "How does PickUsAWinner pick giveaway winners?",
-    a: "PickUsAWinner uses the Web Crypto API for cryptographically secure random selection combined with the Fisher-Yates shuffle algorithm. This guarantees every participant has an equal chance of winning. For Instagram giveaways, we also filter by keywords, mentions, and exclude duplicate/fraudulent entries.",
+    q: "How does PickUsAWinner pick winners?",
+    a: "We use secure random number generation (the same kind used for banking and encryption) to make sure every entry has an equal chance. For Instagram giveaways, we also let you filter by hashtags, emojis, mentions, and automatically remove duplicate or fake entries.",
   },
   {
-    q: "Do I need to sign up or log in to use PickUsAWinner?",
-    a: "No. PickUsAWinner requires no signup and no login. Free to configure. One-time payment (£2.50) required to fetch Instagram comments and pick winners. No subscription.",
+    q: "Do I need to sign up?",
+    a: "Nope. No signup, no login needed. The wheel, name picker, and option picker are totally free. For Instagram comment picking, there's a one-time £2.50 payment — no subscriptions.",
   },
   {
     q: "Can I schedule giveaways?",
-    a: "Yes, PickUsAWinner allows you to schedule giveaways to run automatically at a specific date and time. You'll receive an email with results when the giveaway completes.",
+    a: "Yes! You can set a date and time, and we'll automatically run the giveaway for you. You'll get an email with the results when it's done.",
   },
   {
-    q: "What tools does PickUsAWinner offer?",
-    a: "PickUsAWinner offers four free tools: (1) Instagram Comment Picker for giveaways, (2) Spin the Wheel for random selection with animation, (3) Random Name Picker for drawing names from a list, and (4) Random Option Picker for making random decisions. All tools use cryptographically fair randomness.",
+    q: "What tools do you have?",
+    a: "We have four tools: (1) Instagram Comment Picker for giveaways, (2) Spin the Wheel with a fun animation, (3) Random Name Picker for drawing names from a list, and (4) Random Option Picker for when you can't decide. All free except Instagram comment fetching.",
   },
   {
-    q: "Is the random selection truly fair?",
-    a: "Yes. We use crypto.getRandomValues() — the same cryptographic randomness source used in encryption — instead of Math.random(). This is combined with the Fisher-Yates shuffle for mathematically proven uniform distribution. We also explain our algorithm transparently on our How It Works page.",
+    q: "Is the picking actually fair?",
+    a: "Yes, 100%. We use the same type of secure randomness that banks use — not the basic random that most websites use. Everyone has an equal chance, and we explain exactly how it works on our How It Works page.",
   },
 ];
 
@@ -57,7 +57,7 @@ export default function FAQPage() {
           FAQ
         </h1>
         <p className="text-xl font-bold text-muted-foreground mb-12">
-          Common questions about PickUsAWinner and our giveaway tools.
+          Got questions? Here are the ones we get asked the most.
         </p>
 
         <Accordion type="single" collapsible className="space-y-2">

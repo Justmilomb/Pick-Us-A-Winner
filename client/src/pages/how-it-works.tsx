@@ -24,22 +24,22 @@ export default function HowItWorks() {
       {
         "@type": "Question",
         "name": "How to pick random winners fairly?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Fair winner selection requires three things: (1) cryptographically secure randomness — not Math.random(), (2) uniform distribution where every participant has equal probability, and (3) duplicate removal so one person can't enter multiple times. PickUsAWinner implements all three using the Web Crypto API and Fisher-Yates shuffle." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Fair winner selection needs three things: (1) truly random numbers that can't be predicted, (2) every person has an equal chance, and (3) nobody can enter more than once. PickUsAWinner does all three using secure browser-level randomness and proven shuffling methods." }
       },
       {
         "@type": "Question",
         "name": "What is the Fisher-Yates shuffle algorithm?",
-        "acceptedAnswer": { "@type": "Answer", "text": "The Fisher-Yates shuffle (also known as the Knuth shuffle) is a proven algorithm that produces an unbiased random permutation of a sequence. It works by iterating from the last element to the first, swapping each element with a randomly selected element from those remaining. Combined with crypto.getRandomValues(), it guarantees every permutation is equally likely." }
+        "acceptedAnswer": { "@type": "Answer", "text": "The Fisher-Yates shuffle is a well-known method for mixing up a list so that every possible order is equally likely. Think of it like putting all names in a hat and pulling them out one by one at random. It's been used and trusted for decades." }
       },
       {
         "@type": "Question",
         "name": "What is the difference between Math.random() and crypto.getRandomValues()?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Math.random() is a pseudo-random number generator (PRNG) that uses a deterministic algorithm. Given the same seed, it produces the same sequence. crypto.getRandomValues() is a cryptographically secure random number generator (CSPRNG) that draws entropy from the operating system. It is unpredictable and suitable for security-sensitive applications like fair random selection." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Math.random() uses a simple formula that can technically be predicted. crypto.getRandomValues() gets its randomness from your device's hardware, making it impossible to predict. It's the same kind of randomness used for banking and encryption — way more secure and fair." }
       },
       {
         "@type": "Question",
         "name": "How does PickUsAWinner detect fraud in giveaways?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Our fraud detection system scores each entry based on multiple factors: duplicate usernames, comment length, emoji-only comments, repetitive text patterns, and account age signals. Entries with high fraud scores are flagged and can be automatically excluded, ensuring only legitimate participants are eligible to win." }
+        "acceptedAnswer": { "@type": "Answer", "text": "We check every comment for signs of cheating: duplicate accounts, spammy or copy-paste comments, bot-like patterns, and more. Suspicious entries get flagged, and you can choose to exclude them so only real people can win." }
       }
     ]
   };
@@ -60,7 +60,7 @@ export default function HowItWorks() {
             How <span className="text-primary">It Works</span>
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl font-bold text-slate-700 max-w-3xl mx-auto">
-            Transparency is our core value. Here's exactly how we ensure every selection is cryptographically fair, unbiased, and verifiable.
+            We believe you should know exactly how your winners get picked. Here's a plain breakdown of what happens behind the scenes.
           </p>
         </div>
 
@@ -75,40 +75,34 @@ export default function HowItWorks() {
 
           <div className="space-y-4 text-slate-700 font-medium leading-relaxed">
             <p>
-              Every random selection in PickUsAWinner — whether it's picking an Instagram comment winner, spinning the wheel,
-              or choosing a random name — uses the same battle-tested approach:
+              Whether you're picking an Instagram winner, spinning the wheel, or drawing a name — we use the same
+              proven method every time:
             </p>
 
             <div className="border-2 border-black p-6 bg-slate-50 space-y-4">
-              <h3 className="font-black text-lg text-black">Step 1: Cryptographic Random Number Generation</h3>
+              <h3 className="font-black text-lg text-black">Step 1: Truly Random Numbers</h3>
               <p>
-                We use the <strong>Web Crypto API</strong> (<code>crypto.getRandomValues()</code>) to generate random numbers.
-                Unlike <code>Math.random()</code>, which is a pseudo-random number generator (PRNG) that can be predicted if the
-                seed is known, the Web Crypto API draws entropy from the operating system's random number generator. This is the
-                same source of randomness used in encryption, TLS/SSL, and other security-critical applications.
+                We use a secure random number generator built into your browser (the <strong>Web Crypto API</strong>).
+                Unlike the basic <code>Math.random()</code> that most sites use, this one can't be predicted or gamed.
+                It's the same tech used to keep your bank logins safe.
               </p>
             </div>
 
             <div className="border-2 border-black p-6 bg-slate-50 space-y-4">
-              <h3 className="font-black text-lg text-black">Step 2: Fisher-Yates Shuffle</h3>
+              <h3 className="font-black text-lg text-black">Step 2: Shuffle Everything Fairly</h3>
               <p>
-                When we need to select from a list (like comments or names), we use the <strong>Fisher-Yates shuffle algorithm</strong>
-                (also called the Knuth shuffle). This algorithm produces an unbiased permutation of the array — meaning every possible
-                ordering is equally likely. It works by iterating through the array from end to start, swapping each element with a
-                randomly chosen element from those that haven't been visited yet.
-              </p>
-              <p>
-                This is mathematically proven to produce a uniform distribution across all <em>n!</em> possible permutations,
-                guaranteeing that no participant is favored over any other.
+                We shuffle your entire list of entries using a method called the <strong>Fisher-Yates shuffle</strong>.
+                Think of it like putting every name in a hat and mixing them up perfectly — every possible order is
+                equally likely. Nobody gets an unfair advantage based on when they commented or where they are in the list.
               </p>
             </div>
 
             <div className="border-2 border-black p-6 bg-slate-50 space-y-4">
-              <h3 className="font-black text-lg text-black">Step 3: Selection Without Replacement</h3>
+              <h3 className="font-black text-lg text-black">Step 3: Pick Winners, No Repeats</h3>
               <p>
-                When picking multiple winners, we use <strong>selection without replacement</strong>. This means once a name is
-                picked, it's removed from the pool. The next winner is drawn from the remaining entries. This ensures no person
-                can win twice in the same draw, and every remaining participant's probability increases fairly.
+                When picking multiple winners, once someone is chosen, they're taken out of the pool. The next
+                winner comes from whoever is left. Nobody can win twice in the same draw, and everyone who's
+                still in the pool has an equal shot.
               </p>
             </div>
           </div>
@@ -125,18 +119,18 @@ export default function HowItWorks() {
 
           <div className="space-y-4 text-slate-700 font-medium leading-relaxed">
             <p>
-              For Instagram giveaways, we go beyond simple randomness. Our anti-fraud system analyzes every comment
-              and assigns a fraud score based on multiple signals:
+              For Instagram giveaways, we don't just pick randomly — we also check for cheaters. Every comment
+              gets a fraud score based on a few things:
             </p>
 
             <div className="grid sm:grid-cols-2 gap-4">
               {[
-                { title: "Duplicate Detection", desc: "Same username commenting multiple times is flagged. Only unique entries count." },
-                { title: "Comment Quality", desc: "Ultra-short or emoji-only comments that suggest bot behavior are scored higher." },
-                { title: "Pattern Analysis", desc: "Repetitive text patterns, copy-paste comments, and template responses are detected." },
-                { title: "Mention Validation", desc: "When giveaway rules require @mentions, we verify genuine usernames are tagged." },
-                { title: "Keyword Filtering", desc: "Ensure entries include required hashtags or keywords to qualify." },
-                { title: "Configurable Threshold", desc: "You control the fraud sensitivity. Strict for high-value prizes, relaxed for casual giveaways." },
+                { title: "Duplicate Comments", desc: "If someone comments multiple times, we catch it. Only one entry per person." },
+                { title: "Suspicious Comments", desc: "Super short or spammy-looking comments get flagged as possible bot activity." },
+                { title: "Copy-Paste Detection", desc: "We spot repeated text and template comments that bots like to use." },
+                { title: "Mention Checking", desc: "If your rules say 'tag 2 friends', we check that real usernames are actually tagged." },
+                { title: "Keyword / Emoji Filtering", desc: "Make sure entries include the right hashtag, emoji, or word to qualify." },
+                { title: "You're in Control", desc: "You decide how strict the fraud filter is. Tight for big prizes, relaxed for casual giveaways." },
               ].map((item, i) => (
                 <div key={i} className="border-2 border-black p-4 bg-slate-50">
                   <h4 className="font-black text-sm uppercase text-black mb-1">{item.title}</h4>
@@ -157,15 +151,15 @@ export default function HowItWorks() {
           </div>
 
           <div className="space-y-4 text-slate-700 font-medium leading-relaxed">
-            <p>We take privacy seriously. Here's exactly what happens to your data:</p>
+            <p>Here's what happens with your data (short version: we don't keep it):</p>
 
             <ul className="space-y-3">
               {[
-                "Spin the Wheel, Name Picker, and Option Picker process everything locally in your browser. No data is ever sent to our servers.",
-                "Instagram comment data is fetched server-side (necessary to access Instagram's API), processed for winner selection, and then discarded. We do not store comment data permanently.",
-                "Your email is only used for scheduled giveaway results. We never send marketing emails or share your email with third parties.",
-                "We use essential cookies only for session management. No tracking cookies, no third-party analytics.",
-                "No participant data (names, comments, usernames) is ever sold or shared.",
+                "The wheel, name picker, and option picker all run in your browser. Nothing gets sent to us.",
+                "Instagram comments are grabbed from Instagram, used to pick winners, then thrown away. We don't save them.",
+                "Your email is only used to send you giveaway results. No spam, no marketing, no sharing.",
+                "We only use basic cookies to keep you logged in. No tracking, no ads following you around.",
+                "We never sell or share anyone's names, comments, or usernames. Period.",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span className="bg-primary text-white px-2 py-0.5 text-xs font-black border border-black mt-0.5 flex-shrink-0">✓</span>
@@ -182,7 +176,7 @@ export default function HowItWorks() {
             <div className="bg-primary text-white p-3 border-2 border-black">
               <Eye className="w-8 h-8" />
             </div>
-            <h2 className="text-3xl font-black uppercase">Why Not Just Use Math.random()?</h2>
+            <h2 className="text-3xl font-black uppercase">Why Our Randomness Is Better</h2>
           </div>
 
           <div className="overflow-x-auto">
@@ -190,16 +184,16 @@ export default function HowItWorks() {
               <thead>
                 <tr className="bg-black text-white">
                   <th className="p-3 font-black uppercase text-sm border-2 border-black">Feature</th>
-                  <th className="p-3 font-black uppercase text-sm border-2 border-black">Math.random()</th>
-                  <th className="p-3 font-black uppercase text-sm border-2 border-black">crypto.getRandomValues()</th>
+                  <th className="p-3 font-black uppercase text-sm border-2 border-black">Basic Random (most sites)</th>
+                  <th className="p-3 font-black uppercase text-sm border-2 border-black">Secure Random (what we use)</th>
                 </tr>
               </thead>
               <tbody className="font-medium">
-                <tr><td className="p-3 border-2 border-black font-bold">Randomness Source</td><td className="p-3 border-2 border-black">Algorithm (PRNG)</td><td className="p-3 border-2 border-black bg-green-50">OS entropy (CSPRNG)</td></tr>
-                <tr><td className="p-3 border-2 border-black font-bold">Predictable?</td><td className="p-3 border-2 border-black bg-red-50">Yes, if seed is known</td><td className="p-3 border-2 border-black bg-green-50">No</td></tr>
-                <tr><td className="p-3 border-2 border-black font-bold">Suitable for Crypto</td><td className="p-3 border-2 border-black bg-red-50">No</td><td className="p-3 border-2 border-black bg-green-50">Yes</td></tr>
-                <tr><td className="p-3 border-2 border-black font-bold">Fair for Giveaways</td><td className="p-3 border-2 border-black bg-red-50">Questionable</td><td className="p-3 border-2 border-black bg-green-50">Guaranteed</td></tr>
-                <tr><td className="p-3 border-2 border-black font-bold">Browser Support</td><td className="p-3 border-2 border-black">All browsers</td><td className="p-3 border-2 border-black bg-green-50">All modern browsers</td></tr>
+                <tr><td className="p-3 border-2 border-black font-bold">Where it comes from</td><td className="p-3 border-2 border-black">Simple formula</td><td className="p-3 border-2 border-black bg-green-50">Your device's hardware</td></tr>
+                <tr><td className="p-3 border-2 border-black font-bold">Can someone predict it?</td><td className="p-3 border-2 border-black bg-red-50">Yes, with effort</td><td className="p-3 border-2 border-black bg-green-50">No</td></tr>
+                <tr><td className="p-3 border-2 border-black font-bold">Used for security?</td><td className="p-3 border-2 border-black bg-red-50">No</td><td className="p-3 border-2 border-black bg-green-50">Yes</td></tr>
+                <tr><td className="p-3 border-2 border-black font-bold">Fair for giveaways?</td><td className="p-3 border-2 border-black bg-red-50">Not really</td><td className="p-3 border-2 border-black bg-green-50">100%</td></tr>
+                <tr><td className="p-3 border-2 border-black font-bold">Works everywhere?</td><td className="p-3 border-2 border-black">All browsers</td><td className="p-3 border-2 border-black bg-green-50">All modern browsers</td></tr>
               </tbody>
             </table>
           </div>
@@ -207,9 +201,9 @@ export default function HowItWorks() {
 
         {/* CTA */}
         <section className="border-4 border-black bg-primary text-white p-8 md:p-12 shadow-neo text-center space-y-6">
-          <h2 className="text-3xl sm:text-4xl font-black uppercase">Ready to Pick Fair Winners?</h2>
+          <h2 className="text-3xl sm:text-4xl font-black uppercase">Ready to Pick a Winner?</h2>
           <p className="text-lg font-bold opacity-90 max-w-2xl mx-auto">
-            Use our suite of random selection tools — all built with the same cryptographic fairness guarantees.
+            All our tools use the same fair picking method. Try one out — it takes seconds.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/tool" className="bg-white text-black border-4 border-black py-4 px-8 font-black uppercase shadow-neo hover:translate-x-1 hover:translate-y-1 hover:shadow-neo-sm transition-all inline-flex items-center gap-2">

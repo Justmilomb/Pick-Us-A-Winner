@@ -535,7 +535,7 @@ export default function GiveawayTool() {
                 name: "How do I pick an Instagram giveaway winner?",
                 acceptedAnswer: {
                   "@type": "Answer",
-                  text: "Paste your Instagram post URL, fetch comments, set filters (hashtags, mentions), and click Pick Winners. Our random algorithm selects fairly. No signup, no login required.",
+                  text: "Paste your Instagram post link, grab the comments, set your filters (hashtags, emojis, mentions), and hit Pick Winners. It's random and fair. No signup needed.",
                 },
               },
               {
@@ -543,7 +543,7 @@ export default function GiveawayTool() {
                 name: "Is the Instagram giveaway generator free?",
                 acceptedAnswer: {
                   "@type": "Answer",
-                  text: "Free to configure. one-time payment (£2.50) required to fetch Instagram comments and pick winners.  No subscription, no login required.",
+                  text: "Free to set up. One-time £2.50 payment to fetch comments and pick winners. No subscription, no login needed.",
                 },
               },
               {
@@ -565,10 +565,10 @@ export default function GiveawayTool() {
             <Instagram className="w-5 h-5" /> Instagram Giveaway Generator
           </div>
           <div className="bg-amber-100 border-2 border-amber-600 text-amber-900 px-4 py-2 mb-4 font-bold text-sm sm:text-base max-w-xl mx-auto">
-            Free to configure. one-time payment (£2.50) to fetch comments and pick winners.
+            Free to set up. Just £2.50 (one-time) to grab comments and pick winners.
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-black uppercase mb-4">Pick Winners</h1>
-          <p className="text-base sm:text-lg font-medium text-muted-foreground px-4 sm:px-0">Instagram giveaway generator & comments picker. Fairly select winners from Instagram comments. No signup, no login.</p>
+          <p className="text-base sm:text-lg font-medium text-muted-foreground px-4 sm:px-0">Pick random winners from Instagram comments. Paste a link, set your rules, and go. No signup needed.</p>
         </div>
 
         <div className="grid gap-8">
@@ -761,7 +761,7 @@ export default function GiveawayTool() {
                           <AlertCircle className="w-5 h-5 inline mr-2" /> Exclude Suspicious Entries?
                         </Label>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Auto-filter entries with high fraud scores
+                          Remove entries that look like bots or spam
                         </p>
                       </div>
                       <Switch
@@ -800,7 +800,7 @@ export default function GiveawayTool() {
                       onChange={(e) => setBlockList(e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Enter usernames to exclude from the giveaway (with or without @)
+                      Add usernames you want to exclude (with or without @)
                     </p>
                   </div>
                 </div>

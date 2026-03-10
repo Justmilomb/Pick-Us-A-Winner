@@ -136,7 +136,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <span className="font-display font-black text-3xl md:text-4xl uppercase italic tracking-tight"><span className="text-primary">Pick</span> <span>Us</span> <span className="text-primary">A</span> <span>Winner</span></span>
               </div>
               <p className="text-lg font-bold leading-relaxed max-w-md">
-                The simplest random selection toolkit on the web. Instagram giveaway picker, spin the wheel, random name picker & more. Trusted by creators worldwide.
+                The easiest way to pick random winners. Instagram comment picker, spin the wheel, name picker & more. Used by thousands of creators.
               </p>
             </div>
 

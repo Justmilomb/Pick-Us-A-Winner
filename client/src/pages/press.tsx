@@ -28,7 +28,7 @@ export default function PressPage() {
           Press & <span className="text-primary">Media</span>
         </h1>
         <p className="text-xl font-bold text-muted-foreground mb-12">
-          Link to us, use our logos, or reach out for press inquiries.
+          Want to link to us or grab our logo? Here's everything you need.
         </p>
 
         <section className="space-y-8 mb-16">
@@ -36,7 +36,7 @@ export default function PressPage() {
             <Link2 className="w-6 h-6" /> Link to Us
           </h2>
           <p className="text-lg font-medium leading-relaxed">
-            We appreciate backlinks from creators, blogs, and media. If you mention PickUsAWinner, please link to{" "}
+            If you're writing about us or mentioning PickUsAWinner, feel free to link to{" "}
             <a href="https://pickusawinner.com" className="text-primary font-bold underline hover:no-underline">
               https://pickusawinner.com
             </a>{" "}
@@ -54,7 +54,7 @@ export default function PressPage() {
         <section className="space-y-4">
           <h2 className="text-2xl font-black uppercase">Contact</h2>
           <p className="text-lg font-medium">
-            For press inquiries or partnership opportunities, visit our{" "}
+            For press or partnership stuff, check out our{" "}
             <Link href="/giveaway-generator" className="text-primary font-bold underline hover:no-underline">
               homepage
             </Link>{" "}

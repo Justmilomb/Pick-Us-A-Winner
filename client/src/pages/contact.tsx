@@ -71,7 +71,7 @@ export default function ContactPage() {
           Contact <span className="text-primary">Us</span>
         </h1>
         <p className="text-xl font-bold text-muted-foreground mb-12">
-          Have a question, feedback, or partnership idea? Please contact us directly by email.
+          Got a question or idea? Just send us an email.
         </p>
 
         <div className="grid md:grid-cols-2 gap-12">
@@ -80,7 +80,7 @@ export default function ContactPage() {
               <Mail className="w-6 h-6" /> Get in Touch
             </h2>
             <p className="text-lg font-medium leading-relaxed">
-              The contact form is temporarily unavailable. For all inquiries, email us directly at{" "}
+              The contact form is down for now. Just email us at{" "}
               <a
                 href="mailto:support@pickusawinner.com"
                 className="text-primary font-bold underline hover:no-underline"
