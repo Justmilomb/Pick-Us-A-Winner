@@ -187,6 +187,23 @@ export async function checkEmailHealth(): Promise<EmailHealthStatus> {
     const smtpFrom = process.env.SMTP_FROM?.trim() || null;
     const secure = process.env.SMTP_SECURE === "true" || smtpPort === "465";
 
+    // If Resend is configured, report Resend health (no SMTP verification needed)
+    if (process.env.RESEND_API_KEY) {
+        const fromEmail = process.env.RESEND_FROM?.trim() || smtpFrom || "noreply@pickusawinner.com";
+        return {
+            configured: true,
+            verified: true,
+            smtp: {
+                host: "api.resend.com",
+                port: "443",
+                secure: true,
+                userMasked: maskEmail(fromEmail),
+                from: fromEmail,
+                fromMatchesUser: true,
+            },
+        };
+    }
+
     if (!isEmailConfigured()) {
         return {
             configured: false,
@@ -199,7 +216,7 @@ export async function checkEmailHealth(): Promise<EmailHealthStatus> {
                 from: smtpFrom,
                 fromMatchesUser: !!(smtpFrom && smtpUser && smtpFrom === smtpUser),
             },
-            error: "Missing required SMTP env vars (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS).",
+            error: "Missing required env vars: set RESEND_API_KEY for Resend, or SMTP_HOST/PORT/USER/PASS for SMTP.",
         };
     }
 

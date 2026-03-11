@@ -34,47 +34,50 @@ export class InstagramApiClient {
         // Accumulate comments across both API methods
         const allComments = new Map<string, InstagramComment>();
 
-        // Extract media ID early — needed for v1 API and doc_id POST fallback
+        // Extract media ID early — needed for v1 API (primary) and doc_id POST fallback
         let mediaId: string | null = null;
         try {
             mediaId = await this.extractMediaId(page);
             if (mediaId) log(`Extracted mediaId: ${mediaId}`, "scraper");
         } catch { /* ignore */ }
 
-        // Step 1: GraphQL (primary — fastest, gets the most comments)
-        try {
-            const result = await this.fetchViaGraphQL(page, shortcode, targetCount, deadline, mediaId);
-            for (const c of result.comments) {
-                const key = `${c.username}:${c.text.substring(0, 50)}`;
-                if (!allComments.has(key)) allComments.set(key, c);
-            }
-            log(`GraphQL returned ${result.comments.length} comments (unique: ${allComments.size})`, "scraper");
-        } catch (err) {
-            log(`GraphQL API failed: ${err instanceof Error ? err.message : err}`, "scraper");
-        }
-
-        // Step 2: v1 REST API supplement (only if time remains and need more)
-        if (allComments.size < targetCount && Date.now() < deadline) {
+        // Step 1: v1 REST API (PRIMARY — fastest, finds the most comments reliably)
+        if (mediaId) {
             try {
-                if (mediaId) {
-                    const remaining = targetCount - allComments.size;
-                    log(`v1 API supplement (mediaId=${mediaId}, need ${remaining} more, ${Math.round((deadline - Date.now()) / 1000)}s left)`, "scraper");
-                    const result = await this.fetchViaV1Api(page, mediaId, targetCount, deadline);
-                    let newCount = 0;
-                    for (const c of result.comments) {
-                        const key = `${c.username}:${c.text.substring(0, 50)}`;
-                        if (!allComments.has(key)) {
-                            allComments.set(key, c);
-                            newCount++;
-                        }
-                    }
-                    log(`v1 API added ${newCount} new comments (total: ${allComments.size})`, "scraper");
+                log(`v1 API primary (mediaId=${mediaId}, target=${targetCount}, ${Math.round((deadline - Date.now()) / 1000)}s left)`, "scraper");
+                const result = await this.fetchViaV1Api(page, mediaId, targetCount, deadline);
+                for (const c of result.comments) {
+                    const key = `${c.username}:${c.text.substring(0, 50)}`;
+                    if (!allComments.has(key)) allComments.set(key, c);
                 }
+                log(`v1 API returned ${result.comments.length} comments (unique: ${allComments.size})`, "scraper");
             } catch (err) {
                 log(`v1 API failed: ${err instanceof Error ? err.message : err}`, "scraper");
             }
+        } else {
+            log(`v1 API skipped: could not extract mediaId`, "scraper");
+        }
+
+        // Step 2: GraphQL supplement (only if v1 didn't reach target or no mediaId)
+        if (allComments.size < targetCount && Date.now() < deadline) {
+            try {
+                const remaining = targetCount - allComments.size;
+                log(`GraphQL supplement (have ${allComments.size}, need ${remaining} more, ${Math.round((deadline - Date.now()) / 1000)}s left)`, "scraper");
+                const result = await this.fetchViaGraphQL(page, shortcode, targetCount, deadline, mediaId);
+                let newCount = 0;
+                for (const c of result.comments) {
+                    const key = `${c.username}:${c.text.substring(0, 50)}`;
+                    if (!allComments.has(key)) {
+                        allComments.set(key, c);
+                        newCount++;
+                    }
+                }
+                log(`GraphQL added ${newCount} new comments (total: ${allComments.size})`, "scraper");
+            } catch (err) {
+                log(`GraphQL API failed: ${err instanceof Error ? err.message : err}`, "scraper");
+            }
         } else if (Date.now() >= deadline) {
-            log(`Time budget exhausted, skipping v1 supplement (have ${allComments.size} comments)`, "scraper");
+            log(`Time budget exhausted, skipping GraphQL supplement (have ${allComments.size} comments)`, "scraper");
         }
 
         return {
@@ -387,7 +390,7 @@ export class InstagramApiClient {
             );
 
             if (allComments.size >= targetCount) break;
-            await new Promise((r) => setTimeout(r, 50 + Math.random() * 100));
+            await new Promise((r) => setTimeout(r, 20 + Math.random() * 30));
         }
 
         // If query_hash capped out early but we haven't tried doc_id yet, try it
@@ -467,7 +470,7 @@ export class InstagramApiClient {
                     }
 
                     if (allComments.size >= targetCount) break;
-                    await new Promise((r) => setTimeout(r, 50 + Math.random() * 100));
+                    await new Promise((r) => setTimeout(r, 20 + Math.random() * 30));
                 }
                 if (allComments.size > 0) break; // found a working doc_id
             }
@@ -524,7 +527,7 @@ export class InstagramApiClient {
                     }
 
                     if (allComments.size >= targetCount || newCount === 0) break;
-                    await new Promise((r) => setTimeout(r, 30 + Math.random() * 70));
+                    await new Promise((r) => setTimeout(r, 15 + Math.random() * 20));
                 }
             }
         }
@@ -547,8 +550,9 @@ export class InstagramApiClient {
         const allComments = new Map<string, InstagramComment>();
         let minId: string | null = null;
         let hasMore = true;
-        const PER_PAGE_V1 = 50;
-        const MAX_PAGES = Math.ceil(targetCount / PER_PAGE_V1) + 10;
+        // Larger page size = fewer round trips = faster throughput (>100 comments/s)
+        const PER_PAGE_V1 = 200;
+        const MAX_PAGES = Math.ceil(targetCount / PER_PAGE_V1) + 5;
 
         // Collect parent comment PKs with more child comments to fetch
         const childThreads: { commentPk: string; cursor: string }[] = [];
@@ -598,22 +602,24 @@ export class InstagramApiClient {
             );
 
             if (allComments.size >= targetCount) break;
-            await new Promise((r) => setTimeout(r, 50 + Math.random() * 100));
+            // Minimal delay — enough to avoid immediate rate-limit but maximize throughput
+            await new Promise((r) => setTimeout(r, 15 + Math.random() * 20));
         }
 
-        // ── Phase B: fetch child comment threads ──────────────────────
+        // ── Phase B: fetch child comment threads in parallel batches ──
         if (allComments.size < targetCount && childThreads.length > 0 && Date.now() < deadline) {
-            log(`Fetching child replies for ${childThreads.length} threads via v1 API (${Math.round((deadline - Date.now()) / 1000)}s left)...`, "scraper");
+            log(`Fetching child replies for ${childThreads.length} threads via v1 API in parallel (${Math.round((deadline - Date.now()) / 1000)}s left)...`, "scraper");
 
-            for (let ti = 0; ti < childThreads.length; ti++) {
-                if (allComments.size >= targetCount || Date.now() >= deadline) break;
+            const PARALLEL_BATCH = 8; // fetch up to 8 child threads concurrently
 
-                const thread = childThreads[ti];
+            const fetchChildThread = async (thread: { commentPk: string; cursor: string }, ti: number) => {
                 let childMinId: string | null = thread.cursor || null;
                 let childHasMore = true;
                 const MAX_CHILD_PAGES = 50;
 
                 for (let cp = 0; cp < MAX_CHILD_PAGES && childHasMore; cp++) {
+                    if (allComments.size >= targetCount || Date.now() >= deadline) break;
+
                     let childUrl = `https://www.instagram.com/api/v1/media/${mediaId}/comments/${thread.commentPk}/child_comments/?`;
                     if (childMinId) childUrl += `min_id=${childMinId}&`;
 
@@ -637,9 +643,15 @@ export class InstagramApiClient {
                         );
                     }
 
-                    if (allComments.size >= targetCount) break;
-                    await new Promise((r) => setTimeout(r, 30 + Math.random() * 70));
+                    if (newCount === 0 || allComments.size >= targetCount) break;
+                    await new Promise((r) => setTimeout(r, 10 + Math.random() * 15));
                 }
+            };
+
+            for (let i = 0; i < childThreads.length; i += PARALLEL_BATCH) {
+                if (allComments.size >= targetCount || Date.now() >= deadline) break;
+                const batch = childThreads.slice(i, i + PARALLEL_BATCH);
+                await Promise.all(batch.map((thread, idx) => fetchChildThread(thread, i + idx)));
             }
         }
 
