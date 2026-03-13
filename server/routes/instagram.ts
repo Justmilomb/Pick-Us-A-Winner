@@ -1,7 +1,6 @@
 import type { Express } from "express";
-import { InstagramScraper } from "../scraper/instagram-scraper";
 import { log } from "../log";
-import { countMentions } from "../instagram";
+import { countMentions, getScraperInstance } from "../instagram";
 
 interface InstagramRouteDeps {
   validateInstagramRequest: any;
@@ -134,13 +133,10 @@ export function registerInstagramRoutes(app: Express, deps: InstagramRouteDeps):
           return res.status(400).json({ error: "No valid user IDs provided" });
         }
 
-        const scraper = new InstagramScraper();
-        try {
-          const results = await scraper.checkFollowers(limitedIds);
-          return res.json({ results });
-        } finally {
-          await scraper.close();
-        }
+        // Reuse singleton scraper instance (persistent browser)
+        const scraper = getScraperInstance();
+        const results = await scraper.checkFollowers(limitedIds);
+        return res.json({ results });
       } catch (error) {
         log(`Follower Check Error: ${error}`, "error");
         return res.status(500).json({

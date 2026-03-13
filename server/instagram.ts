@@ -104,18 +104,29 @@ export async function fetchInstagramComments(
 }
 
 /**
- * Fetch comments using custom Puppeteer scraper
+ * Singleton scraper instance — keeps the browser alive between scrapes.
+ * Saves ~2-3 seconds per scrape by avoiding repeated browser startups.
+ * The browser auto-closes after 5 minutes of inactivity (configured in InstagramScraper).
  */
-async function fetchWithCustomScraper(postUrl: string): Promise<FetchCommentsResult> {
+let scraperInstance: InstanceType<typeof InstagramScraper> | null = null;
+
+export function getScraperInstance(): InstanceType<typeof InstagramScraper> {
     if (!InstagramScraper) {
         throw new Error("Custom scraper not available. Puppeteer may not be installed.");
     }
+    if (!scraperInstance) {
+        scraperInstance = new InstagramScraper();
+    }
+    return scraperInstance;
+}
 
-    let scraper: any = null;
+/**
+ * Fetch comments using custom Puppeteer scraper (reuses persistent browser)
+ */
+async function fetchWithCustomScraper(postUrl: string): Promise<FetchCommentsResult> {
+    const scraper = getScraperInstance();
     try {
-        log("Initializing custom scraper...", "instagram");
-        scraper = new InstagramScraper();
-        log("Custom scraper initialized, fetching comments...", "instagram");
+        log("Fetching comments with custom scraper...", "instagram");
         const result = await scraper.fetchComments(postUrl);
         log(`Custom scraper successfully fetched ${result.comments.length} comments`, "instagram");
         return result;
@@ -127,13 +138,6 @@ async function fetchWithCustomScraper(postUrl: string): Promise<FetchCommentsRes
             log(`Custom scraper stack: ${errorStack}`, "error");
         }
         throw error;
-    } finally {
-        if (scraper) {
-            try {
-                await scraper.close();
-            } catch (closeError) {
-                log(`Error closing scraper: ${closeError}`, "error");
-            }
-        }
     }
+    // NOTE: No finally { scraper.close() } — browser stays alive for next scrape
 }
