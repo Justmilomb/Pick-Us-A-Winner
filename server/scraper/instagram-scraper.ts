@@ -11,22 +11,27 @@ import { InstagramApiClient } from "./instagram-api-client";
 // Add stealth plugin to evade detection
 puppeteer.use(StealthPlugin());
 
+// ── Browser pool entry ──────────────────────────────────────────────
+interface PooledBrowser {
+    browser: Browser;
+    loggedIn: boolean;
+    busy: boolean;
+    /** Permanent browsers stay alive between scrapes; overflow browsers close after use */
+    permanent: boolean;
+    id: number;
+}
+
 export class InstagramScraper {
-    private browser: Browser | null = null;
     private proxyManager: ProxyManager;
     private sessionManager: SessionManager;
-    private loggedIn: boolean = false;
 
-    // Idle timeout: close browser after 5 minutes of inactivity to free RAM
-    private static readonly BROWSER_IDLE_TIMEOUT_MS = 5 * 60 * 1000;
-    private idleTimer: ReturnType<typeof setTimeout> | null = null;
-
-    // Concurrency control: serialize scrape operations to prevent race conditions
-    // on login state, shared session cookies, and Instagram rate limits.
-    // Concurrent requests queue up and run one at a time.
-    private operationQueue: Promise<any> = Promise.resolve();
-    private queueDepth: number = 0;
-    private static readonly MAX_QUEUE_DEPTH = 10;
+    // Browser pool: always keep WARM_POOL_SIZE browsers ready.
+    // If all are busy, spin up overflow browsers that close after use.
+    private static readonly WARM_POOL_SIZE = 2;
+    private pool: PooledBrowser[] = [];
+    private nextBrowserId = 1;
+    private poolInitialized = false;
+    private poolInitPromise: Promise<void> | null = null;
 
     // Configuration
     private config = {
@@ -52,65 +57,144 @@ export class InstagramScraper {
         this.sessionManager = new SessionManager();
     }
 
+    // ── Pool Management ─────────────────────────────────────────────────
+
     /**
-     * Reset the idle timer. Called when a scrape starts/ends.
-     * After BROWSER_IDLE_TIMEOUT_MS of inactivity, the browser is closed to free RAM.
+     * Ensure the warm pool is initialized with WARM_POOL_SIZE browsers.
+     * Called lazily on first use. Multiple concurrent callers share the same init promise.
      */
-    private resetIdleTimer(): void {
-        if (this.idleTimer) clearTimeout(this.idleTimer);
-        this.idleTimer = setTimeout(async () => {
-            if (this.browser) {
-                log(`Browser idle for ${InstagramScraper.BROWSER_IDLE_TIMEOUT_MS / 1000}s — closing to free resources`, "scraper");
-                await this.closeBrowser();
-            }
-        }, InstagramScraper.BROWSER_IDLE_TIMEOUT_MS);
+    private async ensurePoolReady(): Promise<void> {
+        if (this.poolInitialized) {
+            // Check that warm browsers are still alive, replace any dead ones
+            await this.replenishPool();
+            return;
+        }
+
+        if (this.poolInitPromise) {
+            await this.poolInitPromise;
+            return;
+        }
+
+        this.poolInitPromise = this.initPool();
+        await this.poolInitPromise;
+    }
+
+    private async initPool(): Promise<void> {
+        log(`Initializing browser pool (warm size: ${InstagramScraper.WARM_POOL_SIZE})...`, "scraper");
+        const launches: Promise<void>[] = [];
+
+        for (let i = 0; i < InstagramScraper.WARM_POOL_SIZE; i++) {
+            launches.push(this.addPermanentBrowser());
+        }
+
+        await Promise.all(launches);
+        this.poolInitialized = true;
+        log(`Browser pool ready: ${this.pool.length} browsers warm`, "scraper");
+    }
+
+    private async addPermanentBrowser(): Promise<PooledBrowser> {
+        const browser = await this.launchBrowser();
+        const entry: PooledBrowser = {
+            browser,
+            loggedIn: false,
+            busy: false,
+            permanent: true,
+            id: this.nextBrowserId++,
+        };
+        this.pool.push(entry);
+        log(`Browser #${entry.id} launched (permanent)`, "scraper");
+        return entry;
     }
 
     /**
-     * Check if the persistent browser is still alive and connected.
+     * Replace any dead permanent browsers so the warm pool stays at full size.
      */
-    private isBrowserAlive(): boolean {
-        if (!this.browser) return false;
+    private async replenishPool(): Promise<void> {
+        // Remove dead browsers from pool
+        const deadEntries = this.pool.filter(e => e.permanent && !this.isBrowserAlive(e));
+        for (const dead of deadEntries) {
+            log(`Browser #${dead.id} found dead — removing from pool`, "scraper");
+            try { await dead.browser.close(); } catch { /* already dead */ }
+            this.pool = this.pool.filter(e => e !== dead);
+        }
+
+        // Launch replacements
+        const permanentCount = this.pool.filter(e => e.permanent).length;
+        const needed = InstagramScraper.WARM_POOL_SIZE - permanentCount;
+        if (needed > 0) {
+            log(`Replenishing pool: launching ${needed} replacement browser(s)`, "scraper");
+            const launches: Promise<void>[] = [];
+            for (let i = 0; i < needed; i++) {
+                launches.push(this.addPermanentBrowser().then(() => {}));
+            }
+            await Promise.all(launches);
+        }
+    }
+
+    private isBrowserAlive(entry: PooledBrowser): boolean {
         try {
-            return this.browser.connected;
+            return entry.browser.connected;
         } catch {
             return false;
         }
     }
 
     /**
-     * Get or create a persistent browser instance.
-     * Reuses the existing browser if it's still alive, otherwise launches a new one.
-     * Saves ~2-3 seconds per scrape by avoiding repeated browser startups.
+     * Acquire a browser from the pool.
+     * - First tries to grab a free permanent browser (warm start)
+     * - If all permanent browsers are busy, spins up an overflow browser (cold start)
+     * - Overflow browsers are automatically closed when released
      */
-    private async getOrCreateBrowser(): Promise<Browser> {
-        if (this.isBrowserAlive()) {
-            log("Reusing existing browser instance (warm start)", "scraper");
-            this.resetIdleTimer();
-            return this.browser!;
+    private async acquireBrowser(): Promise<PooledBrowser> {
+        await this.ensurePoolReady();
+
+        // Try to find a free permanent browser
+        const free = this.pool.find(e => !e.busy && e.permanent && this.isBrowserAlive(e));
+        if (free) {
+            free.busy = true;
+            log(`Acquired browser #${free.id} (permanent, warm start)`, "scraper");
+            return free;
         }
 
-        // Browser is dead or doesn't exist — launch a new one
-        if (this.browser) {
-            // Clean up dead browser reference
-            try { await this.browser.close(); } catch { /* already dead */ }
-            this.browser = null;
-            this.loggedIn = false;
-        }
-
-        log("Launching new browser instance (cold start)...", "scraper");
-        this.browser = await this.launchBrowser();
-        this.loggedIn = false;
-        this.resetIdleTimer();
-        return this.browser;
+        // All permanent browsers busy — spin up an overflow browser
+        log(`All ${InstagramScraper.WARM_POOL_SIZE} warm browsers busy — launching overflow browser`, "scraper");
+        const browser = await this.launchBrowser();
+        const overflow: PooledBrowser = {
+            browser,
+            loggedIn: false,
+            busy: true,
+            permanent: false,
+            id: this.nextBrowserId++,
+        };
+        this.pool.push(overflow);
+        log(`Browser #${overflow.id} launched (overflow — will close after use)`, "scraper");
+        return overflow;
     }
 
     /**
-     * Create a new page with standard configuration (user agent, request interception).
+     * Release a browser back to the pool.
+     * - Permanent browsers are marked as free and stay alive
+     * - Overflow browsers are closed and removed from the pool
      */
-    private async createPage(): Promise<Page> {
-        const browser = await this.getOrCreateBrowser();
-        const page = await browser.newPage();
+    private async releaseBrowser(entry: PooledBrowser): Promise<void> {
+        entry.busy = false;
+
+        if (entry.permanent) {
+            log(`Released browser #${entry.id} back to pool (permanent)`, "scraper");
+            return;
+        }
+
+        // Overflow browser — close and remove
+        log(`Closing overflow browser #${entry.id}`, "scraper");
+        try { await entry.browser.close(); } catch { /* ignore */ }
+        this.pool = this.pool.filter(e => e !== entry);
+    }
+
+    /**
+     * Create a new page on the given browser with standard configuration.
+     */
+    private async createPageOn(entry: PooledBrowser): Promise<Page> {
+        const page = await entry.browser.newPage();
 
         await page.setUserAgent(
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -132,42 +216,13 @@ export class InstagramScraper {
     }
 
     /**
-     * Enqueue an async operation so only one runs at a time.
-     * Concurrent callers wait in line. Rejects immediately if the queue is full.
+     * Get pool status for logging.
      */
-    private enqueue<T>(operation: () => Promise<T>): Promise<T> {
-        if (this.queueDepth >= InstagramScraper.MAX_QUEUE_DEPTH) {
-            return Promise.reject(new Error(
-                `Scraper queue full (${this.queueDepth} pending). Try again later.`
-            ));
-        }
-
-        this.queueDepth++;
-        const result = this.operationQueue.then(
-            () => operation(),
-            () => operation(), // run even if previous operation failed
-        ).finally(() => {
-            this.queueDepth--;
-        });
-
-        // Update the chain so next enqueue waits for this one
-        this.operationQueue = result.catch(() => {}); // swallow errors in the chain
-        return result;
-    }
-
-    /**
-     * Close the browser and clean up resources.
-     */
-    private async closeBrowser(): Promise<void> {
-        if (this.idleTimer) {
-            clearTimeout(this.idleTimer);
-            this.idleTimer = null;
-        }
-        if (this.browser) {
-            try { await this.browser.close(); } catch { /* ignore */ }
-            this.browser = null;
-            this.loggedIn = false;
-        }
+    private poolStatus(): string {
+        const permanent = this.pool.filter(e => e.permanent);
+        const overflow = this.pool.filter(e => !e.permanent);
+        const busy = this.pool.filter(e => e.busy);
+        return `pool: ${permanent.length} warm (${busy.length} busy), ${overflow.length} overflow`;
     }
 
     /**
@@ -237,11 +292,11 @@ export class InstagramScraper {
     /**
      * Ensure we're logged in (restore session or login)
      */
-    private async ensureLoggedIn(page: Page): Promise<boolean> {
+    private async ensureLoggedIn(page: Page, browserInstance: Browser): Promise<boolean> {
         // Try to restore session first
         if (this.sessionManager.hasSession()) {
             await this.sessionManager.restoreSession(page);
-            
+
             // Verify session is still valid
             const isValid = await this.sessionManager.verifySession(page);
             if (isValid) {
@@ -258,7 +313,7 @@ export class InstagramScraper {
             return false;
         }
 
-        return await this.sessionManager.login(this.browser!, username, password);
+        return await this.sessionManager.login(browserInstance, username, password);
     }
 
     /**
@@ -908,31 +963,29 @@ export class InstagramScraper {
      * - Better error handling
      */
     async fetchComments(postUrl: string, targetCommentCount: number = 100000): Promise<FetchCommentsResult> {
-        return this.enqueue(() => this._fetchComments(postUrl, targetCommentCount));
-    }
-
-    private async _fetchComments(postUrl: string, targetCommentCount: number): Promise<FetchCommentsResult> {
         // Hard 3-minute deadline for the entire scrape operation
         const HARD_DEADLINE_MS = 180_000; // 3 minutes
-        log(`Starting comment scraper for: ${postUrl} (target: ${targetCommentCount}, deadline: ${HARD_DEADLINE_MS / 1000}s, queued: ${this.queueDepth})`, "scraper");
         const startTime = Date.now();
         const hardDeadline = startTime + HARD_DEADLINE_MS;
 
-        // Create page from persistent browser (reuses existing browser if alive)
-        const page = await this.createPage();
+        // Acquire a browser from the pool (warm start or overflow)
+        const entry = await this.acquireBrowser();
+        log(`Starting comment scraper for: ${postUrl} (target: ${targetCommentCount}, deadline: ${HARD_DEADLINE_MS / 1000}s, browser #${entry.id}, ${this.poolStatus()})`, "scraper");
+
+        const page = await this.createPageOn(entry);
 
         try {
-            // Ensure logged in (skips if already authenticated from previous scrape)
-            if (!this.loggedIn) {
-                const loggedIn = await this.ensureLoggedIn(page);
+            // Ensure logged in (skips if this browser already authenticated)
+            if (!entry.loggedIn) {
+                const loggedIn = await this.ensureLoggedIn(page, entry.browser);
                 if (!loggedIn) {
                     throw new Error("Failed to login to Instagram");
                 }
-                this.loggedIn = true;
+                entry.loggedIn = true;
             } else {
                 // Restore session cookies on the new page
                 await this.sessionManager.restoreSession(page);
-                log("Reusing existing login session (warm start)", "scraper");
+                log(`Browser #${entry.id}: reusing login session (warm start)`, "scraper");
             }
 
             // Set up network interception for API responses
@@ -1080,17 +1133,16 @@ export class InstagramScraper {
             };
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            log(`Scraping error: ${errorMessage}`, "scraper");
-            // If browser crashed, mark it dead so next call launches a fresh one
-            if (!this.isBrowserAlive()) {
-                this.browser = null;
-                this.loggedIn = false;
+            log(`Scraping error on browser #${entry.id}: ${errorMessage}`, "scraper");
+            // If browser crashed, mark login as stale
+            if (!this.isBrowserAlive(entry)) {
+                entry.loggedIn = false;
             }
             throw error;
         } finally {
-            // Close the page, NOT the browser — keep it warm for next scrape
+            // Close the page, release browser back to pool
             try { await page.close(); } catch { /* ignore */ }
-            this.resetIdleTimer();
+            await this.releaseBrowser(entry);
         }
     }
 
@@ -1099,12 +1151,9 @@ export class InstagramScraper {
      * Reuses persistent browser instance.
      */
     async checkFollowers(userIds: string[]): Promise<Record<string, boolean>> {
-        return this.enqueue(() => this._checkFollowers(userIds));
-    }
-
-    private async _checkFollowers(userIds: string[]): Promise<Record<string, boolean>> {
-        log(`Starting follower check for ${userIds.length} users (queued: ${this.queueDepth})`, "scraper");
-        const page = await this.createPage();
+        const entry = await this.acquireBrowser();
+        log(`Starting follower check for ${userIds.length} users (browser #${entry.id}, ${this.poolStatus()})`, "scraper");
+        const page = await this.createPageOn(entry);
 
         try {
             // Restore session cookies
@@ -1127,22 +1176,28 @@ export class InstagramScraper {
             return result;
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            log(`Follower check error: ${errorMessage}`, "scraper");
-            if (!this.isBrowserAlive()) {
-                this.browser = null;
-                this.loggedIn = false;
+            log(`Follower check error on browser #${entry.id}: ${errorMessage}`, "scraper");
+            if (!this.isBrowserAlive(entry)) {
+                entry.loggedIn = false;
             }
             throw error;
         } finally {
             try { await page.close(); } catch { /* ignore */ }
-            this.resetIdleTimer();
+            await this.releaseBrowser(entry);
         }
     }
 
     /**
-     * Cleanup resources — closes browser and stops idle timer.
+     * Cleanup resources — closes all browsers in the pool.
      */
     async close(): Promise<void> {
-        await this.closeBrowser();
+        log(`Closing browser pool (${this.pool.length} browsers)...`, "scraper");
+        const closes = this.pool.map(async (entry) => {
+            try { await entry.browser.close(); } catch { /* ignore */ }
+        });
+        await Promise.all(closes);
+        this.pool = [];
+        this.poolInitialized = false;
+        this.poolInitPromise = null;
     }
 }
