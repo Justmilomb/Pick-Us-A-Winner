@@ -31,8 +31,10 @@ export class InstagramApiClient {
         this.sessionCookies = cookies.map(c => `${c.name}=${c.value}`).join("; ");
         const csrf = cookies.find(c => c.name === "csrftoken");
         this.csrfToken = csrf?.value || "";
+        const sessionId = cookies.find(c => c.name === "sessionid");
         const ua = await page.evaluate(() => navigator.userAgent);
         this.userAgent = ua || "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+        log(`Session extracted: ${cookies.length} cookies, csrf=${this.csrfToken ? "yes" : "NO"}, sessionid=${sessionId ? "yes" : "NO"}`, "scraper");
     }
 
     /**
@@ -172,11 +174,18 @@ export class InstagramApiClient {
                     "Sec-Fetch-Site": "same-origin",
                 },
             });
-            if (!res.ok) return null;
+            if (!res.ok) {
+                log(`nativeFetch ${res.status} for ${url.substring(0, 80)}...`, "scraper");
+                return null;
+            }
             const text = await res.text();
-            if (text.startsWith("<!") || text.startsWith("<html")) return null;
+            if (text.startsWith("<!") || text.startsWith("<html")) {
+                log(`nativeFetch got HTML instead of JSON (login wall?) for ${url.substring(0, 80)}...`, "scraper");
+                return null;
+            }
             return JSON.parse(text);
-        } catch {
+        } catch (err: any) {
+            log(`nativeFetch error: ${err?.message || err} for ${url.substring(0, 80)}...`, "scraper");
             return null;
         }
     }

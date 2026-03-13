@@ -416,6 +416,141 @@ export class InstagramScraper {
     }
 
     /**
+     * Aggressively open the full comments view.
+     * Instagram shows ~20-30 comments by default. We need to click
+     * "View all X comments" to open the full panel before API extraction.
+     * Tries multiple strategies with retries.
+     */
+    private async openFullCommentsView(page: Page): Promise<void> {
+        for (let attempt = 0; attempt < 4; attempt++) {
+            const clicked = await page.evaluate(() => {
+                let found = false;
+                const allElements = Array.from(document.querySelectorAll('span, a, button, div'));
+
+                for (const el of allElements) {
+                    const text = (el.textContent || '').trim();
+
+                    // "View all X comments" — the main gate to full comments
+                    if (/^View all\s+[\d,]+\s+comments?$/i.test(text)) {
+                        (el as HTMLElement).click();
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    // Try clicking comment icon/button (speech bubble) to open comments panel
+                    const commentButtons = document.querySelectorAll('[aria-label*="Comment"], [aria-label*="comment"], svg[aria-label*="Comment"]');
+                    for (const btn of commentButtons) {
+                        const clickTarget = btn.closest('button') || btn.closest('a') || btn as HTMLElement;
+                        if (clickTarget) {
+                            (clickTarget as HTMLElement).click();
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                return found;
+            });
+
+            if (clicked) {
+                log(`Phase 0: Clicked "View all comments" (attempt ${attempt + 1})`, "scraper");
+                // Wait for comments panel to load and API responses to come in
+                await this.randomDelay(2000, 3500);
+            } else {
+                if (attempt === 0) {
+                    log("Phase 0: No 'View all comments' button found — comments may already be open", "scraper");
+                }
+                break;
+            }
+
+            // Check if we now see a comments scrollable container
+            const hasCommentPanel = await page.evaluate(() => {
+                const allElements = document.querySelectorAll('div, section, ul');
+                for (const el of allElements) {
+                    const htmlEl = el as HTMLElement;
+                    const style = window.getComputedStyle(htmlEl);
+                    const hasScroll = style.overflowY === 'scroll' || style.overflowY === 'auto';
+                    if (!hasScroll) continue;
+                    if (htmlEl.scrollHeight <= htmlEl.clientHeight + 50) continue;
+                    const profileLinks = htmlEl.querySelectorAll('a[href^="/"]');
+                    const realLinks = Array.from(profileLinks).filter(a => {
+                        const h = a.getAttribute('href') || '';
+                        return !h.includes('/p/') && !h.includes('/reel/') && !h.includes('/tv/') && h.length > 1;
+                    });
+                    if (realLinks.length >= 3) return true;
+                }
+                return false;
+            });
+
+            if (hasCommentPanel) {
+                log("Phase 0: Comments panel detected — ready for extraction", "scraper");
+                break;
+            }
+        }
+
+        // Also click any "View replies" / "Load more" buttons visible now
+        await this.clickLoadMoreButtons(page);
+    }
+
+    /**
+     * Fallback: navigate to /p/{shortcode}/comments/ URL which sometimes
+     * loads a dedicated comments page with more comments accessible.
+     */
+    private async tryCommentsUrlFallback(
+        page: Page,
+        postUrl: string,
+        capturedComments: Map<string, InstagramComment>,
+        lastApiResponseTime: { value: number },
+    ): Promise<void> {
+        const shortcodeMatch = postUrl.match(/\/(p|reel|tv)\/([A-Za-z0-9_-]+)/);
+        if (!shortcodeMatch) return;
+
+        const commentsUrl = `https://www.instagram.com/p/${shortcodeMatch[2]}/comments/`;
+        log(`Navigating to comments URL: ${commentsUrl}`, "scraper");
+
+        try {
+            await page.goto(commentsUrl, { waitUntil: "networkidle2", timeout: 30000 });
+            await this.randomDelay(2000, 3000);
+
+            // Click any load-more buttons on the comments page
+            for (let attempt = 0; attempt < 3; attempt++) {
+                const clicked = await this.clickLoadMoreButtons(page);
+                if (clicked === 0) break;
+                await this.randomDelay(800, 1500);
+            }
+
+            // Extract any comments from this page via DOM
+            const domComments = await this.extractComments(page);
+            let newCount = 0;
+            for (const comment of domComments) {
+                const key = `${comment.username}:${comment.text.substring(0, 50)}`;
+                if (!capturedComments.has(key)) {
+                    capturedComments.set(key, comment);
+                    newCount++;
+                }
+            }
+            if (newCount > 0) {
+                lastApiResponseTime.value = Date.now();
+            }
+            log(`Comments URL fallback: +${newCount} new comments (total: ${capturedComments.size})`, "scraper");
+
+            // Navigate back to original post for further phases
+            await page.goto(postUrl, { waitUntil: "networkidle2", timeout: 30000 });
+            await this.randomDelay(1000, 2000);
+            await this.openFullCommentsView(page);
+        } catch (err) {
+            log(`Comments URL fallback failed: ${err instanceof Error ? err.message : err}`, "scraper");
+            // Navigate back to original post
+            try {
+                await page.goto(postUrl, { waitUntil: "networkidle2", timeout: 30000 });
+                await this.randomDelay(1000, 2000);
+            } catch { /* ignore */ }
+        }
+    }
+
+    /**
      * FIXED: Optimized scroll logic with much faster performance
      * 
      * Key improvements:
@@ -435,14 +570,15 @@ export class InstagramScraper {
         let lastCommentCount = capturedComments.size;
         let consecutiveZeroScrolls = 0;
         let currentDelayMode = 'fast'; // 'fast', 'normal', 'stuck', 'bottom'
-        const maxNoProgress = this.config.maxNoProgress;
-        const maxZeroScrolls = 15; // Reduced from 50
-        
+        const maxNoProgress = 30; // Increased: give more time for slow-loading comments
+        const maxZeroScrolls = 25; // Increased: more tolerance for stuck scrolling
+
         log(`Starting scroll loop: target=${targetCommentCount}, maxScrolls=${maxScrolls}`, "scraper");
 
         for (let i = 0; i < maxScrolls; i++) {
-            // Click load more buttons periodically (less frequently - every 20 iterations)
-            if (i % 20 === 0 && i > 0) {
+            // Click load more buttons frequently — every 5 iterations
+            // This is critical: Instagram lazy-loads "View replies" and "Load more" buttons
+            if (i % 5 === 0) {
                 await this.clickLoadMoreButtons(page);
             }
 
@@ -635,8 +771,10 @@ export class InstagramScraper {
             // Check if at bottom for several consecutive iterations
             if (scrollResult.atBottom) {
                 log(`At bottom of comments (iteration ${i + 1})`, "scraper");
-                if (capturedComments.size > 0 && noProgressCount >= 5) {
-                    log(`Bottom confirmed with no progress. Stopping at ${currentCount} comments.`, "scraper");
+                // When at bottom, aggressively click load-more buttons to expand replies
+                await this.clickLoadMoreButtons(page);
+                if (capturedComments.size > 0 && noProgressCount >= 10) {
+                    log(`Bottom confirmed with no progress (${noProgressCount} iterations). Stopping at ${currentCount} comments.`, "scraper");
                     break;
                 }
             }
@@ -1052,7 +1190,14 @@ export class InstagramScraper {
             // Navigate to the post
             log(`Navigating to post: ${postUrl}`, "scraper");
             await page.goto(postUrl, { waitUntil: "networkidle2", timeout: 60000 });
-            await this.randomDelay(2000, 3000);
+            await this.randomDelay(1500, 2500);
+
+            // ── Phase 0: Open full comments view ───────────────────────
+            // Instagram initially shows only ~20-30 comments. We MUST click
+            // "View all X comments" to open the full comments panel/modal
+            // before doing any API extraction.
+            log("Phase 0: Opening full comments view...", "scraper");
+            await this.openFullCommentsView(page);
 
             // ── Phase 1: Direct API extraction (fastest path) ─────────────
             const apiClient = new InstagramApiClient();
@@ -1071,6 +1216,12 @@ export class InstagramScraper {
                 log(`Phase 1 direct API failed: ${err instanceof Error ? err.message : err}`, "scraper");
             }
 
+            // If Phase 1 got very few comments, try navigating to /comments/ URL
+            if (capturedComments.size < 50 && Date.now() < hardDeadline) {
+                log(`Phase 1 only got ${capturedComments.size} comments — trying /comments/ URL fallback...`, "scraper");
+                await this.tryCommentsUrlFallback(page, postUrl, capturedComments, lastApiResponseTime);
+            }
+
             // Only skip scroll/DOM if we already have enough comments or time is up
             const timeRemaining = hardDeadline - Date.now();
             const skipScroll = capturedComments.size >= targetCommentCount || timeRemaining < 10_000;
@@ -1081,11 +1232,13 @@ export class InstagramScraper {
             let domComments: InstagramComment[] = [];
             if (!skipScroll && Date.now() < hardDeadline) {
                 // ── Phase 2: Scroll + network interception fallback ───────
-                // Initial button clicking
-                log("Looking for 'View all comments' buttons...", "scraper");
-                await this.clickLoadMoreButtons(page);
-                await this.randomDelay(500, 1000);
-                await this.clickLoadMoreButtons(page);
+                // Aggressively click all load-more buttons before scrolling
+                log("Phase 2: Clicking all load-more buttons...", "scraper");
+                for (let attempt = 0; attempt < 5; attempt++) {
+                    const clicked = await this.clickLoadMoreButtons(page);
+                    if (clicked === 0) break;
+                    await this.randomDelay(800, 1500);
+                }
 
                 log("Phase 2: Scrolling to capture API responses...", "scraper");
                 await this.scrollCommentsSection(page, capturedComments, lastApiResponseTime, this.config.maxScrolls, targetCommentCount);
@@ -1093,7 +1246,7 @@ export class InstagramScraper {
                 // ── Phase 3: DOM extraction if still short and time remains ──
                 if (capturedComments.size < targetCommentCount && Date.now() < hardDeadline) {
                     log("Phase 3: Extracting comments from DOM...", "scraper");
-                    await this.randomDelay(500, 1000);
+                    await this.randomDelay(300, 600);
                     domComments = await this.extractComments(page);
                     log(`DOM extracted ${domComments.length} comments`, "scraper");
                 }
