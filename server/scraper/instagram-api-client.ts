@@ -709,9 +709,12 @@ export class InstagramApiClient {
         // Fire first request
         let pendingFetch: Promise<any> | null = null;
 
+        // Track which cursor param to use: next_min_id uses &min_id=, next_max_id uses &max_id=
+        let cursorParam: 'min_id' | 'max_id' = 'min_id';
+
         const buildV1Url = (cursor: string | null) => {
             let url = `https://www.instagram.com/api/v1/media/${mediaId}/comments/?can_support_threading=true&permalink_enabled=false&count=${PER_PAGE_V1}`;
-            if (cursor) url += `&min_id=${cursor}`;
+            if (cursor) url += `&${cursorParam}=${cursor}`;
             return url;
         };
 
@@ -724,7 +727,7 @@ export class InstagramApiClient {
 
         for (let pageNum = 0; pageNum < MAX_PAGES && hasMore && Date.now() < deadline; pageNum++) {
             // Await current page result
-            const data = await pendingFetch;
+            let data = await pendingFetch;
             pendingFetch = null;
 
             if (!data) {
@@ -735,8 +738,7 @@ export class InstagramApiClient {
                     const fallbackData = await this.igFetch(page, buildV1Url(minId));
                     if (fallbackData) {
                         useNative = false;
-                        // Process fallback data below by reassigning
-                        // (need to restructure slightly)
+                        data = fallbackData;
                     }
                 }
                 if (!data) {
@@ -775,8 +777,19 @@ export class InstagramApiClient {
                 }
             }
 
-            hasMore = data.has_more_comments === true || data.next_min_id != null;
-            minId = data.next_min_id || null;
+            // Support both next_min_id (older API) and next_max_id (newer API) cursors
+            const nextMinId = data.next_min_id || null;
+            const nextMaxId = data.next_max_id || null;
+            hasMore = data.has_more_comments === true || nextMinId != null || nextMaxId != null;
+            if (nextMinId) {
+                minId = nextMinId;
+                cursorParam = 'min_id';
+            } else if (nextMaxId) {
+                minId = nextMaxId;
+                cursorParam = 'max_id';
+            } else {
+                minId = null;
+            }
 
             // Pipeline: fire next page request immediately (don't wait for processing)
             if (hasMore && pageNum + 1 < MAX_PAGES && Date.now() < deadline && allComments.size < targetCount) {
