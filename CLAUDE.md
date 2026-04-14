@@ -165,6 +165,16 @@ Required variables (see `.env.example`):
 - **Server build:** esbuild bundles `server/index.ts` into `dist/index.cjs` (CommonJS, minified). Bundled deps are allowlisted in `script/build.ts`; other deps are external.
 - **Docker:** Node.js 20 Alpine, runs as non-root `appuser`, expects pre-built `dist/` folder, exposes port 5000.
 
+---
+
+## Reading Order (cold start)
+1. Read `E:\Coding\Second Brain\Giveaway-Engine\CONTEXT.md` — your project brain
+2. Read `E:\Coding\Second Brain\_index\MASTER_INDEX.md` — cross-project awareness
+3. Read `E:\Coding\Second Brain\_index\SKILL_TRANSFERS.md` — applicable lessons
+4. This file (`CLAUDE.md`) — project rules and architecture
+
+---
+
 ## Coding Conventions
 
 - **TypeScript strict mode** is enabled. All source files use `.ts` / `.tsx`.
@@ -198,3 +208,33 @@ These files contain the most logic and are most likely to need changes:
 - `server/security.ts` (14KB) — Rate limiting, credit system, IP blocking
 - `server/email-templates.ts` (13KB) — Email HTML/text templates
 - `server/instagram.ts` (12KB) — Instagram integration (Apify + scraper dispatch)
+
+---
+
+## Before You Finish
+
+### Minimum write-back (every session):
+1. `E:\Coding\Second Brain\Giveaway-Engine\SESSION_LOG.md` — add entry if anything important happened
+2. `E:\Coding\Second Brain\Giveaway-Engine\KNOWN_ISSUES.md` — add/remove bugs if any changed
+
+### Full write-back (when project state materially changed):
+3. `E:\Coding\Second Brain\Giveaway-Engine\CONTEXT.md` — update changed sections only
+4. `E:\Coding\Second Brain\Giveaway-Engine\PATTERNS.md` — add if you learned something new
+5. `E:\Coding\Second Brain\_index\MASTER_INDEX.md` — update if you added new knowledge files
+6. `E:\Coding\Second Brain\_index\SKILL_TRANSFERS.md` — add if lesson applies elsewhere
+
+### Notion database updates (use Notion MCP tools):
+
+Database IDs are in `E:\Coding\Second Brain\_system\conventions\notion-config.md`.
+Use `data_source_id` (not `database_id`) when creating pages via `notion-create-pages`.
+
+7. **Projects database** — update status/health for Giveaway-Engine after significant work
+8. **Tasks database** — update status of any tasks you worked on
+9. **Bugs database** — add/update bugs found or fixed
+10. **Agent Log** — add entry ONLY if important (decision, error, breakthrough, blocker)
+
+If Notion MCP is unavailable, log pending updates to `E:\Coding\Second Brain\Giveaway-Engine\SESSION_LOG.md` with `[NOTION_PENDING]` tag.
+
+### If session is interrupted:
+Prioritise: SESSION_LOG > KNOWN_ISSUES > CONTEXT > everything else.
+Notion updates are non-critical — Obsidian is the source of truth.
