@@ -521,7 +521,7 @@ class PgStorage implements IStorage {
 
   async deleteGiveaway(id: string): Promise<boolean> {
     const result = await this.pool.query(`DELETE FROM giveaways WHERE id = $1`, [id]);
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async createAd(insertAd: InsertAd): Promise<Ad> {
@@ -602,7 +602,7 @@ class PgStorage implements IStorage {
 
   async deleteAd(id: string): Promise<boolean> {
     const result = await this.pool.query(`DELETE FROM ads WHERE id = $1`, [id]);
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async incrementAdStats(id: string, type: "view" | "click"): Promise<void> {

@@ -81,7 +81,7 @@ export class InstagramScraper {
 
     private async initPool(): Promise<void> {
         log(`Initializing browser pool (warm size: ${InstagramScraper.WARM_POOL_SIZE})...`, "scraper");
-        const launches: Promise<void>[] = [];
+        const launches: Promise<unknown>[] = [];
 
         for (let i = 0; i < InstagramScraper.WARM_POOL_SIZE; i++) {
             launches.push(this.addPermanentBrowser());

@@ -727,7 +727,7 @@ export class InstagramApiClient {
 
         for (let pageNum = 0; pageNum < MAX_PAGES && hasMore && Date.now() < deadline; pageNum++) {
             // Await current page result
-            let data = await pendingFetch;
+            let data: any = await pendingFetch;
             pendingFetch = null;
 
             if (!data) {
@@ -778,8 +778,8 @@ export class InstagramApiClient {
             }
 
             // Support both next_min_id (older API) and next_max_id (newer API) cursors
-            const nextMinId = data.next_min_id || null;
-            const nextMaxId = data.next_max_id || null;
+            const nextMinId: string | null = data.next_min_id || null;
+            const nextMaxId: string | null = data.next_max_id || null;
             hasMore = data.has_more_comments === true || nextMinId != null || nextMaxId != null;
             if (nextMinId) {
                 minId = nextMinId;
