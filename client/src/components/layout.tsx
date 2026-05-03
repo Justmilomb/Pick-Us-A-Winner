@@ -108,12 +108,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </nav>
 
                 <div className="mt-auto p-8 border-t-4 border-black bg-white">
-                  <p className="font-black uppercase tracking-widest text-sm mb-4">Supported Platforms</p>
-                  <div className="flex gap-4">
-                    <span className="p-4 border-4 border-black bg-instagram text-white shadow-neo-sm font-black italic">IG</span>
-                    <span className="p-4 border-4 border-black bg-slate-200 text-slate-500 shadow-neo-sm font-black italic opacity-50">YT</span>
-                    <span className="p-4 border-4 border-black bg-slate-200 text-slate-500 shadow-neo-sm font-black italic opacity-50">TK</span>
-                  </div>
+                  <p className="font-black uppercase tracking-widest text-sm mb-2">Built by</p>
+                  <a href="https://certifiedrandom.studios" target="_blank" rel="noopener noreferrer" className="font-black uppercase text-xl text-primary hover:underline italic">
+                    Certified Random
+                  </a>
                 </div>
               </div>
             </SheetContent>
@@ -157,7 +155,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <li><Link href="/how-it-works" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> How It Works</Link></li>
                 <li><Link href="/faq" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> FAQ</Link></li>
                 <li><Link href="/instagram-giveaway-guide" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> Instagram Giveaway Guide</Link></li>
-                <li><Link href="/coming-soon" className="hover:text-primary transition-colors flex items-center gap-2 group opacity-60"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> YouTube, TikTok, Facebook (Soon)</Link></li>
+                <li><Link href="/press" className="hover:text-primary transition-colors flex items-center gap-2 group"><div className="w-2 h-2 bg-black group-hover:bg-primary" /> Media Kit</Link></li>
               </ul>
             </div>
           </div>
@@ -176,7 +174,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Link href="/contact" className="hover:underline underline-offset-4">Contact</Link>
               <Link href="/privacy" className="hover:underline underline-offset-4">Privacy Policy</Link>
               <Link href="/terms" className="hover:underline underline-offset-4">Terms of Service</Link>
-              <span className="text-muted-foreground">Certified Random</span>
+              <a href="https://certifiedrandom.studios" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Certified Random</a>
             </div>
           </div>
         </div>

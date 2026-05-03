@@ -119,91 +119,15 @@ export default function GiveawayTool() {
     }
   }, [winnerCount, filterKeyword, minMentions, requireMention, excludeDuplicates, blockList, enableBonusChances, excludeFraud]);
 
-  // Handle initial form submission - fetch comments first, then let user set rules and pay.
+  // Handle initial form submission - service is retired, show graceful message.
   const handleFetch = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFetchError(null);
-
-    // Validation
-    if (!url.includes("instagram.com")) {
-      toast({ title: "Invalid URL", description: "Please enter a valid Instagram Post URL", variant: "destructive" });
-      return;
-    }
-
-    setStep("fetching");
-    setFetchTimer(FETCH_MAX_SECONDS);
-
-    const timerInterval = setInterval(() => {
-      setFetchTimer(prev => Math.max(0, prev - 1));
-    }, 1000);
-
-    try {
-      const response = await fetch("/api/instagram/comments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to fetch comments");
-
-      const entries = (data.entries || []).map((entry: any) => ({
-        ...entry,
-        fraudScore: entry.fraudScore || 0,
-      }));
-
-      setFetchedEntries(entries);
-      setStep("options");
-
-      const initialValid = filterEntries(entries, {
-        keyword: "",
-        mentions: 1,
-        requireMention: false,
-        duplicates: true,
-        blockList: blockList,
-        excludeFraud: excludeFraud,
-      });
-      setValidEntries(initialValid);
-
-      toast({
-        title: "Success!",
-        description: `Loaded ${entries.length > 200 ? "200+" : entries.length} comments from Instagram`,
-      });
-    } catch (error) {
-      console.error("Fetch error:", error);
-      setFetchError(error instanceof Error ? error.message : "Unknown error occurred");
-      setStep("input");
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to fetch comments",
-        variant: "destructive",
-      });
-    } finally {
-      clearInterval(timerInterval);
-    }
+    setFetchError("service_retired");
   };
 
-  // Step 1: Create a Stripe PaymentIntent and show card form
+  // Payment is not available — service is retired.
   const handleCreatePaymentIntent = async () => {
-    setIsCreatingIntent(true);
-    try {
-      const res = await fetch("/api/payment/create-intent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create payment");
-      setClientSecret(data.clientSecret);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to start payment",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCreatingIntent(false);
-    }
+    setFetchError("service_retired");
   };
 
   const selectWinners = (entries: Entry[]): Entry[] => {
@@ -559,16 +483,24 @@ export default function GiveawayTool() {
         ]}
       />
       <div className="max-w-4xl mx-auto">
+        {/* Service retired notice */}
+        <div className="border-4 border-black bg-slate-50 p-5 mb-8 shadow-neo flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex-shrink-0 bg-black text-white px-3 py-1 font-black uppercase text-xs tracking-widest whitespace-nowrap">
+            Portfolio Demo
+          </div>
+          <p className="font-bold text-slate-700 text-sm leading-relaxed">
+            The live backend for this service has been retired. What you see below is the tool's interface,
+            exactly as it appeared to users. The client-side tools (Spin the Wheel, Name Picker, Option Picker)
+            still work — only the Instagram comment fetching required the backend.
+          </p>
+        </div>
+
         <div className="text-center mb-12 relative">
-          {/* User header removed */}
           <div className="inline-flex items-center gap-2 bg-[#E1306C] text-white px-4 py-1 font-bold uppercase tracking-wider mb-4 border-2 border-black shadow-[4px_4px_0px_0px_#000000] transform -rotate-2">
             <Instagram className="w-5 h-5" /> Instagram Giveaway Generator
           </div>
-          <div className="bg-amber-100 border-2 border-amber-600 text-amber-900 px-4 py-2 mb-4 font-bold text-sm sm:text-base max-w-xl mx-auto">
-            Free to set up. Just £2.50 (one-time) to grab comments and pick winners.
-          </div>
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-black uppercase mb-4">Pick Winners</h1>
-          <p className="text-base sm:text-lg font-medium text-muted-foreground px-4 sm:px-0">Pick random winners from Instagram comments. Paste a link, set your rules, and go. No signup needed.</p>
+          <p className="text-base sm:text-lg font-medium text-muted-foreground px-4 sm:px-0">Pick random winners from Instagram comments. Paste a link, set your rules, and go.</p>
         </div>
 
         <div className="grid gap-8">
@@ -581,25 +513,46 @@ export default function GiveawayTool() {
                 exit={{ opacity: 0, y: -20 }}
                 className="neo-box p-4 sm:p-8 md:p-12 bg-white"
               >
-                <form onSubmit={handleFetch} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-lg sm:text-xl font-bold uppercase">Instagram Post URL</Label>
-                    <Input
-                      placeholder="https://www.instagram.com/p/DB1234567/"
-                      className="neo-input text-lg"
-                      value={url}
-                      onChange={(e) => setUrl(e.target.value)}
-                    />
-                    <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4" /> Works with Posts and Reels.
-                    </p>
+                {fetchError === "service_retired" ? (
+                  <div className="text-center space-y-6 py-8">
+                    <div className="inline-block bg-slate-100 border-4 border-black p-6 shadow-neo">
+                      <CheckCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                      <h2 className="text-2xl font-black uppercase mb-2">Feature Was Part of the Live Service</h2>
+                      <p className="font-medium text-slate-600 max-w-md mx-auto">
+                        The Instagram comment scraper required the backend, which has been retired.
+                        This is a portfolio demonstration of the interface.
+                      </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                      <Button
+                        onClick={() => setFetchError(null)}
+                        className="neo-btn-secondary"
+                      >
+                        Back to Input
+                      </Button>
+                    </div>
                   </div>
+                ) : (
+                  <form onSubmit={handleFetch} className="space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-lg sm:text-xl font-bold uppercase">Instagram Post URL</Label>
+                      <Input
+                        placeholder="https://www.instagram.com/p/DB1234567/"
+                        className="neo-input text-lg"
+                        value={url}
+                        onChange={(e) => setUrl(e.target.value)}
+                      />
+                      <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4" /> Works with Posts and Reels.
+                      </p>
+                    </div>
 
-                  <Button type="submit" className="w-full neo-btn-primary text-lg sm:text-xl py-4 sm:py-6 bg-[#E1306C] hover:bg-[#C13584] border-black text-white mt-4">
-                    <Search className="mr-2 w-5 h-5 sm:w-6 sm:h-6" />
-                    Fetch Comments
-                  </Button>
-                </form>
+                    <Button type="submit" className="w-full neo-btn-primary text-lg sm:text-xl py-4 sm:py-6 bg-[#E1306C] hover:bg-[#C13584] border-black text-white mt-4">
+                      <Search className="mr-2 w-5 h-5 sm:w-6 sm:h-6" />
+                      Fetch Comments
+                    </Button>
+                  </form>
+                )}
               </motion.div>
             )}
 
