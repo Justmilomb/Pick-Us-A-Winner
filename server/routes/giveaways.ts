@@ -103,7 +103,7 @@ export function registerGiveawayRoutes(app: Express, deps: GiveawayRouteDeps): v
         const tokenResult = redeemPurchaseToken(ip, paymentToken);
         if (!tokenResult.success) {
           return res.status(402).json({
-            error: tokenResult.error || "Invalid payment token",
+            error: "Your payment session has expired or is invalid. Please try the payment again.",
             paymentRequired: true,
           });
         }
@@ -236,7 +236,7 @@ export function registerGiveawayRoutes(app: Express, deps: GiveawayRouteDeps): v
 
       if (timeUntilScheduled < fifteenMinutes) {
         return res.status(403).json({
-          error: "Giveaway cannot be edited. Less than 15 minutes remaining.",
+          error: "This giveaway can no longer be edited because it starts in less than 15 minutes.",
         });
       }
 
@@ -303,7 +303,7 @@ export function registerGiveawayRoutes(app: Express, deps: GiveawayRouteDeps): v
 
       if (timeUntilScheduled < fifteenMinutes) {
         return res.status(403).json({
-          error: "Giveaway cannot be cancelled. Less than 15 minutes remaining.",
+          error: "This giveaway can no longer be cancelled because it starts in less than 15 minutes.",
         });
       }
 

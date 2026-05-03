@@ -40,7 +40,7 @@ export function CheckoutForm({ onSuccess, onCancel }: CheckoutFormProps) {
     } else if (paymentIntent && paymentIntent.status === "succeeded") {
       onSuccess(paymentIntent.id);
     } else {
-      setErrorMessage("Something went wrong. Please try again.");
+      setErrorMessage("Payment didn't go through. Please try again or use a different card.");
       setIsProcessing(false);
     }
   };

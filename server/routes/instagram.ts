@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { log } from "../log";
+import { sendErrorResponse } from "../error-messages";
 import { countMentions, getScraperInstance } from "../instagram";
 
 interface InstagramRouteDeps {
@@ -33,7 +34,7 @@ export function registerInstagramRoutes(app: Express, deps: InstagramRouteDeps):
         if (!postId) {
           return res.status(400).json({
             valid: false,
-            error: "Could not extract post ID from URL. Use format: instagram.com/p/CODE or instagram.com/reel/CODE",
+            error: "We couldn't recognise this Instagram URL. Please paste the full link to a post or reel.",
           });
         }
 
@@ -46,7 +47,7 @@ export function registerInstagramRoutes(app: Express, deps: InstagramRouteDeps):
         log(`Validation Error: ${error}`, "error");
         return res.status(500).json({
           valid: false,
-          error: error instanceof Error ? error.message : "Failed to validate URL",
+          error: "Could not validate this URL. Please try again.",
         });
       }
     },
@@ -62,7 +63,7 @@ export function registerInstagramRoutes(app: Express, deps: InstagramRouteDeps):
         const postId = extractPostId(url);
         if (!postId) {
           return res.status(400).json({
-            error: "Could not extract post ID from URL",
+            error: "We couldn't recognise this Instagram URL. Please paste the full link to a post or reel.",
           });
         }
 
@@ -110,10 +111,7 @@ export function registerInstagramRoutes(app: Express, deps: InstagramRouteDeps):
           },
         });
       } catch (error) {
-        log(`Instagram Comments API Error: ${error}`, "error");
-        return res.status(500).json({
-          error: error instanceof Error ? error.message : "Failed to fetch comments",
-        });
+        return sendErrorResponse(res, 500, error, "Instagram Comments API");
       }
     },
   );
@@ -139,10 +137,7 @@ export function registerInstagramRoutes(app: Express, deps: InstagramRouteDeps):
         const results = await scraper.checkFollowers(limitedIds);
         return res.json({ results });
       } catch (error) {
-        log(`Follower Check Error: ${error}`, "error");
-        return res.status(500).json({
-          error: error instanceof Error ? error.message : "Failed to check follower status",
-        });
+        return sendErrorResponse(res, 500, error, "Follower Check");
       }
     },
   );

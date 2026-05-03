@@ -22,6 +22,7 @@ import { CheckoutForm } from "@/components/checkout-form";
 import { getStripe } from "@/lib/stripe";
 
 import { useLocation } from "wouter";
+import { parseApiError } from "@/lib/error-messages";
 
 const stripeAppearance = {
   theme: "flat" as const,
@@ -171,11 +172,12 @@ export default function GiveawayTool() {
       });
     } catch (error) {
       console.error("Fetch error:", error);
-      setFetchError(error instanceof Error ? error.message : "Unknown error occurred");
+      const friendly = parseApiError(error);
+      setFetchError(friendly.description);
       setStep("input");
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to fetch comments",
+        title: "Couldn't Fetch Comments",
+        description: friendly.description,
         variant: "destructive",
       });
     } finally {
@@ -196,9 +198,10 @@ export default function GiveawayTool() {
       if (!res.ok) throw new Error(data.error || "Failed to create payment");
       setClientSecret(data.clientSecret);
     } catch (error) {
+      const friendly = parseApiError(error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to start payment",
+        title: "Payment Setup Failed",
+        description: friendly.description,
         variant: "destructive",
       });
     } finally {
@@ -296,11 +299,12 @@ export default function GiveawayTool() {
       }, 3000);
     } catch (error) {
       console.error("Payment error:", error);
-      setFetchError(error instanceof Error ? error.message : "Unknown error occurred");
-      setStep("options");
+      const friendly = parseApiError(error);
+      setFetchError(friendly.description);
+      setStep(fetchedEntries.length > 0 ? "options" : "input");
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Payment failed",
+        title: "Payment Error",
+        description: friendly.description,
         variant: "destructive",
       });
     } finally {

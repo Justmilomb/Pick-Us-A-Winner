@@ -92,7 +92,7 @@ export function setupAuth(app: Express) {
             try {
                 const user = await storage.getUserByEmail(email);
                 if (!user || !user.password) {
-                    return done(null, false, { message: "Account not found or password login not available for this account." });
+                    return done(null, false, { message: "No account found with that email. Please check and try again." });
                 }
 
                 if (!(await comparePasswords(password, user.password))) {

@@ -286,7 +286,7 @@ export function redeemPurchaseToken(ip: string, token: string): { success: boole
 export const globalRateLimiter = rateLimit({
   windowMs: CONFIG.GLOBAL_RATE_WINDOW_MS,
   max: CONFIG.GLOBAL_RATE_LIMIT,
-  message: { error: "Too many requests. Please slow down." },
+  message: { error: "You're sending requests too quickly. Please wait a moment and try again." },
   standardHeaders: true,
   legacyHeaders: false,
   // Use default IP detection (req.ip)
@@ -296,8 +296,8 @@ export const globalRateLimiter = rateLimit({
 export const instagramRateLimiter = rateLimit({
   windowMs: CONFIG.INSTAGRAM_RATE_WINDOW_MS,
   max: CONFIG.INSTAGRAM_RATE_LIMIT,
-  message: { 
-    error: "Instagram API rate limit exceeded. Please try again later or purchase more credits.",
+  message: {
+    error: "You've reached the limit for Instagram requests this hour. Please wait a few minutes and try again.",
     retryAfter: Math.ceil(CONFIG.INSTAGRAM_RATE_WINDOW_MS / 1000)
   },
   standardHeaders: true,
@@ -308,7 +308,7 @@ export const instagramRateLimiter = rateLimit({
 export const giveawayRateLimiter = rateLimit({
   windowMs: CONFIG.GIVEAWAY_RATE_WINDOW_MS,
   max: CONFIG.GIVEAWAY_RATE_LIMIT,
-  message: { error: "Too many giveaways created. Please try again later." },
+  message: { error: "You've scheduled several giveaways recently. Please wait a bit before creating another." },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -317,7 +317,7 @@ export const giveawayRateLimiter = rateLimit({
 export const emailRateLimiter = rateLimit({
   windowMs: CONFIG.EMAIL_RATE_WINDOW_MS,
   max: CONFIG.EMAIL_RATE_LIMIT,
-  message: { error: "Too many emails sent. Please try again later." },
+  message: { error: "Too many emails sent recently. Please wait a bit before sending more." },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -326,7 +326,7 @@ export const emailRateLimiter = rateLimit({
 export const imageRateLimiter = rateLimit({
   windowMs: CONFIG.IMAGE_RATE_WINDOW_MS,
   max: CONFIG.IMAGE_RATE_LIMIT,
-  message: { error: "Too many image requests. Please try again later." },
+  message: { error: "Too many image downloads recently. Please wait a moment." },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -343,8 +343,8 @@ export function blockCheckMiddleware(req: Request, res: Response, next: NextFunc
   // Check if blocked
   if (record.blocked) {
     if (record.blockedUntil && new Date(record.blockedUntil) > new Date()) {
-      return res.status(403).json({ 
-        error: "Access temporarily blocked due to suspicious activity",
+      return res.status(403).json({
+        error: "Your access has been temporarily restricted due to unusual activity. This will be lifted automatically.",
         blockedUntil: record.blockedUntil
       });
     } else {
@@ -366,7 +366,7 @@ export function creditCheckMiddleware(req: Request, res: Response, next: NextFun
   
   if (!creditStatus.hasCredits) {
     return res.status(402).json({
-      error: "No credits remaining. Please purchase credits to continue.",
+      error: "You've used your free credits. Purchase more to continue fetching comments.",
       creditsRemaining: 0,
       purchaseRequired: true
     });

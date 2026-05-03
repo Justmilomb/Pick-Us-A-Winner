@@ -25,7 +25,7 @@ export function registerAdRoutes(app: Express, deps: AdRouteDeps): void {
     } catch (error) {
       log(`Get Random Ad Error: ${error}`, "error");
       return res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to fetch ad",
+        error: "Failed to load ad",
       });
     }
   });
@@ -43,7 +43,7 @@ export function registerAdRoutes(app: Express, deps: AdRouteDeps): void {
     } catch (error) {
       log(`Track Ad Click Error: ${error}`, "error");
       return res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to track click",
+        error: "Failed to track click",
       });
     }
   });
@@ -57,7 +57,7 @@ export function registerAdRoutes(app: Express, deps: AdRouteDeps): void {
       } catch (error) {
         log(`Get All Ads Error: ${error}`, "error");
         return res.status(500).json({
-          error: error instanceof Error ? error.message : "Failed to fetch ads",
+          error: "Failed to fetch ads",
         });
       }
     },
@@ -82,7 +82,7 @@ export function registerAdRoutes(app: Express, deps: AdRouteDeps): void {
       } catch (error) {
         log(`Create Ad Error: ${error}`, "error");
         return res.status(500).json({
-          error: error instanceof Error ? error.message : "Failed to create ad",
+          error: "Failed to create ad",
         });
       }
     },
@@ -105,7 +105,7 @@ export function registerAdRoutes(app: Express, deps: AdRouteDeps): void {
       } catch (error) {
         log(`Update Ad Error: ${error}`, "error");
         return res.status(500).json({
-          error: error instanceof Error ? error.message : "Failed to update ad",
+          error: "Failed to update ad",
         });
       }
     },
@@ -127,7 +127,7 @@ export function registerAdRoutes(app: Express, deps: AdRouteDeps): void {
       } catch (error) {
         log(`Delete Ad Error: ${error}`, "error");
         return res.status(500).json({
-          error: error instanceof Error ? error.message : "Failed to delete ad",
+          error: "Failed to delete ad",
         });
       }
     },

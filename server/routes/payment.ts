@@ -52,13 +52,13 @@ export function registerPaymentRoutes(app: Express, deps: PaymentRouteDeps): voi
       }
 
       if (redeemedPaymentIntents.has(paymentIntentId)) {
-        return res.status(400).json({ error: "This payment has already been redeemed" });
+        return res.status(400).json({ error: "This payment has already been applied to your account." });
       }
 
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
       if (paymentIntent.status !== "succeeded") {
-        return res.status(400).json({ error: "Payment has not succeeded" });
+        return res.status(400).json({ error: "Payment hasn't completed yet. Please wait a moment and try again." });
       }
 
       redeemedPaymentIntents.add(paymentIntentId);
